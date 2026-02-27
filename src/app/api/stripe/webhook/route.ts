@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createServiceClient } from '@/lib/supabase/server'
+import { processOrderCommission } from '@/lib/commissions/process-order-commission'
 import Stripe from 'stripe'
 
 export async function POST(request: NextRequest) {
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
         blend_components: meta.blend_components ? JSON.parse(meta.blend_components) : {},
       }
 
-      await supabase.from('orders').insert(orderData)
+      const { data: order } = await supabase.from('orders').insert(orderData).select('id').single()
 
       // Track purchase event
       await supabase.from('events').insert({
@@ -51,6 +52,11 @@ export async function POST(request: NextRequest) {
         signature_id: meta.signature_id,
         metadata: { amount_cents: session.amount_total },
       })
+
+      // Process commissions and points
+      if (order && meta.creator_id && session.amount_total) {
+        await processOrderCommission(supabase, order.id, meta.creator_id, session.amount_total)
+      }
 
       // If subscription, create subscription record
       if (meta.is_subscription === 'true' && session.subscription) {
@@ -93,6 +99,40 @@ export async function POST(request: NextRequest) {
         .from('subscriptions')
         .update({ status: 'cancelled' })
         .eq('stripe_subscription_id', sub.id)
+      break
+    }
+
+    case 'invoice.payment_succeeded': {
+      const invoice = event.data.object as unknown as {
+        billing_reason: string; subscription: string | null;
+        amount_paid: number; currency: string; payment_intent: string | null;
+      }
+      // Only process subscription renewal invoices (not the first one which is handled by checkout)
+      if (invoice.billing_reason === 'subscription_cycle' && invoice.subscription) {
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('creator_id, signature_id')
+          .eq('stripe_subscription_id', invoice.subscription)
+          .single()
+
+        if (sub && invoice.amount_paid) {
+          const { data: order } = await supabase.from('orders').insert({
+            creator_id: sub.creator_id,
+            signature_id: sub.signature_id,
+            stripe_payment_intent_id: invoice.payment_intent || null,
+            status: 'paid',
+            is_subscription: true,
+            amount_cents: invoice.amount_paid,
+            currency: invoice.currency || 'usd',
+            line_items: [{ name: 'Subscription Renewal', quantity: 1 }],
+            blend_components: {},
+          }).select('id').single()
+
+          if (order) {
+            await processOrderCommission(supabase, order.id, sub.creator_id, invoice.amount_paid)
+          }
+        }
+      }
       break
     }
   }

@@ -1,7 +1,6 @@
 -- Glow Custom Serum - Full Schema
 
--- Enable UUID extension
-create extension if not exists "uuid-ossp";
+-- gen_random_uuid() is built-in to Postgres 13+, no extension needed
 
 -- Enum for user roles
 create type user_role as enum ('ADMIN', 'CREATOR', 'CUSTOMER');
@@ -21,7 +20,7 @@ create table profiles (
 
 -- Creators
 create table creators (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null unique references profiles(id) on delete cascade,
   slug text not null unique,
   approved boolean not null default false,
@@ -40,7 +39,7 @@ create table creators (
 
 -- Base Formulas
 create table base_formulas (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null unique,
   slug text not null unique,
   description text,
@@ -52,7 +51,7 @@ create table base_formulas (
 
 -- Boosters
 create table boosters (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null unique,
   slug text not null unique,
   need_key text not null, -- maps to BARRIER, CLARIFY, BRIGHTEN, HYDRATE, SMOOTH, PREP
@@ -65,7 +64,7 @@ create table boosters (
 
 -- Textures
 create table textures (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null unique,
   slug text not null unique,
   description text,
@@ -76,7 +75,7 @@ create table textures (
 
 -- Scents
 create table scents (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null unique,
   slug text not null unique,
   description text,
@@ -87,7 +86,7 @@ create table scents (
 
 -- Compatibility: Base <-> Booster
 create table compatibility_base_booster (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   base_id uuid not null references base_formulas(id) on delete cascade,
   booster_id uuid not null references boosters(id) on delete cascade,
   unique(base_id, booster_id)
@@ -95,7 +94,7 @@ create table compatibility_base_booster (
 
 -- Compatibility: Booster pairs
 create table compatibility_booster_pair (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   booster_a_id uuid not null references boosters(id) on delete cascade,
   booster_b_id uuid not null references boosters(id) on delete cascade,
   unique(booster_a_id, booster_b_id),
@@ -104,7 +103,7 @@ create table compatibility_booster_pair (
 
 -- Creator Signatures (their custom serum products)
 create table creator_signatures (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   creator_id uuid not null references creators(id) on delete cascade,
   signature_name text not null,
   slug text not null,
@@ -128,7 +127,7 @@ create table creator_signatures (
 
 -- Analytics events
 create table events (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   event_type text not null, -- storefront_view, quiz_start, quiz_complete, add_to_cart, purchase
   creator_id uuid references creators(id) on delete set null,
   signature_id uuid references creator_signatures(id) on delete set null,
@@ -139,7 +138,7 @@ create table events (
 
 -- Orders
 create table orders (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   customer_id uuid references profiles(id) on delete set null,
   creator_id uuid not null references creators(id),
   signature_id uuid not null references creator_signatures(id),
@@ -159,7 +158,7 @@ create table orders (
 
 -- Subscriptions
 create table subscriptions (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   customer_id uuid references profiles(id) on delete set null,
   creator_id uuid not null references creators(id),
   signature_id uuid not null references creator_signatures(id),

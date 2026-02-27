@@ -1,20 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { motion } from 'framer-motion'
+import { ReferralBanner } from '@/components/referral-banner'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+  const refCode = searchParams.get('ref')
 
   const supabase = createClient()
+
+  // Store referral code in cookie
+  useEffect(() => {
+    if (refCode) {
+      document.cookie = `glow_ref=${refCode};path=/;max-age=${30 * 24 * 60 * 60};samesite=lax`
+    }
+  }, [refCode])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -56,6 +67,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
+            {refCode && <ReferralBanner refCode={refCode} />}
             {sent ? (
               <motion.div
                 initial={{ opacity: 0 }}

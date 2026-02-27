@@ -23,6 +23,8 @@ export interface Creator {
   hero_image_url: string | null
   label_template: string
   accent_color: string
+  referral_code: string | null
+  referred_by_code: string | null
   created_at: string
   updated_at: string
 }
@@ -162,3 +164,103 @@ export interface Subscription {
 export type NeedKey = 'BARRIER' | 'CLARIFY' | 'BRIGHTEN' | 'HYDRATE' | 'SMOOTH' | 'PREP'
 
 export type NeedScores = Record<NeedKey, number>
+
+// Compensation enums
+export type CommissionType = 'PERSONAL' | 'REFERRAL_MATCH'
+export type CommissionStatus = 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'
+export type PayoutStatus = 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED'
+export type BonusType = 'MONTHLY_TIER' | 'NEW_CREATOR'
+export type RewardTier = 'PEARL' | 'OPAL' | 'ROSE_QUARTZ' | 'AMETHYST' | 'SAPPHIRE' | 'DIAMOND'
+
+export interface CommissionSettings {
+  id: string
+  commission_rate: number
+  referral_match_rate: number
+  new_creator_bonus_cents: number
+  new_creator_bonus_window_days: number
+  points_personal_multiplier: number
+  points_referral_multiplier: number
+  commission_hold_days: number
+  created_at: string
+  updated_at: string
+}
+
+export interface MonthlyBonusTier {
+  id: string
+  min_commission_cents: number
+  max_commission_cents: number | null
+  bonus_cents: number
+  tier_label: string
+  sort_order: number
+}
+
+export interface CreatorReferral {
+  id: string
+  referrer_id: string
+  referred_id: string
+  match_expires_at: string
+  created_at: string
+}
+
+export interface Commission {
+  id: string
+  creator_id: string
+  order_id: string
+  commission_type: CommissionType
+  amount_cents: number
+  rate: number
+  status: CommissionStatus
+  approved_at: string | null
+  paid_at: string | null
+  period: string | null
+  created_at: string
+  // Joined
+  order?: Order
+  creator?: Creator
+}
+
+export interface Bonus {
+  id: string
+  creator_id: string
+  bonus_type: BonusType
+  amount_cents: number
+  period: string | null
+  metadata: Record<string, unknown>
+  created_at: string
+}
+
+export interface RewardPointsEntry {
+  id: string
+  creator_id: string
+  order_id: string | null
+  points: number
+  source: CommissionType
+  description: string | null
+  created_at: string
+}
+
+export interface RewardPointsBalance {
+  creator_id: string
+  total_points: number
+  updated_at: string
+}
+
+export interface RewardMilestone {
+  id: string
+  creator_id: string
+  tier: RewardTier
+  points_at_crossing: number
+  created_at: string
+}
+
+export interface Payout {
+  id: string
+  creator_id: string
+  period: string
+  commission_total_cents: number
+  bonus_total_cents: number
+  total_cents: number
+  status: PayoutStatus
+  paid_at: string | null
+  created_at: string
+}

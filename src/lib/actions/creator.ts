@@ -18,6 +18,13 @@ export async function createCreatorProfile(input: CreatorBrandInput) {
     .update({ role: 'CREATOR' })
     .eq('id', user.id)
 
+  // Generate unique referral code
+  const referralCode = parsed.slug.toUpperCase().replace(/-/g, '').slice(0, 6) +
+    Math.random().toString(36).slice(2, 6).toUpperCase()
+
+  // Check for referred_by_code from user metadata (set during auth callback)
+  const referredByCode = (user.user_metadata?.referred_by_code as string) || null
+
   // Create creator record
   const { data, error } = await supabase
     .from('creators')
@@ -30,6 +37,8 @@ export async function createCreatorProfile(input: CreatorBrandInput) {
       story: parsed.story,
       label_template: parsed.label_template,
       accent_color: parsed.accent_color,
+      referral_code: referralCode,
+      referred_by_code: referredByCode,
     })
     .select()
     .single()
@@ -37,6 +46,26 @@ export async function createCreatorProfile(input: CreatorBrandInput) {
   if (error) {
     if (error.code === '23505') throw new Error('This handle is already taken')
     throw new Error(error.message)
+  }
+
+  // If referred by someone, create the referral relationship
+  if (referredByCode) {
+    const { data: referrer } = await supabase
+      .from('creators')
+      .select('id')
+      .eq('referral_code', referredByCode)
+      .single()
+
+    if (referrer && referrer.id !== data.id) {
+      const expiresAt = new Date()
+      expiresAt.setMonth(expiresAt.getMonth() + 12)
+
+      await supabase.from('creator_referrals').insert({
+        referrer_id: referrer.id,
+        referred_id: data.id,
+        match_expires_at: expiresAt.toISOString(),
+      })
+    }
   }
 
   revalidatePath('/creator')
