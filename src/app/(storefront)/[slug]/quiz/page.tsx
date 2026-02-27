@@ -10,18 +10,18 @@ import { Progress } from '@/components/ui/progress'
 import { createClient } from '@/lib/supabase/client'
 import { quizQuestions, computeBlend, type BlendResult } from '@/lib/quiz'
 import { trackEvent } from '@/lib/actions/events'
-import type { BaseFormula, Booster, Texture, Scent, CompatibilityBaseBooster, CompatibilityBoosterPair, Creator } from '@/types/database'
+import type { BaseFormula, Booster, Texture, Scent, CompatibilityBaseBooster, CompatibilityBoosterPair, GlowGirl } from '@/types/database'
 
 export default function QuizPage() {
   const params = useParams()
-  const creatorSlug = (params.creatorSlug as string).replace(/^@/, '')
+  const slug = (params.slug as string).replace(/^@/, '')
   const supabase = createClient()
 
   const [currentQ, setCurrentQ] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [result, setResult] = useState<BlendResult | null>(null)
   const [computing, setComputing] = useState(false)
-  const [creator, setCreator] = useState<Creator | null>(null)
+  const [glowGirl, setGlowGirl] = useState<GlowGirl | null>(null)
   const [catalogData, setCatalogData] = useState<{
     bases: BaseFormula[]
     boosters: Booster[]
@@ -33,8 +33,8 @@ export default function QuizPage() {
 
   useEffect(() => {
     async function load() {
-      const [creatorRes, basesRes, boostersRes, texturesRes, scentsRes, bbRes, bpRes] = await Promise.all([
-        supabase.from('creators').select('*').eq('slug', creatorSlug).single(),
+      const [glowGirlRes, basesRes, boostersRes, texturesRes, scentsRes, bbRes, bpRes] = await Promise.all([
+        supabase.from('glow_girls').select('*').eq('slug', slug).single(),
         supabase.from('base_formulas').select('*').eq('active', true).order('sort_order'),
         supabase.from('boosters').select('*').eq('active', true).order('sort_order'),
         supabase.from('textures').select('*').eq('active', true).order('sort_order'),
@@ -42,7 +42,7 @@ export default function QuizPage() {
         supabase.from('compatibility_base_booster').select('*'),
         supabase.from('compatibility_booster_pair').select('*'),
       ])
-      setCreator(creatorRes.data)
+      setGlowGirl(glowGirlRes.data)
       setCatalogData({
         bases: basesRes.data || [],
         boosters: boostersRes.data || [],
@@ -51,12 +51,12 @@ export default function QuizPage() {
         baseBoosterCompat: bbRes.data || [],
         boosterPairCompat: bpRes.data || [],
       })
-      if (creatorRes.data) {
-        trackEvent('quiz_start', creatorRes.data.id)
+      if (glowGirlRes.data) {
+        trackEvent('quiz_start', glowGirlRes.data.id)
       }
     }
     load()
-  }, [creatorSlug]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [slug]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAnswer = useCallback((questionId: string, value: string) => {
     const updated = { ...answers, [questionId]: value }
@@ -68,7 +68,7 @@ export default function QuizPage() {
       // Compute result
       setComputing(true)
       setTimeout(() => {
-        if (catalogData && creator) {
+        if (catalogData && glowGirl) {
           const blend = computeBlend(
             updated,
             catalogData.bases,
@@ -77,17 +77,17 @@ export default function QuizPage() {
             catalogData.scents,
             catalogData.baseBoosterCompat,
             catalogData.boosterPairCompat,
-            creator.brand_name || undefined
+            glowGirl.brand_name || undefined
           )
           setResult(blend)
-          trackEvent('quiz_complete', creator.id, null, { blend_name: blend.blendName })
+          trackEvent('quiz_complete', glowGirl.id, null, { blend_name: blend.blendName })
         }
         setComputing(false)
       }, 2000) // Dramatic pause for "computing your blend..."
     }
-  }, [answers, currentQ, catalogData, creator])
+  }, [answers, currentQ, catalogData, glowGirl])
 
-  const accentColor = creator?.accent_color || '#8B5CF6'
+  const accentColor = glowGirl?.accent_color || '#8B5CF6'
   const progress = ((currentQ + 1) / quizQuestions.length) * 100
 
   if (!catalogData) {
@@ -198,8 +198,8 @@ export default function QuizPage() {
               {/* CTA */}
               <div className="pt-4 space-y-3">
                 <CheckoutButton
-                  creatorSlug={creatorSlug}
-                  creatorId={creator?.id || ''}
+                  slug={slug}
+                  glowGirlId={glowGirl?.id || ''}
                   accentColor={accentColor}
                 />
               </div>
@@ -227,7 +227,7 @@ export default function QuizPage() {
       <div className="max-w-xl mx-auto">
         <div className="text-center mb-2">
           <p className="text-sm text-muted-foreground">
-            {creator?.brand_name || 'Glow'} Skin Quiz
+            {glowGirl?.brand_name || 'Glow'} Skin Quiz
           </p>
         </div>
 
@@ -284,18 +284,18 @@ export default function QuizPage() {
   )
 }
 
-function CheckoutButton({ creatorSlug, creatorId, accentColor }: { creatorSlug: string; creatorId: string; accentColor: string }) {
+function CheckoutButton({ slug, glowGirlId, accentColor }: { slug: string; glowGirlId: string; accentColor: string }) {
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
 
   async function handleCheckout(mode: 'subscription' | 'payment') {
     setLoading(true)
 
-    // Find first published signature for this creator
+    // Find first published signature for this glow girl
     const { data: signatures } = await supabase
-      .from('creator_signatures')
+      .from('glow_girl_signatures')
       .select('id')
-      .eq('creator_id', creatorId)
+      .eq('glow_girl_id', glowGirlId)
       .eq('publish_status', 'PUBLISHED')
       .limit(1)
 
@@ -305,7 +305,7 @@ function CheckoutButton({ creatorSlug, creatorId, accentColor }: { creatorSlug: 
       return
     }
 
-    trackEvent('add_to_cart', creatorId, signatures[0].id)
+    trackEvent('add_to_cart', glowGirlId, signatures[0].id)
 
     const res = await fetch('/api/stripe/checkout', {
       method: 'POST',
@@ -313,7 +313,7 @@ function CheckoutButton({ creatorSlug, creatorId, accentColor }: { creatorSlug: 
       body: JSON.stringify({
         signatureId: signatures[0].id,
         mode,
-        creatorSlug,
+        slug,
       }),
     })
 

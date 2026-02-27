@@ -43,16 +43,16 @@ export function calculateMonthlyBonus(
 }
 
 /**
- * Calculate new creator bonus (incremental, within 45-day window).
+ * Calculate new Glow Girl bonus (incremental, within 45-day window).
  * Total available is settings.new_creator_bonus_cents.
  * Returns the incremental amount still owed.
  */
-export function calculateNewCreatorBonus(
+export function calculateNewGlowGirlBonus(
   totalEarnedCents: number,
   alreadyPaidBonusCents: number,
   settings: CommissionSettings
 ): number {
-  // New creator bonus matches earnings up to the cap
+  // New Glow Girl bonus matches earnings up to the cap
   const eligible = Math.min(totalEarnedCents, settings.new_creator_bonus_cents)
   const incremental = Math.max(0, eligible - alreadyPaidBonusCents)
   return incremental

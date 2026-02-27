@@ -2,15 +2,15 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { approveCreator } from '@/lib/actions/creator'
+import { approveGlowGirl } from '@/lib/actions/glow-girl'
 
-export function AdminCreatorActions({ creatorId, approved }: { creatorId: string; approved: boolean }) {
+export function AdminGlowGirlActions({ glowGirlId, approved }: { glowGirlId: string; approved: boolean }) {
   const [loading, setLoading] = useState(false)
 
   async function handleToggle() {
     setLoading(true)
     try {
-      await approveCreator(creatorId, !approved)
+      await approveGlowGirl(glowGirlId, !approved)
     } catch (err) {
       console.error(err)
     }

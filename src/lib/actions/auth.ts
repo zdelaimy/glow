@@ -9,7 +9,7 @@ export async function signOut() {
   redirect('/login')
 }
 
-export async function updateRole(userId: string, role: 'ADMIN' | 'CREATOR' | 'CUSTOMER') {
+export async function updateRole(userId: string, role: 'ADMIN' | 'GLOW_GIRL' | 'CUSTOMER') {
   const supabase = await createClient()
 
   // Verify caller is admin

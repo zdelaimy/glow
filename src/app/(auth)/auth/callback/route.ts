@@ -17,7 +17,7 @@ export async function GET(request: Request) {
         const cookieStore = await cookies()
         const refCode = cookieStore.get('glow_ref')?.value
         if (refCode) {
-          // Store referred_by_code on the creator record when they onboard
+          // Store referred_by_code on the glow girl record when they onboard
           // For now, store it as user metadata so onboarding can read it
           await supabase.auth.updateUser({
             data: { referred_by_code: refCode },
@@ -33,8 +33,8 @@ export async function GET(request: Request) {
         if (profile?.role === 'ADMIN') {
           return NextResponse.redirect(`${origin}/admin`)
         }
-        if (profile?.role === 'CREATOR') {
-          return NextResponse.redirect(`${origin}/creator/dashboard`)
+        if (profile?.role === 'GLOW_GIRL') {
+          return NextResponse.redirect(`${origin}/glow-girl/dashboard`)
         }
       }
       return NextResponse.redirect(`${origin}${redirect}`)

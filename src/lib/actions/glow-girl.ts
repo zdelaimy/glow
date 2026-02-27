@@ -1,21 +1,21 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { creatorBrandSchema, creatorSignatureSchema } from '@/lib/validations'
+import { glowGirlBrandSchema, glowGirlSignatureSchema } from '@/lib/validations'
 import { revalidatePath } from 'next/cache'
-import type { CreatorBrandInput, CreatorSignatureInput } from '@/lib/validations'
+import type { GlowGirlBrandInput, GlowGirlSignatureInput } from '@/lib/validations'
 
-export async function createCreatorProfile(input: CreatorBrandInput) {
+export async function createGlowGirlProfile(input: GlowGirlBrandInput) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const parsed = creatorBrandSchema.parse(input)
+  const parsed = glowGirlBrandSchema.parse(input)
 
-  // Update profile role to CREATOR
+  // Update profile role to GLOW_GIRL
   await supabase
     .from('profiles')
-    .update({ role: 'CREATOR' })
+    .update({ role: 'GLOW_GIRL' })
     .eq('id', user.id)
 
   // Generate unique referral code
@@ -25,9 +25,9 @@ export async function createCreatorProfile(input: CreatorBrandInput) {
   // Check for referred_by_code from user metadata (set during auth callback)
   const referredByCode = (user.user_metadata?.referred_by_code as string) || null
 
-  // Create creator record
+  // Create glow girl record
   const { data, error } = await supabase
-    .from('creators')
+    .from('glow_girls')
     .insert({
       user_id: user.id,
       slug: parsed.slug,
@@ -51,7 +51,7 @@ export async function createCreatorProfile(input: CreatorBrandInput) {
   // If referred by someone, create the referral relationship
   if (referredByCode) {
     const { data: referrer } = await supabase
-      .from('creators')
+      .from('glow_girls')
       .select('id')
       .eq('referral_code', referredByCode)
       .single()
@@ -60,7 +60,7 @@ export async function createCreatorProfile(input: CreatorBrandInput) {
       const expiresAt = new Date()
       expiresAt.setMonth(expiresAt.getMonth() + 12)
 
-      await supabase.from('creator_referrals').insert({
+      await supabase.from('glow_girl_referrals').insert({
         referrer_id: referrer.id,
         referred_id: data.id,
         match_expires_at: expiresAt.toISOString(),
@@ -68,36 +68,36 @@ export async function createCreatorProfile(input: CreatorBrandInput) {
     }
   }
 
-  revalidatePath('/creator')
+  revalidatePath('/glow-girl')
   return data
 }
 
-export async function updateCreatorBrand(creatorId: string, input: Partial<CreatorBrandInput> & { logo_url?: string; hero_image_url?: string }) {
+export async function updateGlowGirlBrand(glowGirlId: string, input: Partial<GlowGirlBrandInput> & { logo_url?: string; hero_image_url?: string }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
   const { error } = await supabase
-    .from('creators')
+    .from('glow_girls')
     .update(input)
-    .eq('id', creatorId)
+    .eq('id', glowGirlId)
     .eq('user_id', user.id)
 
   if (error) throw new Error(error.message)
-  revalidatePath('/creator')
+  revalidatePath('/glow-girl')
 }
 
-export async function createSignature(creatorId: string, input: CreatorSignatureInput) {
+export async function createSignature(glowGirlId: string, input: GlowGirlSignatureInput) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const parsed = creatorSignatureSchema.parse(input)
+  const parsed = glowGirlSignatureSchema.parse(input)
 
   const { data, error } = await supabase
-    .from('creator_signatures')
+    .from('glow_girl_signatures')
     .insert({
-      creator_id: creatorId,
+      glow_girl_id: glowGirlId,
       ...parsed,
     })
     .select()
@@ -105,36 +105,36 @@ export async function createSignature(creatorId: string, input: CreatorSignature
 
   if (error) throw new Error(error.message)
 
-  revalidatePath('/creator')
+  revalidatePath('/glow-girl')
   return data
 }
 
-export async function updateSignature(signatureId: string, input: Partial<CreatorSignatureInput> & { publish_status?: string }) {
+export async function updateSignature(signatureId: string, input: Partial<GlowGirlSignatureInput> & { publish_status?: string }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
   // Verify ownership via join
   const { data: sig } = await supabase
-    .from('creator_signatures')
-    .select('creator_id, creators!inner(user_id)')
+    .from('glow_girl_signatures')
+    .select('glow_girl_id, glow_girls!inner(user_id)')
     .eq('id', signatureId)
     .single()
 
-  if (!sig || (sig.creators as unknown as { user_id: string }).user_id !== user.id) {
+  if (!sig || (sig.glow_girls as unknown as { user_id: string }).user_id !== user.id) {
     throw new Error('Not authorized')
   }
 
   const { error } = await supabase
-    .from('creator_signatures')
+    .from('glow_girl_signatures')
     .update(input)
     .eq('id', signatureId)
 
   if (error) throw new Error(error.message)
-  revalidatePath('/creator')
+  revalidatePath('/glow-girl')
 }
 
-export async function approveCreator(creatorId: string, approved: boolean) {
+export async function approveGlowGirl(glowGirlId: string, approved: boolean) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
@@ -148,9 +148,9 @@ export async function approveCreator(creatorId: string, approved: boolean) {
   if (profile?.role !== 'ADMIN') throw new Error('Not authorized')
 
   const { error } = await supabase
-    .from('creators')
+    .from('glow_girls')
     .update({ approved })
-    .eq('id', creatorId)
+    .eq('id', glowGirlId)
 
   if (error) throw new Error(error.message)
   revalidatePath('/admin')

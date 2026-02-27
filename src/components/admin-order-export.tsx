@@ -8,7 +8,7 @@ export function AdminOrderExport() {
     const supabase = createClient()
     const { data: orders } = await supabase
       .from('orders')
-      .select('*, creator:creators(brand_name)')
+      .select('*, glow_girl:glow_girls(brand_name)')
       .order('created_at', { ascending: false })
 
     if (!orders || orders.length === 0) {
@@ -16,15 +16,15 @@ export function AdminOrderExport() {
       return
     }
 
-    const header = 'ID,Date,Customer,Creator,Amount,Status,Subscription,Blend\n'
+    const header = 'ID,Date,Customer,Glow Girl,Amount,Status,Subscription,Blend\n'
     const rows = orders.map(o => {
-      const creator = o.creator as unknown as { brand_name: string } | null
+      const glowGirl = o.glow_girl as unknown as { brand_name: string } | null
       const blend = o.blend_components as Record<string, string>
       return [
         o.id,
         new Date(o.created_at).toISOString(),
         o.shipping_name || '',
-        creator?.brand_name || '',
+        glowGirl?.brand_name || '',
         (o.amount_cents / 100).toFixed(2),
         o.status,
         o.is_subscription ? 'Yes' : 'No',

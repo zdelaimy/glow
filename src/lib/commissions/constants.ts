@@ -5,7 +5,7 @@ export const REWARD_TIERS: { tier: RewardTier; minPoints: number; label: string;
   { tier: 'OPAL', minPoints: 5000, label: 'Opal', description: 'Branded merch pack + early access to new launches' },
   { tier: 'ROSE_QUARTZ', minPoints: 15000, label: 'Rose Quartz', description: 'Annual serum supply + VIP community access' },
   { tier: 'AMETHYST', minPoints: 35000, label: 'Amethyst', description: 'Spa retreat weekend + custom packaging designs' },
-  { tier: 'SAPPHIRE', minPoints: 75000, label: 'Sapphire', description: 'All-expenses-paid creator summit + 1-on-1 mentorship' },
+  { tier: 'SAPPHIRE', minPoints: 75000, label: 'Sapphire', description: 'All-expenses-paid Glow Girl summit + 1-on-1 mentorship' },
   { tier: 'DIAMOND', minPoints: 150000, label: 'Diamond', description: 'Luxury trip for two + co-branded product line' },
 ]
 

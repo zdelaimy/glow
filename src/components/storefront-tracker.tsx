@@ -3,9 +3,9 @@
 import { useEffect } from 'react'
 import { trackEvent } from '@/lib/actions/events'
 
-export function StorefrontTracker({ creatorId }: { creatorId: string }) {
+export function StorefrontTracker({ glowGirlId }: { glowGirlId: string }) {
   useEffect(() => {
-    trackEvent('storefront_view', creatorId)
-  }, [creatorId])
+    trackEvent('storefront_view', glowGirlId)
+  }, [glowGirlId])
   return null
 }

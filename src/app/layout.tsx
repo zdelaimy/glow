@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import localFont from "next/font/local"
+import { Instrument_Serif } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 
@@ -13,10 +14,16 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 })
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-instrument-serif",
+})
 
 export const metadata: Metadata = {
-  title: "Glow — Custom Serums by Creators",
-  description: "Discover your perfect custom serum, designed by your favorite creators.",
+  title: "Glow — Custom Serums by Glow Girls",
+  description: "Discover your perfect custom serum, designed by your favorite Glow Girls.",
 }
 
 export default function RootLayout({
@@ -26,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { createCreatorProfile, updateCreatorBrand } from '@/lib/actions/creator'
+import { createGlowGirlProfile, updateGlowGirlBrand } from '@/lib/actions/glow-girl'
 import { createClient } from '@/lib/supabase/client'
 
 const LABEL_TEMPLATES = [
@@ -24,7 +24,7 @@ const ACCENT_COLORS = [
 
 const STEPS = ['Brand', 'Story', 'Style', 'Preview']
 
-export default function CreatorOnboarding() {
+export default function GlowGirlOnboarding() {
   const router = useRouter()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -48,7 +48,7 @@ export default function CreatorOnboarding() {
     setLoading(true)
     setError(null)
     try {
-      const creator = await createCreatorProfile({
+      const glowGirl = await createGlowGirlProfile({
         brand_name: brandName,
         slug,
         hero_headline: heroHeadline,
@@ -64,7 +64,7 @@ export default function CreatorOnboarding() {
 
       if (logoFile) {
         const ext = logoFile.name.split('.').pop()
-        const path = `creators/${creator.id}/logo.${ext}`
+        const path = `glow-girls/${glowGirl.id}/logo.${ext}`
         const { error: uploadErr } = await supabase.storage.from('brand-assets').upload(path, logoFile, { upsert: true })
         if (!uploadErr) {
           const { data } = supabase.storage.from('brand-assets').getPublicUrl(path)
@@ -74,7 +74,7 @@ export default function CreatorOnboarding() {
 
       if (heroFile) {
         const ext = heroFile.name.split('.').pop()
-        const path = `creators/${creator.id}/hero.${ext}`
+        const path = `glow-girls/${glowGirl.id}/hero.${ext}`
         const { error: uploadErr } = await supabase.storage.from('brand-assets').upload(path, heroFile, { upsert: true })
         if (!uploadErr) {
           const { data } = supabase.storage.from('brand-assets').getPublicUrl(path)
@@ -83,10 +83,10 @@ export default function CreatorOnboarding() {
       }
 
       if (Object.keys(updates).length > 0) {
-        await updateCreatorBrand(creator.id, updates)
+        await updateGlowGirlBrand(glowGirl.id, updates)
       }
 
-      router.push('/creator/dashboard')
+      router.push('/glow-girl/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     }
@@ -100,7 +100,7 @@ export default function CreatorOnboarding() {
           <h1 className="text-3xl font-light tracking-tight">
             Create your <span className="font-semibold">brand</span>
           </h1>
-          <p className="text-muted-foreground mt-2">Set up your creator storefront in a few steps.</p>
+          <p className="text-muted-foreground mt-2">Set up your Glow Girl storefront in a few steps.</p>
         </div>
 
         <div className="mb-8">

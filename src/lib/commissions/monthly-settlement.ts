@@ -1,5 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js'
-import { calculateMonthlyBonus, calculateNewCreatorBonus } from './calculate'
+import { calculateMonthlyBonus, calculateNewGlowGirlBonus } from './calculate'
 import type { CommissionSettings, MonthlyBonusTier } from '@/types/database'
 
 /**
@@ -23,14 +23,14 @@ export async function runMonthlySettlement(supabase: SupabaseClient, period: str
     return
   }
 
-  // Get all creators who have approved commissions for this period
+  // Get all glow girls who have approved commissions for this period
   const { data: commissionSums } = await supabase
-    .rpc('aggregate_commissions_by_creator', { target_period: period })
+    .rpc('aggregate_commissions_by_glow_girl', { target_period: period })
 
   // Fallback: manual aggregation if RPC doesn't exist
-  const creatorTotals = commissionSums || await getCreatorCommissionTotals(supabase, period)
+  const glowGirlTotals = commissionSums || await getGlowGirlCommissionTotals(supabase, period)
 
-  for (const { creator_id, total_cents } of creatorTotals) {
+  for (const { glow_girl_id, total_cents } of glowGirlTotals) {
     // Calculate monthly bonus tier
     const { bonusCents, tierLabel } = calculateMonthlyBonus(
       total_cents,
@@ -39,7 +39,7 @@ export async function runMonthlySettlement(supabase: SupabaseClient, period: str
 
     if (bonusCents > 0) {
       await supabase.from('bonuses').insert({
-        creator_id,
+        glow_girl_id,
         bonus_type: 'MONTHLY_TIER',
         amount_cents: bonusCents,
         period,
@@ -47,34 +47,34 @@ export async function runMonthlySettlement(supabase: SupabaseClient, period: str
       })
     }
 
-    // Check new creator bonus eligibility (within 45-day window)
-    const { data: creator } = await supabase
-      .from('creators')
+    // Check new glow girl bonus eligibility (within 45-day window)
+    const { data: glowGirl } = await supabase
+      .from('glow_girls')
       .select('created_at')
-      .eq('id', creator_id)
+      .eq('id', glow_girl_id)
       .single()
 
-    if (creator) {
-      const createdAt = new Date(creator.created_at)
+    if (glowGirl) {
+      const createdAt = new Date(glowGirl.created_at)
       const windowEnd = new Date(createdAt)
       windowEnd.setDate(windowEnd.getDate() + (settings as CommissionSettings).new_creator_bonus_window_days)
 
       if (new Date() <= windowEnd) {
-        // Get total already-paid new creator bonuses
+        // Get total already-paid new glow girl bonuses
         const { data: existingBonuses } = await supabase
           .from('bonuses')
           .select('amount_cents')
-          .eq('creator_id', creator_id)
-          .eq('bonus_type', 'NEW_CREATOR')
+          .eq('glow_girl_id', glow_girl_id)
+          .eq('bonus_type', 'NEW_GLOW_GIRL')
 
         const alreadyPaid = (existingBonuses || []).reduce((s, b) => s + b.amount_cents, 0)
-        const newCreatorBonus = calculateNewCreatorBonus(total_cents, alreadyPaid, settings as CommissionSettings)
+        const newGlowGirlBonus = calculateNewGlowGirlBonus(total_cents, alreadyPaid, settings as CommissionSettings)
 
-        if (newCreatorBonus > 0) {
+        if (newGlowGirlBonus > 0) {
           await supabase.from('bonuses').insert({
-            creator_id,
-            bonus_type: 'NEW_CREATOR',
-            amount_cents: newCreatorBonus,
+            glow_girl_id,
+            bonus_type: 'NEW_GLOW_GIRL',
+            amount_cents: newGlowGirlBonus,
             period,
           })
         }
@@ -85,30 +85,30 @@ export async function runMonthlySettlement(supabase: SupabaseClient, period: str
     const { data: periodBonuses } = await supabase
       .from('bonuses')
       .select('amount_cents')
-      .eq('creator_id', creator_id)
+      .eq('glow_girl_id', glow_girl_id)
       .eq('period', period)
 
     const bonusTotal = (periodBonuses || []).reduce((s, b) => s + b.amount_cents, 0)
 
     // Create or update payout record
     await supabase.from('payouts').upsert({
-      creator_id,
+      glow_girl_id,
       period,
       commission_total_cents: total_cents,
       bonus_total_cents: bonusTotal,
       total_cents: total_cents + bonusTotal,
       status: 'PENDING',
-    }, { onConflict: 'creator_id,period' })
+    }, { onConflict: 'glow_girl_id,period' })
   }
 }
 
-async function getCreatorCommissionTotals(
+async function getGlowGirlCommissionTotals(
   supabase: SupabaseClient,
   period: string
-): Promise<{ creator_id: string; total_cents: number }[]> {
+): Promise<{ glow_girl_id: string; total_cents: number }[]> {
   const { data: commissions } = await supabase
     .from('commissions')
-    .select('creator_id, amount_cents')
+    .select('glow_girl_id, amount_cents')
     .eq('period', period)
     .eq('status', 'APPROVED')
 
@@ -116,11 +116,11 @@ async function getCreatorCommissionTotals(
 
   const totals = new Map<string, number>()
   for (const c of commissions) {
-    totals.set(c.creator_id, (totals.get(c.creator_id) || 0) + c.amount_cents)
+    totals.set(c.glow_girl_id, (totals.get(c.glow_girl_id) || 0) + c.amount_cents)
   }
 
-  return Array.from(totals.entries()).map(([creator_id, total_cents]) => ({
-    creator_id,
+  return Array.from(totals.entries()).map(([glow_girl_id, total_cents]) => ({
+    glow_girl_id,
     total_cents,
   }))
 }

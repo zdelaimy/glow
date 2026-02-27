@@ -1,12 +1,12 @@
 'use server'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { requireCreator, requireAdmin } from '@/lib/auth'
+import { requireGlowGirl, requireAdmin } from '@/lib/auth'
 
-// ─── Creator-facing actions ───
+// ─── Glow Girl-facing actions ───
 
 export async function getMyEarningsSummary() {
-  const { creator } = await requireCreator()
+  const { glowGirl } = await requireGlowGirl()
   const supabase = await createClient()
 
   const currentPeriod = new Date().toISOString().slice(0, 7)
@@ -15,7 +15,7 @@ export async function getMyEarningsSummary() {
   const { data: monthCommissions } = await supabase
     .from('commissions')
     .select('amount_cents, status')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('period', currentPeriod)
 
   const monthTotal = (monthCommissions || [])
@@ -30,7 +30,7 @@ export async function getMyEarningsSummary() {
   const { data: monthBonuses } = await supabase
     .from('bonuses')
     .select('amount_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('period', currentPeriod)
 
   const bonusTotal = (monthBonuses || []).reduce((s, b) => s + b.amount_cents, 0)
@@ -39,13 +39,13 @@ export async function getMyEarningsSummary() {
   const { data: allCommissions } = await supabase
     .from('commissions')
     .select('amount_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .in('status', ['APPROVED', 'PAID'])
 
   const { data: allBonuses } = await supabase
     .from('bonuses')
     .select('amount_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
 
   const lifetimeCommissions = (allCommissions || []).reduce((s, c) => s + c.amount_cents, 0)
   const lifetimeBonuses = (allBonuses || []).reduce((s, b) => s + b.amount_cents, 0)
@@ -54,7 +54,7 @@ export async function getMyEarningsSummary() {
   const { data: pendingPayout } = await supabase
     .from('payouts')
     .select('total_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('status', 'PENDING')
 
   const pendingPayoutTotal = (pendingPayout || []).reduce((s, p) => s + p.total_cents, 0)
@@ -72,13 +72,13 @@ export async function getMyEarningsSummary() {
 }
 
 export async function getMyCommissions(period?: string) {
-  const { creator } = await requireCreator()
+  const { glowGirl } = await requireGlowGirl()
   const supabase = await createClient()
 
   let query = supabase
     .from('commissions')
     .select('*, order:orders(amount_cents, created_at, shipping_name)')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .order('created_at', { ascending: false })
 
   if (period) {
@@ -90,25 +90,25 @@ export async function getMyCommissions(period?: string) {
 }
 
 export async function getMyRewardPoints() {
-  const { creator } = await requireCreator()
+  const { glowGirl } = await requireGlowGirl()
   const supabase = await createClient()
 
   const { data: balance } = await supabase
     .from('reward_points_balance')
     .select('total_points')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .single()
 
   const { data: milestones } = await supabase
     .from('reward_milestones')
     .select('*')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .order('created_at', { ascending: false })
 
   const { data: recentActivity } = await supabase
     .from('reward_points_ledger')
     .select('*')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .order('created_at', { ascending: false })
     .limit(20)
 
@@ -120,22 +120,22 @@ export async function getMyRewardPoints() {
 }
 
 export async function getMyReferrals() {
-  const { creator } = await requireCreator()
+  const { glowGirl } = await requireGlowGirl()
   const supabase = await createClient()
 
   const currentPeriod = new Date().toISOString().slice(0, 7)
 
   const { data: referrals } = await supabase
-    .from('creator_referrals')
-    .select('*, referred:creators!creator_referrals_referred_id_fkey(id, brand_name, created_at, approved)')
-    .eq('referrer_id', creator.id)
+    .from('glow_girl_referrals')
+    .select('*, referred:glow_girls!glow_girl_referrals_referred_id_fkey(id, brand_name, created_at, approved)')
+    .eq('referrer_id', glowGirl.id)
     .order('created_at', { ascending: false })
 
   // Referral earnings this month
   const { data: refEarnings } = await supabase
     .from('commissions')
     .select('amount_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('commission_type', 'REFERRAL_MATCH')
     .eq('period', currentPeriod)
     .in('status', ['PENDING', 'APPROVED', 'PAID'])
@@ -143,7 +143,7 @@ export async function getMyReferrals() {
   const monthlyRefEarnings = (refEarnings || []).reduce((s, c) => s + c.amount_cents, 0)
 
   return {
-    referralCode: creator.referral_code,
+    referralCode: glowGirl.referral_code,
     referrals: referrals || [],
     totalReferred: (referrals || []).length,
     activeReferred: (referrals || []).filter(r => {
@@ -162,18 +162,18 @@ export async function getCommissionOverview(period: string) {
 
   const { data: commissions } = await supabase
     .from('commissions')
-    .select('*, creator:creators(brand_name)')
+    .select('*, glow_girl:glow_girls(brand_name)')
     .eq('period', period)
     .order('created_at', { ascending: false })
 
   const { data: bonuses } = await supabase
     .from('bonuses')
-    .select('*, creator:creators(brand_name)')
+    .select('*, glow_girl:glow_girls(brand_name)')
     .eq('period', period)
 
   const { data: payouts } = await supabase
     .from('payouts')
-    .select('*, creator:creators(brand_name)')
+    .select('*, glow_girl:glow_girls(brand_name)')
     .eq('period', period)
 
   return { commissions: commissions || [], bonuses: bonuses || [], payouts: payouts || [] }

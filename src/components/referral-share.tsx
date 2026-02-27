@@ -11,7 +11,7 @@ export function ReferralShare({ referralCode }: { referralCode: string | null })
 
   if (!referralCode) return null
 
-  const referralLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/creators?ref=${referralCode}`
+  const referralLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/glow-girls?ref=${referralCode}`
 
   function copyToClipboard(text: string, type: 'link' | 'code') {
     navigator.clipboard.writeText(text)

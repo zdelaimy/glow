@@ -8,14 +8,14 @@ import { trackEvent } from '@/lib/actions/events'
 
 interface Props {
   signatureId: string
-  creatorSlug: string
-  creatorId: string
+  slug: string
+  glowGirlId: string
   subscriptionPrice: number
   oneTimePrice: number
   accentColor: string
 }
 
-export function ProductCheckout({ signatureId, creatorSlug, creatorId, subscriptionPrice, oneTimePrice, accentColor }: Props) {
+export function ProductCheckout({ signatureId, slug, glowGirlId, subscriptionPrice, oneTimePrice, accentColor }: Props) {
   const [isSubscription, setIsSubscription] = useState(true)
   const [loading, setLoading] = useState(false)
 
@@ -23,7 +23,7 @@ export function ProductCheckout({ signatureId, creatorSlug, creatorId, subscript
 
   async function handleCheckout() {
     setLoading(true)
-    trackEvent('add_to_cart', creatorId, signatureId)
+    trackEvent('add_to_cart', glowGirlId, signatureId)
 
     const res = await fetch('/api/stripe/checkout', {
       method: 'POST',
@@ -31,7 +31,7 @@ export function ProductCheckout({ signatureId, creatorSlug, creatorId, subscript
       body: JSON.stringify({
         signatureId,
         mode: isSubscription ? 'subscription' : 'payment',
-        creatorSlug,
+        slug,
       }),
     })
 

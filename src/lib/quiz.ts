@@ -154,7 +154,7 @@ export function computeBlend(
   scents: Scent[],
   baseBoosterCompat: CompatibilityBaseBooster[],
   boosterPairCompat: CompatibilityBoosterPair[],
-  creatorBrandName?: string
+  brandName?: string
 ): BlendResult {
   const scores = computeScores(answers)
   const ranked = rankNeeds(scores)
@@ -204,7 +204,7 @@ export function computeBlend(
   const scent = scents.find(s => s.slug === scentSlug) || null
 
   // Generate blend name
-  const prefix = creatorBrandName || 'Glow'
+  const prefix = brandName || 'Glow'
   const blendName = `${prefix} ${primaryBooster.name}${secondaryBooster ? ` + ${secondaryBooster.name}` : ''} Serum`
 
   // Generate benefit bullets (cosmetic language only)

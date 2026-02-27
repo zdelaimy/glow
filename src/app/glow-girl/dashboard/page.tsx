@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { requireCreator } from '@/lib/auth'
+import { requireGlowGirl } from '@/lib/auth'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,44 +10,46 @@ import { SignOutButton } from '@/components/sign-out-button'
 import { ReferralShare } from '@/components/referral-share'
 import { TierProgressBar } from '@/components/tier-progress-bar'
 import { getRewardTier } from '@/lib/commissions/calculate'
+import { PodDashboard } from '@/components/pod-dashboard'
+import { getMyPod, getPodStats } from '@/lib/actions/pods'
 import type { MonthlyBonusTier, RewardTier } from '@/types/database'
 
-export default async function CreatorDashboard() {
-  const { creator } = await requireCreator()
+export default async function GlowGirlDashboard() {
+  const { glowGirl } = await requireGlowGirl()
   const supabase = await createClient()
   const currentPeriod = new Date().toISOString().slice(0, 7)
 
   // Fetch signatures
   const { data: signatures } = await supabase
-    .from('creator_signatures')
-    .select('*, base:base_formulas(name), booster_primary:boosters!creator_signatures_booster_primary_id_fkey(name)')
-    .eq('creator_id', creator.id)
+    .from('glow_girl_signatures')
+    .select('*, base:base_formulas(name), booster_primary:boosters!glow_girl_signatures_booster_primary_id_fkey(name)')
+    .eq('glow_girl_id', glowGirl.id)
     .order('created_at', { ascending: false })
 
   // Fetch analytics
   const { count: viewCount } = await supabase
     .from('events')
     .select('*', { count: 'exact', head: true })
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('event_type', 'storefront_view')
 
   const { count: quizCount } = await supabase
     .from('events')
     .select('*', { count: 'exact', head: true })
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('event_type', 'quiz_complete')
 
   const { count: purchaseCount } = await supabase
     .from('events')
     .select('*', { count: 'exact', head: true })
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('event_type', 'purchase')
 
   // Fetch orders for revenue
   const { data: orders } = await supabase
     .from('orders')
     .select('amount_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('status', 'paid')
 
   const totalRevenue = (orders || []).reduce((sum, o) => sum + o.amount_cents, 0)
@@ -57,7 +59,7 @@ export default async function CreatorDashboard() {
   const { data: monthCommissions } = await supabase
     .from('commissions')
     .select('*')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('period', currentPeriod)
     .order('created_at', { ascending: false })
 
@@ -68,7 +70,7 @@ export default async function CreatorDashboard() {
   const { data: monthBonuses } = await supabase
     .from('bonuses')
     .select('amount_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('period', currentPeriod)
 
   const monthBonusTotal = (monthBonuses || []).reduce((s, b) => s + b.amount_cents, 0)
@@ -76,13 +78,13 @@ export default async function CreatorDashboard() {
   const { data: allCommissions } = await supabase
     .from('commissions')
     .select('amount_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .in('status', ['APPROVED', 'PAID'])
 
   const { data: allBonuses } = await supabase
     .from('bonuses')
     .select('amount_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
 
   const lifetimeTotal = (allCommissions || []).reduce((s, c) => s + c.amount_cents, 0) +
     (allBonuses || []).reduce((s, b) => s + b.amount_cents, 0)
@@ -90,7 +92,7 @@ export default async function CreatorDashboard() {
   const { data: pendingPayouts } = await supabase
     .from('payouts')
     .select('total_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('status', 'PENDING')
 
   const pendingPayoutTotal = (pendingPayouts || []).reduce((s, p) => s + p.total_cents, 0)
@@ -118,15 +120,15 @@ export default async function CreatorDashboard() {
 
   // Referral data
   const { data: referrals } = await supabase
-    .from('creator_referrals')
-    .select('*, referred:creators!creator_referrals_referred_id_fkey(id, brand_name, created_at, approved)')
-    .eq('referrer_id', creator.id)
+    .from('glow_girl_referrals')
+    .select('*, referred:glow_girls!glow_girl_referrals_referred_id_fkey(id, brand_name, created_at, approved)')
+    .eq('referrer_id', glowGirl.id)
     .order('created_at', { ascending: false })
 
   const { data: refEarnings } = await supabase
     .from('commissions')
     .select('amount_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .eq('commission_type', 'REFERRAL_MATCH')
     .eq('period', currentPeriod)
 
@@ -136,7 +138,7 @@ export default async function CreatorDashboard() {
   const { data: pointsBalance } = await supabase
     .from('reward_points_balance')
     .select('total_points')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .single()
 
   const totalPoints = pointsBalance?.total_points || 0
@@ -145,13 +147,13 @@ export default async function CreatorDashboard() {
   const { data: milestones } = await supabase
     .from('reward_milestones')
     .select('*')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .order('created_at', { ascending: false })
 
   const { data: recentPointsActivity } = await supabase
     .from('reward_points_ledger')
     .select('*')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .order('created_at', { ascending: false })
     .limit(20)
 
@@ -166,9 +168,21 @@ export default async function CreatorDashboard() {
   const { data: trendCommissions } = await supabase
     .from('commissions')
     .select('period, amount_cents')
-    .eq('creator_id', creator.id)
+    .eq('glow_girl_id', glowGirl.id)
     .in('period', months)
     .in('status', ['PENDING', 'APPROVED', 'PAID'])
+
+  // Pod data
+  let podData = null
+  let podStats = null
+  try {
+    podData = await getMyPod()
+    if (podData) {
+      podStats = await getPodStats(podData.pod.id)
+    }
+  } catch {
+    // Pod queries may fail if tables don't exist yet
+  }
 
   const trendData = months.map(m => {
     const total = (trendCommissions || [])
@@ -189,12 +203,12 @@ export default async function CreatorDashboard() {
               </div>
             </Link>
             <div>
-              <h1 className="font-semibold">{creator.brand_name}</h1>
-              <p className="text-sm text-muted-foreground">Creator Dashboard</p>
+              <h1 className="font-semibold">{glowGirl.brand_name}</h1>
+              <p className="text-sm text-muted-foreground">Glow Girl Dashboard</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link href={`/@${creator.slug}`} target="_blank">
+            <Link href={`/@${glowGirl.slug}`} target="_blank">
               <Button variant="outline" size="sm">View Storefront</Button>
             </Link>
             <SignOutButton />
@@ -203,9 +217,9 @@ export default async function CreatorDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {!creator.approved && (
+        {!glowGirl.approved && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 mb-6">
-            Your creator account is pending approval. Your storefront will be visible once approved.
+            Your Glow Girl account is pending approval. Your storefront will be visible once approved.
           </div>
         )}
 
@@ -215,6 +229,7 @@ export default async function CreatorDashboard() {
             <TabsTrigger value="earnings">Earnings</TabsTrigger>
             <TabsTrigger value="referrals">Referrals</TabsTrigger>
             <TabsTrigger value="rewards">Rewards</TabsTrigger>
+            <TabsTrigger value="pod">Pod</TabsTrigger>
           </TabsList>
 
           {/* ─── Overview Tab ─── */}
@@ -238,7 +253,7 @@ export default async function CreatorDashboard() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Your Serums</h2>
-                <Link href="/creator/signature">
+                <Link href="/glow-girl/signature">
                   <Button className="bg-gradient-to-r from-violet-600 to-violet-500">
                     Create New Serum
                   </Button>
@@ -249,7 +264,7 @@ export default async function CreatorDashboard() {
                 <Card>
                   <CardContent className="py-12 text-center">
                     <p className="text-muted-foreground mb-4">You haven&apos;t created any serums yet.</p>
-                    <Link href="/creator/signature">
+                    <Link href="/glow-girl/signature">
                       <Button>Create your first signature serum</Button>
                     </Link>
                   </CardContent>
@@ -274,7 +289,7 @@ export default async function CreatorDashboard() {
                             ${(sig.subscription_price_cents / 100).toFixed(2)}/mo &middot; ${(sig.one_time_price_cents / 100).toFixed(2)} one-time
                           </p>
                         </div>
-                        <Link href={`/@${creator.slug}/product/${sig.slug}`} className="block mt-3">
+                        <Link href={`/@${glowGirl.slug}/product/${sig.slug}`} className="block mt-3">
                           <Button variant="outline" size="sm" className="w-full">View Product</Button>
                         </Link>
                       </CardContent>
@@ -286,7 +301,7 @@ export default async function CreatorDashboard() {
 
             <div>
               <h2 className="text-xl font-semibold mb-4">Recent Orders</h2>
-              <OrdersList creatorId={creator.id} />
+              <OrdersList glowGirlId={glowGirl.id} />
             </div>
           </TabsContent>
 
@@ -362,7 +377,7 @@ export default async function CreatorDashboard() {
                       <div key={c.id} className="py-3 flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium">
-                            {c.commission_type === 'PERSONAL' ? 'Personal Sale' : 'Referral Match'}
+                            {c.commission_type === 'PERSONAL' ? 'Personal Sale' : c.commission_type === 'POD_OVERRIDE' ? 'Pod Override' : 'Referral Match'}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(c.created_at).toLocaleDateString()}
@@ -407,11 +422,11 @@ export default async function CreatorDashboard() {
               </Card>
             </div>
 
-            <ReferralShare referralCode={creator.referral_code} />
+            <ReferralShare referralCode={glowGirl.referral_code} />
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Referred Creators</CardTitle>
+                <CardTitle className="text-lg">Referred Glow Girls</CardTitle>
               </CardHeader>
               <CardContent>
                 {(!referrals || referrals.length === 0) ? (
@@ -440,6 +455,11 @@ export default async function CreatorDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ─── Pod Tab ─── */}
+          <TabsContent value="pod">
+            <PodDashboard podData={podData} podStats={podStats} />
           </TabsContent>
 
           {/* ─── Rewards Tab ─── */}
@@ -481,12 +501,12 @@ export default async function CreatorDashboard() {
   )
 }
 
-async function OrdersList({ creatorId }: { creatorId: string }) {
+async function OrdersList({ glowGirlId }: { glowGirlId: string }) {
   const supabase = await createClient()
   const { data: orders } = await supabase
     .from('orders')
     .select('*')
-    .eq('creator_id', creatorId)
+    .eq('glow_girl_id', glowGirlId)
     .order('created_at', { ascending: false })
     .limit(10)
 

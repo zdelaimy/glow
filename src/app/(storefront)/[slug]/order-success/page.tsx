@@ -3,12 +3,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface Props {
-  params: Promise<{ creatorSlug: string }>
+  params: Promise<{ slug: string }>
 }
 
 export default async function OrderSuccess({ params }: Props) {
-  const { creatorSlug } = await params
-  const slug = creatorSlug.replace(/^@/, '')
+  const { slug: rawSlug } = await params
+  const slug = rawSlug.replace(/^@/, '')
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 via-white to-rose-50 px-4">

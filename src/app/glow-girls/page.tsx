@@ -8,7 +8,7 @@ import { EarningsCalculator } from '@/components/earnings-calculator'
 import { REWARD_TIERS } from '@/lib/commissions/constants'
 import type { MonthlyBonusTier, CommissionSettings } from '@/types/database'
 
-export default async function CreatorsOpportunityPage({
+export default async function GlowGirlsOpportunityPage({
   searchParams,
 }: {
   searchParams: Promise<{ ref?: string }>
@@ -66,7 +66,7 @@ export default async function CreatorsOpportunityPage({
       <main className="max-w-7xl mx-auto px-6">
         {/* Hero */}
         <section className="py-20 md:py-28 text-center max-w-3xl mx-auto">
-          <Badge variant="secondary" className="mb-6">Creator Opportunity</Badge>
+          <Badge variant="secondary" className="mb-6">Glow Girl Opportunity</Badge>
           <h1 className="text-4xl md:text-6xl font-light tracking-tight leading-[1.1] mb-6">
             Your glow.{' '}
             <span className="font-semibold bg-gradient-to-r from-violet-600 to-rose-500 bg-clip-text text-transparent">
@@ -101,13 +101,13 @@ export default async function CreatorsOpportunityPage({
               {
                 title: 'Refer',
                 subtitle: '10% referral match',
-                desc: 'Invite other creators. Earn a percentage match on their commissions for 12 months.',
+                desc: 'Invite other Glow Girls. Earn a percentage match on their commissions for 12 months.',
                 color: 'from-rose-400 to-rose-500',
               },
               {
-                title: 'Mentor',
-                subtitle: 'Coming Soon',
-                desc: 'Build and lead a team of creators. Unlock leadership bonuses and exclusive perks.',
+                title: 'Pod Override',
+                subtitle: '5% override',
+                desc: 'Build your pod. Earn a 5% override on every sale from your pod members.',
                 color: 'from-amber-400 to-amber-500',
               },
             ].map((stream) => (
@@ -181,10 +181,10 @@ export default async function CreatorsOpportunityPage({
           )}
         </section>
 
-        {/* 2026 Creator Rewards */}
+        {/* 2026 Glow Girl Rewards */}
         <section className="py-16">
           <h2 className="text-3xl font-light tracking-tight text-center mb-4">
-            2026 <span className="font-semibold">Creator Rewards</span>
+            2026 <span className="font-semibold">Glow Girl Rewards</span>
           </h2>
           <p className="text-center text-muted-foreground mb-10 max-w-lg mx-auto">
             Earn points on every sale. Unlock exclusive rewards as you grow.
@@ -217,11 +217,11 @@ export default async function CreatorsOpportunityPage({
             Start your <span className="font-semibold">glow business</span>
           </h2>
           <p className="text-muted-foreground mb-8">
-            Join creators building the future of personalized skincare. No inventory, no minimums, no risk.
+            Join Glow Girls building the future of personalized skincare. No inventory, no minimums, no risk.
           </p>
           <Link href="/login">
             <Button size="lg" className="h-12 px-10 text-base bg-gradient-to-r from-violet-600 to-violet-500">
-              Become a Creator
+              Become a Glow Girl
             </Button>
           </Link>
         </section>

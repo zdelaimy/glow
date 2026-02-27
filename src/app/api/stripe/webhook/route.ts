@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       const orderData = {
         stripe_checkout_session_id: session.id,
         stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : null,
-        creator_id: meta.creator_id,
+        glow_girl_id: meta.glow_girl_id,
         signature_id: meta.signature_id,
         status: 'paid',
         is_subscription: meta.is_subscription === 'true',
@@ -48,14 +48,14 @@ export async function POST(request: NextRequest) {
       // Track purchase event
       await supabase.from('events').insert({
         event_type: 'purchase',
-        creator_id: meta.creator_id,
+        glow_girl_id: meta.glow_girl_id,
         signature_id: meta.signature_id,
         metadata: { amount_cents: session.amount_total },
       })
 
       // Process commissions and points
-      if (order && meta.creator_id && session.amount_total) {
-        await processOrderCommission(supabase, order.id, meta.creator_id, session.amount_total)
+      if (order && meta.glow_girl_id && session.amount_total) {
+        await processOrderCommission(supabase, order.id, meta.glow_girl_id, session.amount_total)
       }
 
       // If subscription, create subscription record
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
           current_period_start: number; current_period_end: number;
         }
         await supabase.from('subscriptions').insert({
-          creator_id: meta.creator_id,
+          glow_girl_id: meta.glow_girl_id,
           signature_id: meta.signature_id,
           stripe_subscription_id: sub.id,
           stripe_customer_id: typeof sub.customer === 'string' ? sub.customer : sub.customer.id,
@@ -111,13 +111,13 @@ export async function POST(request: NextRequest) {
       if (invoice.billing_reason === 'subscription_cycle' && invoice.subscription) {
         const { data: sub } = await supabase
           .from('subscriptions')
-          .select('creator_id, signature_id')
+          .select('glow_girl_id, signature_id')
           .eq('stripe_subscription_id', invoice.subscription)
           .single()
 
         if (sub && invoice.amount_paid) {
           const { data: order } = await supabase.from('orders').insert({
-            creator_id: sub.creator_id,
+            glow_girl_id: sub.glow_girl_id,
             signature_id: sub.signature_id,
             stripe_payment_intent_id: invoice.payment_intent || null,
             status: 'paid',
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
           }).select('id').single()
 
           if (order) {
-            await processOrderCommission(supabase, order.id, sub.creator_id, invoice.amount_paid)
+            await processOrderCommission(supabase, order.id, sub.glow_girl_id, invoice.amount_paid)
           }
         }
       }

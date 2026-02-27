@@ -5,17 +5,17 @@ import { createClient } from '@/lib/supabase/server'
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-    const { signatureId, mode, creatorSlug } = await request.json()
+    const { signatureId, mode, slug } = await request.json()
 
     // Fetch signature with relations
     const { data: signature } = await supabase
-      .from('creator_signatures')
+      .from('glow_girl_signatures')
       .select(`
         *,
         base:base_formulas(*),
-        booster_primary:boosters!creator_signatures_booster_primary_id_fkey(*),
-        booster_secondary:boosters!creator_signatures_booster_secondary_id_fkey(*),
-        creator:creators(*)
+        booster_primary:boosters!glow_girl_signatures_booster_primary_id_fkey(*),
+        booster_secondary:boosters!glow_girl_signatures_booster_secondary_id_fkey(*),
+        glow_girl:glow_girls(*)
       `)
       .eq('id', signatureId)
       .single()
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       ? signature.subscription_price_cents
       : signature.one_time_price_cents
 
-    const creator = signature.creator as { slug: string; brand_name: string }
+    const glowGirl = signature.glow_girl as { slug: string; brand_name: string }
 
     const session = await stripe.checkout.sessions.create({
       mode: isSubscription ? 'subscription' : 'payment',
@@ -39,10 +39,10 @@ export async function POST(request: NextRequest) {
             currency: 'usd',
             product_data: {
               name: signature.signature_name,
-              description: `Custom serum by ${creator.brand_name}`,
+              description: `Custom serum by ${glowGirl.brand_name}`,
               metadata: {
                 signature_id: signature.id,
-                creator_id: signature.creator_id,
+                glow_girl_id: signature.glow_girl_id,
               },
             },
             unit_amount: priceCents,
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       },
       metadata: {
         signature_id: signature.id,
-        creator_id: signature.creator_id,
+        glow_girl_id: signature.glow_girl_id,
         is_subscription: String(isSubscription),
         blend_components: JSON.stringify({
           base: (signature.base as { name: string })?.name,
@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
           booster_secondary: (signature.booster_secondary as { name: string } | null)?.name,
         }),
       },
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/@${creatorSlug}/order-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/@${creatorSlug}`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/@${slug}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/@${slug}`,
     })
 
     return NextResponse.json({ url: session.url })

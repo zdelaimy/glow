@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'CREATOR' | 'CUSTOMER'
+export type UserRole = 'ADMIN' | 'GLOW_GIRL' | 'CUSTOMER'
 export type PublishStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
 
 export interface Profile {
@@ -10,7 +10,7 @@ export interface Profile {
   updated_at: string
 }
 
-export interface Creator {
+export interface GlowGirl {
   id: string
   user_id: string
   slug: string
@@ -84,9 +84,9 @@ export interface CompatibilityBoosterPair {
   booster_b_id: string
 }
 
-export interface CreatorSignature {
+export interface GlowGirlSignature {
   id: string
-  creator_id: string
+  glow_girl_id: string
   signature_name: string
   slug: string
   base_id: string
@@ -110,13 +110,13 @@ export interface CreatorSignature {
   booster_secondary?: Booster
   texture?: Texture
   scent?: Scent
-  creator?: Creator
+  glow_girl?: GlowGirl
 }
 
 export interface AnalyticsEvent {
   id: string
   event_type: EventType
-  creator_id: string | null
+  glow_girl_id: string | null
   signature_id: string | null
   user_id: string | null
   metadata: Record<string, unknown>
@@ -128,7 +128,7 @@ export type EventType = 'storefront_view' | 'quiz_start' | 'quiz_complete' | 'ad
 export interface Order {
   id: string
   customer_id: string | null
-  creator_id: string
+  glow_girl_id: string
   signature_id: string
   stripe_checkout_session_id: string | null
   stripe_payment_intent_id: string | null
@@ -143,14 +143,14 @@ export interface Order {
   created_at: string
   updated_at: string
   // Joined
-  signature?: CreatorSignature
-  creator?: Creator
+  signature?: GlowGirlSignature
+  glow_girl?: GlowGirl
 }
 
 export interface Subscription {
   id: string
   customer_id: string | null
-  creator_id: string
+  glow_girl_id: string
   signature_id: string
   stripe_subscription_id: string | null
   stripe_customer_id: string | null
@@ -166,10 +166,10 @@ export type NeedKey = 'BARRIER' | 'CLARIFY' | 'BRIGHTEN' | 'HYDRATE' | 'SMOOTH' 
 export type NeedScores = Record<NeedKey, number>
 
 // Compensation enums
-export type CommissionType = 'PERSONAL' | 'REFERRAL_MATCH'
+export type CommissionType = 'PERSONAL' | 'REFERRAL_MATCH' | 'POD_OVERRIDE'
 export type CommissionStatus = 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'
 export type PayoutStatus = 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED'
-export type BonusType = 'MONTHLY_TIER' | 'NEW_CREATOR'
+export type BonusType = 'MONTHLY_TIER' | 'NEW_GLOW_GIRL'
 export type RewardTier = 'PEARL' | 'OPAL' | 'ROSE_QUARTZ' | 'AMETHYST' | 'SAPPHIRE' | 'DIAMOND'
 
 export interface CommissionSettings {
@@ -181,6 +181,7 @@ export interface CommissionSettings {
   points_personal_multiplier: number
   points_referral_multiplier: number
   commission_hold_days: number
+  pod_override_rate: number
   created_at: string
   updated_at: string
 }
@@ -194,7 +195,7 @@ export interface MonthlyBonusTier {
   sort_order: number
 }
 
-export interface CreatorReferral {
+export interface GlowGirlReferral {
   id: string
   referrer_id: string
   referred_id: string
@@ -204,7 +205,7 @@ export interface CreatorReferral {
 
 export interface Commission {
   id: string
-  creator_id: string
+  glow_girl_id: string
   order_id: string
   commission_type: CommissionType
   amount_cents: number
@@ -216,12 +217,12 @@ export interface Commission {
   created_at: string
   // Joined
   order?: Order
-  creator?: Creator
+  glow_girl?: GlowGirl
 }
 
 export interface Bonus {
   id: string
-  creator_id: string
+  glow_girl_id: string
   bonus_type: BonusType
   amount_cents: number
   period: string | null
@@ -231,7 +232,7 @@ export interface Bonus {
 
 export interface RewardPointsEntry {
   id: string
-  creator_id: string
+  glow_girl_id: string
   order_id: string | null
   points: number
   source: CommissionType
@@ -240,14 +241,14 @@ export interface RewardPointsEntry {
 }
 
 export interface RewardPointsBalance {
-  creator_id: string
+  glow_girl_id: string
   total_points: number
   updated_at: string
 }
 
 export interface RewardMilestone {
   id: string
-  creator_id: string
+  glow_girl_id: string
   tier: RewardTier
   points_at_crossing: number
   created_at: string
@@ -255,7 +256,7 @@ export interface RewardMilestone {
 
 export interface Payout {
   id: string
-  creator_id: string
+  glow_girl_id: string
   period: string
   commission_total_cents: number
   bonus_total_cents: number
@@ -263,4 +264,30 @@ export interface Payout {
   status: PayoutStatus
   paid_at: string | null
   created_at: string
+}
+
+// Pods
+export interface Pod {
+  id: string
+  name: string
+  leader_id: string
+  pod_code: string
+  created_at: string
+  updated_at: string
+  // Joined
+  leader?: GlowGirl
+}
+
+export type PodMemberRole = 'LEADER' | 'MEMBER'
+
+export interface PodMembership {
+  id: string
+  pod_id: string
+  glow_girl_id: string
+  role: PodMemberRole
+  joined_at: string
+  left_at: string | null
+  // Joined
+  pod?: Pod
+  glow_girl?: GlowGirl
 }

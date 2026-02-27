@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const creatorBrandSchema = z.object({
+export const glowGirlBrandSchema = z.object({
   brand_name: z.string().min(2).max(50),
   slug: z.string().min(3).max(32).regex(/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/, 'Slug must be lowercase alphanumeric with hyphens'),
   hero_headline: z.string().min(5).max(120),
@@ -10,7 +10,7 @@ export const creatorBrandSchema = z.object({
   accent_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
 })
 
-export const creatorSignatureSchema = z.object({
+export const glowGirlSignatureSchema = z.object({
   signature_name: z.string().min(2).max(60),
   slug: z.string().min(2).max(40).regex(/^[a-z0-9-]+$/),
   base_id: z.string().uuid(),
@@ -25,5 +25,5 @@ export const creatorSignatureSchema = z.object({
   ritual_instructions: z.string().max(1000).nullable(),
 })
 
-export type CreatorBrandInput = z.infer<typeof creatorBrandSchema>
-export type CreatorSignatureInput = z.infer<typeof creatorSignatureSchema>
+export type GlowGirlBrandInput = z.infer<typeof glowGirlBrandSchema>
+export type GlowGirlSignatureInput = z.infer<typeof glowGirlSignatureSchema>

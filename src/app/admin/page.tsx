@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SignOutButton } from '@/components/sign-out-button'
-import { AdminCreatorActions } from '@/components/admin-creator-actions'
+import { AdminGlowGirlActions } from '@/components/admin-glow-girl-actions'
 import { AdminOrderExport } from '@/components/admin-order-export'
 import Link from 'next/link'
 
@@ -12,16 +12,16 @@ export default async function AdminDashboard() {
   await requireAdmin()
   const supabase = await createClient()
 
-  // Fetch all creators
-  const { data: creators } = await supabase
-    .from('creators')
+  // Fetch all glow girls
+  const { data: glowGirls } = await supabase
+    .from('glow_girls')
     .select('*, profiles!inner(full_name, role)')
     .order('created_at', { ascending: false })
 
   // Fetch all orders
   const { data: orders } = await supabase
     .from('orders')
-    .select('*, creator:creators(brand_name, slug)')
+    .select('*, glow_girl:glow_girls(brand_name, slug)')
     .order('created_at', { ascending: false })
     .limit(50)
 
@@ -37,26 +37,26 @@ export default async function AdminDashboard() {
 
   const totalRevenue = (revenueData || []).reduce((s, o) => s + o.amount_cents, 0)
 
-  const { count: totalCreators } = await supabase
-    .from('creators')
+  const { count: totalGlowGirls } = await supabase
+    .from('glow_girls')
     .select('*', { count: 'exact', head: true })
 
-  // Top creators by events
-  const { data: topCreators } = await supabase
+  // Top glow girls by events
+  const { data: topGlowGirls } = await supabase
     .from('events')
-    .select('creator_id, creators!inner(brand_name, slug)')
+    .select('glow_girl_id, glow_girls!inner(brand_name, slug)')
     .eq('event_type', 'purchase')
     .limit(100)
 
-  const creatorCounts: Record<string, { name: string; slug: string; count: number }> = {}
-  for (const ev of topCreators || []) {
-    const c = ev.creators as unknown as { brand_name: string; slug: string }
-    if (!creatorCounts[ev.creator_id!]) {
-      creatorCounts[ev.creator_id!] = { name: c.brand_name, slug: c.slug, count: 0 }
+  const glowGirlCounts: Record<string, { name: string; slug: string; count: number }> = {}
+  for (const ev of topGlowGirls || []) {
+    const c = ev.glow_girls as unknown as { brand_name: string; slug: string }
+    if (!glowGirlCounts[ev.glow_girl_id!]) {
+      glowGirlCounts[ev.glow_girl_id!] = { name: c.brand_name, slug: c.slug, count: 0 }
     }
-    creatorCounts[ev.creator_id!].count++
+    glowGirlCounts[ev.glow_girl_id!].count++
   }
-  const topCreatorsList = Object.values(creatorCounts).sort((a, b) => b.count - a.count).slice(0, 5)
+  const topGlowGirlsList = Object.values(glowGirlCounts).sort((a, b) => b.count - a.count).slice(0, 5)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -83,7 +83,7 @@ export default async function AdminDashboard() {
           {[
             { label: 'Total Revenue', value: `$${(totalRevenue / 100).toFixed(2)}` },
             { label: 'Total Orders', value: totalOrders || 0 },
-            { label: 'Creators', value: totalCreators || 0 },
+            { label: 'Glow Girls', value: totalGlowGirls || 0 },
             { label: 'Avg Order Value', value: totalOrders ? `$${(totalRevenue / (totalOrders || 1) / 100).toFixed(2)}` : '$0' },
           ].map((stat) => (
             <Card key={stat.label}>
@@ -95,41 +95,41 @@ export default async function AdminDashboard() {
           ))}
         </div>
 
-        <Tabs defaultValue="creators">
+        <Tabs defaultValue="glow-girls">
           <TabsList>
-            <TabsTrigger value="creators">Creators</TabsTrigger>
+            <TabsTrigger value="glow-girls">Glow Girls</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="creators" className="mt-6">
+          <TabsContent value="glow-girls" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Creators</CardTitle>
+                <CardTitle>Glow Girls</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="divide-y">
-                  {(creators || []).map((creator) => {
-                    const profile = creator.profiles as unknown as { full_name: string }
+                  {(glowGirls || []).map((glowGirl) => {
+                    const profile = glowGirl.profiles as unknown as { full_name: string }
                     return (
-                      <div key={creator.id} className="py-4 flex items-center justify-between">
+                      <div key={glowGirl.id} className="py-4 flex items-center justify-between">
                         <div>
-                          <p className="font-medium">{creator.brand_name || 'Unnamed'}</p>
+                          <p className="font-medium">{glowGirl.brand_name || 'Unnamed'}</p>
                           <p className="text-sm text-muted-foreground">
-                            @{creator.slug} &middot; {profile?.full_name || 'No name'}
+                            @{glowGirl.slug} &middot; {profile?.full_name || 'No name'}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Badge variant={creator.approved ? 'default' : 'secondary'}>
-                            {creator.approved ? 'Approved' : 'Pending'}
+                          <Badge variant={glowGirl.approved ? 'default' : 'secondary'}>
+                            {glowGirl.approved ? 'Approved' : 'Pending'}
                           </Badge>
-                          <AdminCreatorActions creatorId={creator.id} approved={creator.approved} />
+                          <AdminGlowGirlActions glowGirlId={glowGirl.id} approved={glowGirl.approved} />
                         </div>
                       </div>
                     )
                   })}
-                  {(!creators || creators.length === 0) && (
-                    <p className="py-8 text-center text-muted-foreground">No creators yet.</p>
+                  {(!glowGirls || glowGirls.length === 0) && (
+                    <p className="py-8 text-center text-muted-foreground">No Glow Girls yet.</p>
                   )}
                 </div>
               </CardContent>
@@ -145,13 +145,13 @@ export default async function AdminDashboard() {
               <CardContent>
                 <div className="divide-y">
                   {(orders || []).map((order) => {
-                    const creator = order.creator as unknown as { brand_name: string; slug: string } | null
+                    const glowGirl = order.glow_girl as unknown as { brand_name: string; slug: string } | null
                     return (
                       <div key={order.id} className="py-3 flex items-center justify-between">
                         <div>
                           <p className="font-medium">{order.shipping_name || 'Customer'}</p>
                           <p className="text-sm text-muted-foreground">
-                            {creator?.brand_name} &middot; {new Date(order.created_at).toLocaleDateString()}
+                            {glowGirl?.brand_name} &middot; {new Date(order.created_at).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="text-right">
@@ -177,11 +177,11 @@ export default async function AdminDashboard() {
           <TabsContent value="analytics" className="mt-6">
             <div className="grid md:grid-cols-2 gap-6">
               <Card>
-                <CardHeader><CardTitle>Top Creators (by sales)</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Top Glow Girls (by sales)</CardTitle></CardHeader>
                 <CardContent>
-                  {topCreatorsList.length > 0 ? (
+                  {topGlowGirlsList.length > 0 ? (
                     <div className="space-y-3">
-                      {topCreatorsList.map((c, i) => (
+                      {topGlowGirlsList.map((c, i) => (
                         <div key={c.slug} className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <span className="text-lg font-light text-muted-foreground w-6">{i + 1}</span>
@@ -213,12 +213,12 @@ export default async function AdminDashboard() {
                       <span className="font-semibold">{totalOrders || 0}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Active creators</span>
-                      <span className="font-semibold">{(creators || []).filter(c => c.approved).length}</span>
+                      <span className="text-muted-foreground">Active Glow Girls</span>
+                      <span className="font-semibold">{(glowGirls || []).filter(c => c.approved).length}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Pending approval</span>
-                      <span className="font-semibold">{(creators || []).filter(c => !c.approved).length}</span>
+                      <span className="font-semibold">{(glowGirls || []).filter(c => !c.approved).length}</span>
                     </div>
                   </div>
                 </CardContent>

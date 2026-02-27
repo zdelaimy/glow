@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { createSignature, updateSignature } from '@/lib/actions/creator'
+import { createSignature, updateSignature } from '@/lib/actions/glow-girl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,7 +24,7 @@ export default function CreateSignature() {
   const [scents, setScents] = useState<Scent[]>([])
   const [baseBoosterCompat, setBaseBoosterCompat] = useState<CompatibilityBaseBooster[]>([])
   const [boosterPairCompat, setBoosterPairCompat] = useState<CompatibilityBoosterPair[]>([])
-  const [creatorId, setCreatorId] = useState<string | null>(null)
+  const [glowGirlId, setGlowGirlId] = useState<string | null>(null)
 
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
@@ -41,14 +41,14 @@ export default function CreateSignature() {
 
   useEffect(() => {
     async function load() {
-      const [basesRes, boostersRes, texturesRes, scentsRes, bbRes, bpRes, creatorRes] = await Promise.all([
+      const [basesRes, boostersRes, texturesRes, scentsRes, bbRes, bpRes, glowGirlRes] = await Promise.all([
         supabase.from('base_formulas').select('*').eq('active', true).order('sort_order'),
         supabase.from('boosters').select('*').eq('active', true).order('sort_order'),
         supabase.from('textures').select('*').eq('active', true).order('sort_order'),
         supabase.from('scents').select('*').eq('active', true).order('sort_order'),
         supabase.from('compatibility_base_booster').select('*'),
         supabase.from('compatibility_booster_pair').select('*'),
-        supabase.from('creators').select('id').limit(1).single(),
+        supabase.from('glow_girls').select('id').limit(1).single(),
       ])
       setBases(basesRes.data || [])
       setBoosters(boostersRes.data || [])
@@ -56,18 +56,16 @@ export default function CreateSignature() {
       setScents(scentsRes.data || [])
       setBaseBoosterCompat(bbRes.data || [])
       setBoosterPairCompat(bpRes.data || [])
-      if (creatorRes.data) setCreatorId(creatorRes.data.id)
+      if (glowGirlRes.data) setGlowGirlId(glowGirlRes.data.id)
     }
     load()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Filter boosters by base compatibility
   const compatibleBoosterIds = new Set(
     baseBoosterCompat.filter(c => c.base_id === baseId).map(c => c.booster_id)
   )
   const availableBoosters = boosters.filter(b => compatibleBoosterIds.has(b.id))
 
-  // Filter secondary boosters by pair compatibility
   const compatiblePairIds = new Set(
     boosterPairCompat
       .filter(p => p.booster_a_id === primaryBoosterId || p.booster_b_id === primaryBoosterId)
@@ -78,11 +76,11 @@ export default function CreateSignature() {
   )
 
   async function handleSubmit() {
-    if (!creatorId) return
+    if (!glowGirlId) return
     setLoading(true)
     setError(null)
     try {
-      const sig = await createSignature(creatorId, {
+      const sig = await createSignature(glowGirlId, {
         signature_name: name,
         slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         base_id: baseId,
@@ -97,9 +95,8 @@ export default function CreateSignature() {
         ritual_instructions: ritualInstructions || null,
       })
 
-      // Auto-publish
       await updateSignature(sig.id, { publish_status: 'PUBLISHED' })
-      router.push('/creator/dashboard')
+      router.push('/glow-girl/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create')
     }
@@ -254,7 +251,7 @@ export default function CreateSignature() {
         {error && <p className="text-sm text-red-500">{error}</p>}
 
         <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={() => router.push('/creator/dashboard')}>Cancel</Button>
+          <Button variant="outline" onClick={() => router.push('/glow-girl/dashboard')}>Cancel</Button>
           <Button
             onClick={handleSubmit}
             disabled={loading || !baseId || !primaryBoosterId || !name}

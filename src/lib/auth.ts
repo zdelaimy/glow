@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import type { Profile, Creator, UserRole } from '@/types/database'
+import type { Profile, GlowGirl, UserRole } from '@/types/database'
 
 export async function getUser() {
   const supabase = await createClient()
@@ -48,26 +48,26 @@ export async function requireAdmin() {
   return requireRole('ADMIN')
 }
 
-export async function requireCreator(): Promise<{ user: Awaited<ReturnType<typeof requireAuth>>; profile: Profile; creator: Creator }> {
-  const { user, profile } = await requireRole('CREATOR')
+export async function requireGlowGirl(): Promise<{ user: Awaited<ReturnType<typeof requireAuth>>; profile: Profile; glowGirl: GlowGirl }> {
+  const { user, profile } = await requireRole('GLOW_GIRL')
   const supabase = await createClient()
-  const { data: creator } = await supabase
-    .from('creators')
+  const { data: glowGirl } = await supabase
+    .from('glow_girls')
     .select('*')
     .eq('user_id', user.id)
     .single()
 
-  if (!creator) {
-    redirect('/creator/onboarding')
+  if (!glowGirl) {
+    redirect('/glow-girl/onboarding')
   }
 
-  return { user, profile, creator }
+  return { user, profile, glowGirl }
 }
 
-export async function getCreatorForUser(userId: string): Promise<Creator | null> {
+export async function getGlowGirlForUser(userId: string): Promise<GlowGirl | null> {
   const supabase = await createClient()
   const { data } = await supabase
-    .from('creators')
+    .from('glow_girls')
     .select('*')
     .eq('user_id', userId)
     .single()
