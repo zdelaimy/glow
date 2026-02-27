@@ -48,25 +48,19 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left — Brand Panel */}
       <div className="relative hidden lg:flex lg:w-[52%] overflow-hidden items-center justify-center bg-[#0c0a14]">
-        {/* Gradient orbs */}
+        {/* Gradient orbs — static for performance */}
         <div className="absolute inset-0">
-          <motion.div
-            className="absolute w-[600px] h-[600px] rounded-full opacity-30 blur-[120px]"
+          <div
+            className="absolute w-[600px] h-[600px] rounded-full opacity-30"
             style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)', top: '-10%', left: '-10%' }}
-            animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
           />
-          <motion.div
-            className="absolute w-[500px] h-[500px] rounded-full opacity-25 blur-[100px]"
+          <div
+            className="absolute w-[500px] h-[500px] rounded-full opacity-25"
             style={{ background: 'radial-gradient(circle, #e11d89 0%, transparent 70%)', bottom: '-5%', right: '-5%' }}
-            animate={{ x: [0, -30, 0], y: [0, -40, 0] }}
-            transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
           />
-          <motion.div
-            className="absolute w-[300px] h-[300px] rounded-full opacity-20 blur-[80px]"
+          <div
+            className="absolute w-[300px] h-[300px] rounded-full opacity-20"
             style={{ background: 'radial-gradient(circle, #f472b6 0%, transparent 70%)', top: '40%', left: '50%' }}
-            animate={{ x: [0, 20, -20, 0], y: [0, -20, 20, 0] }}
-            transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
           />
         </div>
 
@@ -107,25 +101,26 @@ export default function LoginPage() {
               Custom serums crafted by the Glow Girls you trust. Personalized formulas, delivered to your door.
             </p>
 
-            {/* Social proof dots */}
+            {/* Product images */}
             <div className="flex items-center gap-4">
-              <div className="flex -space-x-2">
+              <div className="flex -space-x-3">
                 {[
-                  'from-violet-400 to-violet-600',
-                  'from-rose-400 to-rose-600',
-                  'from-fuchsia-400 to-fuchsia-600',
-                  'from-pink-400 to-pink-600',
-                ].map((gradient, i) => (
-                  <motion.div
+                  '/hero/1571781926291-c477ebfd024b.jpg',
+                  '/hero/1612817288484-6f916006741a.jpg',
+                  '/hero/1556228578-0d85b1a4d571.jpg',
+                ].map((src, i) => (
+                  <motion.img
                     key={i}
-                    className={`w-8 h-8 rounded-full bg-gradient-to-br ${gradient} border-2 border-[#0c0a14]`}
+                    src={src}
+                    alt="Product"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-[#0c0a14]"
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 + i * 0.1 }}
                   />
                 ))}
               </div>
-              <span className="text-white/40 text-sm">2,400+ serums created</span>
+              <span className="text-white/40 text-sm">50+ serums created</span>
             </div>
           </motion.div>
         </div>

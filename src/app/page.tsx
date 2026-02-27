@@ -18,7 +18,7 @@ export default function HomePage() {
             How It Works
           </p>
           <h2 className="font-serif text-3xl md:text-5xl italic leading-tight mb-6">
-            Where Glow Girls become founders.
+            Where aspiring influencers become founders.
           </h2>
           <p className="text-sm text-neutral-400 max-w-xl mx-auto mb-20 uppercase tracking-wide">
             Design your formula. Build your brand. We handle the rest.
@@ -29,20 +29,20 @@ export default function HomePage() {
               {
                 step: "01",
                 icon: FlaskConical,
-                title: "Glow Girl Designs",
-                desc: "Build your signature serum formula and branded storefront — no inventory, no minimums.",
+                title: "Glow Designs",
+                desc: "We build your signature serum formula and branded store — your name, your product, zero hassle.",
               },
               {
                 step: "02",
                 icon: Droplets,
-                title: "Customer Discovers",
-                desc: "Your audience takes a quick skin quiz on your page. We match them to the perfect blend.",
+                title: "Market & Connect",
+                desc: "Use the Glow platform to market your product and build a community with other aspiring Glow Girls.",
               },
               {
                 step: "03",
                 icon: Package,
-                title: "We Blend & Ship",
-                desc: "Custom serums mixed on demand and shipped direct. Your brand, their doorstep.",
+                title: "Earn & Grow",
+                desc: "Earn passive income through commissions, recruit your own Pod, and scale your beauty empire.",
               },
             ].map((item) => (
               <div key={item.step} className="flex flex-col items-center">
@@ -120,26 +120,36 @@ export default function HomePage() {
               {
                 quote:
                   "I launched my brand in a weekend and had my first sale within days.",
-                name: "Glow Girl Testimonial",
+                name: "Jessica M.",
+                img: "/hero/headshot1.jpg",
               },
               {
                 quote:
                   "The bonus tiers keep me motivated. I hit Gold in my second month.",
-                name: "Glow Girl Testimonial",
+                name: "Aaliyah R.",
+                img: "/hero/headshot2.jpg",
               },
               {
                 quote:
-                  "My customers love the quiz experience. It sells itself.",
-                name: "Glow Girl Testimonial",
+                  "My family and friends love my own custom formula. It sells itself.",
+                name: "Taylor K.",
+                img: "/hero/headshot3.jpg",
               },
             ].map((t, i) => (
               <div key={i} className="text-left space-y-4">
                 <p className="text-sm text-neutral-600 leading-relaxed italic">
                   &ldquo;{t.quote}&rdquo;
                 </p>
-                <p className="text-xs text-neutral-400 uppercase tracking-wide">
-                  &mdash; {t.name}
-                </p>
+                <div className="flex items-center gap-3 mt-2">
+                  <img
+                    src={t.img}
+                    alt={t.name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                  <p className="text-xs font-medium text-neutral-700">
+                    {t.name}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

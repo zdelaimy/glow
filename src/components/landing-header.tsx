@@ -31,7 +31,7 @@ export function LandingHeader() {
               "w-8 h-8 rounded-xl flex items-center justify-center transition-colors duration-300",
               scrolled
                 ? "bg-gradient-to-br from-violet-500 to-rose-400"
-                : "bg-white/20 backdrop-blur-sm"
+                : "bg-neutral-900/70 backdrop-blur-md border border-neutral-700/30"
             )}
           >
             <span className="text-white font-bold text-sm">G</span>
@@ -39,27 +39,13 @@ export function LandingHeader() {
           <span
             className={cn(
               "font-semibold text-lg tracking-tight transition-colors duration-300",
-              scrolled ? "text-neutral-900" : "text-white"
+              scrolled ? "text-neutral-900" : "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
             )}
           >
             Glow
           </span>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/glow-girls" className="hidden sm:block">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "transition-colors duration-300",
-                scrolled
-                  ? "text-neutral-700 hover:text-neutral-900"
-                  : "text-white/90 hover:text-white hover:bg-white/10"
-              )}
-            >
-              For Glow Girls
-            </Button>
-          </Link>
           <Link href="/login" className="hidden sm:block">
             <Button
               variant="ghost"
@@ -68,7 +54,7 @@ export function LandingHeader() {
                 "transition-colors duration-300",
                 scrolled
                   ? "text-neutral-700 hover:text-neutral-900"
-                  : "text-white/90 hover:text-white hover:bg-white/10"
+                  : "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)] hover:text-white hover:bg-white/10"
               )}
             >
               Sign in
@@ -81,7 +67,7 @@ export function LandingHeader() {
                 "transition-all duration-300",
                 scrolled
                   ? "bg-gradient-to-r from-violet-600 to-violet-500 text-white"
-                  : "bg-white/15 backdrop-blur-sm text-white border border-white/30 hover:bg-white/25"
+                  : "bg-white/90 text-neutral-900 font-medium hover:bg-white"
               )}
             >
               Become a Glow Girl
