@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import localFont from "next/font/local"
-import { Instrument_Serif } from "next/font/google"
+import { Instrument_Serif, Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 
@@ -13,6 +13,10 @@ const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+})
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
 })
 const instrumentSerif = Instrument_Serif({
   weight: "400",
@@ -33,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} font-sans antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${inter.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>

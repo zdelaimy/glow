@@ -158,11 +158,11 @@ export default async function GlowGirlStorefront({ params }: Props) {
         <div className="max-w-2xl mx-auto space-y-6">
           <h2 className="text-2xl font-semibold text-center mb-8">FAQ</h2>
           {[
-            { q: 'What\'s included in my order?', a: 'Your order includes a base formula bottle and individual booster pods. Mix them together for your custom serum experience.' },
-            { q: 'How do I mix my serum?', a: 'Simply dispense the base into your palm, add your booster pod(s), and mix gently. Press into clean skin as part of your daily ritual.' },
-            { q: 'Is this safe for sensitive skin?', a: 'Our formulas use gentle, well-tolerated cosmetic ingredients. If you have specific concerns, we recommend consulting with a dermatologist.' },
+            { q: 'What\'s included in my order?', a: 'Your order includes your selected Glow product, beautifully packaged and ready to use.' },
+            { q: 'How do I use the products?', a: 'Each product comes with simple instructions. Apply as part of your daily beauty ritual for best results.' },
+            { q: 'Is this safe for sensitive skin?', a: 'Our products use gentle, well-tolerated cosmetic ingredients. If you have specific concerns, we recommend consulting with a dermatologist.' },
             { q: 'Can I cancel my subscription?', a: 'Yes! You can cancel or pause your subscription at any time. No commitments, no hassle.' },
-            { q: 'What\'s your return policy?', a: 'We offer a 30-day satisfaction guarantee. If you\'re not happy with your blend, reach out to our team.' },
+            { q: 'What\'s your return policy?', a: 'We offer a 30-day satisfaction guarantee. If you\'re not happy with your purchase, reach out to our team.' },
           ].map((faq, i) => (
             <div key={i} className="space-y-1">
               <h3 className="font-medium">{faq.q}</h3>

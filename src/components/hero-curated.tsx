@@ -3,11 +3,11 @@
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
-import { heroImages } from "@/lib/hero-images"
+import { heroSlides } from "@/lib/hero-images"
 import { useCarousel } from "@/hooks/use-carousel"
 
 export function HeroCurated() {
-  const { current, goTo } = useCarousel(heroImages.length, 6000)
+  const { current, goTo } = useCarousel(heroSlides.length, 6000)
 
   return (
     <section className="relative h-screen w-full overflow-hidden bg-neutral-900">
@@ -22,8 +22,8 @@ export function HeroCurated() {
           className="absolute inset-0"
         >
           <Image
-            src={heroImages[current].src}
-            alt={heroImages[current].alt}
+            src={heroSlides[current].src}
+            alt={heroSlides[current].alt}
             fill
             priority={current === 0}
             className="object-cover"
@@ -102,7 +102,7 @@ export function HeroCurated() {
           transition={{ duration: 0.6, delay: 1 }}
           className="absolute bottom-10 flex gap-2"
         >
-          {heroImages.map((_, i) => (
+          {heroSlides.map((_, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}

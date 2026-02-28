@@ -1,113 +1,117 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image"
 import Link from "next/link"
-import { heroImages } from "@/lib/hero-images"
+import { heroSlides } from "@/lib/hero-images"
 import { useCarousel } from "@/hooks/use-carousel"
+import { useRef, useEffect } from "react"
 
-const slideVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? "4%" : "-4%",
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction: number) => ({
-    x: direction > 0 ? "-4%" : "4%",
-    opacity: 0,
-  }),
+function HeroVideo({ src, active }: { src: string; active: boolean }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    if (!videoRef.current) return
+    if (active) {
+      videoRef.current.currentTime = 0
+      videoRef.current.play().catch(() => {})
+    } else {
+      videoRef.current.pause()
+    }
+  }, [active])
+
+  return (
+    <div
+      className="absolute inset-0 z-0 transition-opacity duration-700 ease-in-out"
+      style={{ opacity: active ? 1 : 0 }}
+    >
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <video
+        ref={videoRef}
+        src={src}
+        muted
+        autoPlay={active}
+        playsInline
+        loop
+        preload="auto"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+    </div>
+  )
 }
 
 export function HeroRhode() {
-  const { current, direction, goTo } = useCarousel(heroImages.length, 5000)
-  const slide = heroImages[current]
+  const { current, goTo } = useCarousel(heroSlides.length, 7000)
+  const slide = heroSlides[current]
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-neutral-900">
-      {/* Background carousel — direction-aware slide + fade */}
-      <AnimatePresence mode="sync" custom={direction}>
-        <motion.div
-          key={current}
-          custom={direction}
-          variants={slideVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-          className="absolute inset-0"
-        >
-          <Image
-            src={slide.src}
-            alt={slide.alt}
-            fill
-            priority={current === 0}
-            className="object-cover"
-            sizes="100vw"
-          />
-        </motion.div>
-      </AnimatePresence>
+    <section className="bg-[#f5f0eb] px-3 pb-3 pt-3 md:px-4 md:pb-4 md:pt-4">
+      {/* Inset video container with rounded corners */}
+      <div className="relative w-full h-[calc(100vh-24px)] md:h-[calc(100vh-32px)] rounded-[8px] overflow-hidden">
+        {/* Background videos */}
+        {heroSlides.map((s, i) => (
+          <HeroVideo key={s.src} src={s.src} active={i === current} />
+        ))}
 
-      {/* Minimal bottom gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
+        {/* Warm tint overlay */}
+        <div className="absolute inset-0 z-[1] bg-amber-900/10 pointer-events-none" />
 
-      {/* Content — bottom-left editorial */}
-      <div className="relative z-10 flex flex-col justify-end h-full px-6 md:px-12 lg:px-20 pb-20 md:pb-24">
-        {/* Product name + "by Glow" */}
-        <AnimatePresence mode="wait">
+        {/* Bottom gradient for text legibility */}
+        <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+        {/* Content — bottom-left editorial */}
+        <div className="absolute inset-0 z-[5] flex flex-col justify-end px-8 md:px-14 pb-12 md:pb-16">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.45 }}
+            >
+              <h1 className="font-serif text-[2.5rem] md:text-[3.25rem] lg:text-[3.75rem] text-white leading-[1.08] max-w-xl tracking-tight">
+                {slide.headline}
+              </h1>
+              <p className="mt-2.5 text-[13px] md:text-sm text-white/60 max-w-sm tracking-wide font-inter">
+                {slide.subtitle}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+
           <motion.div
-            key={current}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="mt-5"
           >
-            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-white leading-[1.1] max-w-lg">
-              {slide.product}
-            </h1>
-            <p className="mt-2 text-sm md:text-base text-white/50 tracking-wide">
-              {slide.glowGirl}&apos;s formula{" "}
-              <span className="text-white/70">by Glow</span>
-            </p>
+            <Link href="/login">
+              <button className="h-9 px-5 rounded-full bg-white text-neutral-900 text-[11px] uppercase tracking-[0.18em] font-medium font-inter hover:bg-white/90 transition-colors cursor-pointer">
+                Start Your Journey
+              </button>
+            </Link>
           </motion.div>
-        </AnimatePresence>
+        </div>
 
+        {/* Slide indicators — bottom-right */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
+          className="absolute bottom-12 right-8 md:right-14 z-[5] flex gap-1.5"
         >
-          <Link href="/login">
-            <button className="h-10 px-6 rounded-full bg-white/90 text-neutral-900 text-xs uppercase tracking-[0.15em] font-medium hover:bg-white transition-colors cursor-pointer">
-              Discover Your Serum
-            </button>
-          </Link>
+          {heroSlides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className={`h-[3px] rounded-full transition-all duration-500 cursor-pointer ${
+                i === current
+                  ? "w-8 bg-white"
+                  : "w-4 bg-white/30 hover:bg-white/50"
+              }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
         </motion.div>
       </div>
-
-      {/* Thin line indicators — bottom-right */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-        className="absolute bottom-10 right-6 md:right-12 lg:right-20 z-10 flex gap-1.5"
-      >
-        {heroImages.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            className={`h-0.5 rounded-full transition-all duration-500 cursor-pointer ${
-              i === current
-                ? "w-10 bg-white"
-                : "w-5 bg-white/30 hover:bg-white/50"
-            }`}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
-      </motion.div>
     </section>
   )
 }

@@ -21,7 +21,7 @@ export default async function OrderSuccess({ params }: Props) {
           </div>
           <h1 className="text-2xl font-semibold">Order Confirmed!</h1>
           <p className="text-muted-foreground">
-            Your custom serum is on its way. Check your email for order details and tracking information.
+            Your order is on its way. Check your email for order details and tracking information.
           </p>
           <div className="pt-4">
             <Link href={`/${slug}`}>

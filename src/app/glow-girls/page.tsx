@@ -47,9 +47,9 @@ export default async function GlowGirlsOpportunityPage({
       <header className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-rose-400 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">G</span>
+            <span className="text-white font-bold text-sm">g</span>
           </div>
-          <span className="font-semibold text-lg tracking-tight">Glow</span>
+          <span className="font-semibold text-lg tracking-tight">glow</span>
         </Link>
         <div className="flex items-center gap-3">
           <Link href="/login">
@@ -76,7 +76,7 @@ export default async function GlowGirlsOpportunityPage({
             Your terms.
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-            Build a skincare brand powered by your community. Earn commissions, bonuses, and rewards every month.
+            Open your own beauty storefront, sell curated Glow products, and earn commissions, bonuses, and rewards every month.
           </p>
           <Link href="/login">
             <Button size="lg" className="h-12 px-8 text-base bg-gradient-to-r from-violet-600 to-violet-500">
@@ -95,7 +95,7 @@ export default async function GlowGirlsOpportunityPage({
               {
                 title: 'Sell',
                 subtitle: '25% commission',
-                desc: 'Earn on every serum sold through your storefront. One-time or subscription — you earn either way.',
+                desc: 'Earn on every product sold through your storefront. One-time or subscription — you earn either way.',
                 color: 'from-violet-500 to-violet-600',
               },
               {
@@ -217,7 +217,7 @@ export default async function GlowGirlsOpportunityPage({
             Start your <span className="font-semibold">glow business</span>
           </h2>
           <p className="text-muted-foreground mb-8">
-            Join Glow Girls building the future of personalized skincare. No inventory, no minimums, no risk.
+            Join Glow Girls building their own beauty businesses. No inventory, no minimums, no risk.
           </p>
           <Link href="/login">
             <Button size="lg" className="h-12 px-10 text-base bg-gradient-to-r from-violet-600 to-violet-500">
@@ -229,7 +229,7 @@ export default async function GlowGirlsOpportunityPage({
 
       <footer className="border-t py-8 mt-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center text-sm text-muted-foreground">
-          <span>Glow Custom Serum</span>
+          <span>Glow Beauty</span>
           <span>Cosmetic products only. Not intended to diagnose or treat any condition.</span>
         </div>
       </footer>

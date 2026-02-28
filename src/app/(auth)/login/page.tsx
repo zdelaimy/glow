@@ -84,21 +84,21 @@ export default function LoginPage() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 mb-16 group">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-400 to-rose-400 flex items-center justify-center">
-                <span className="text-white font-bold text-base">G</span>
+                <span className="text-white font-bold text-base">g</span>
               </div>
-              <span className="text-white/90 text-lg tracking-[0.2em] uppercase font-light group-hover:text-white transition-colors">Glow</span>
+              <span className="text-white/90 text-lg tracking-[0.2em] uppercase font-light group-hover:text-white transition-colors">glow</span>
             </Link>
 
             {/* Headline */}
             <h1 className="text-white text-[2.75rem] leading-[1.1] font-light tracking-tight mb-6">
-              Your skin,{' '}
+              Your beauty business,{' '}
               <span className="bg-gradient-to-r from-violet-300 to-rose-300 bg-clip-text text-transparent font-normal">
-                reimagined
+                your way
               </span>
             </h1>
 
             <p className="text-white/50 text-base leading-relaxed mb-12 max-w-sm">
-              Custom serums crafted by the Glow Girls you trust. Personalized formulas, delivered to your door.
+              Open your storefront, share products you love, and earn commissions on every sale.
             </p>
 
             {/* Product images */}
@@ -120,7 +120,7 @@ export default function LoginPage() {
                   />
                 ))}
               </div>
-              <span className="text-white/40 text-sm">50+ serums created</span>
+              <span className="text-white/40 text-sm">Join 50+ Glow Girls</span>
             </div>
           </motion.div>
         </div>
@@ -143,9 +143,9 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <Link href="/" className="flex items-center gap-2.5 mb-10 lg:hidden group">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-rose-400 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">G</span>
+              <span className="text-white font-bold text-sm">g</span>
             </div>
-            <span className="text-neutral-800 text-base tracking-[0.15em] uppercase font-light group-hover:text-neutral-600 transition-colors">Glow</span>
+            <span className="text-neutral-800 text-base tracking-[0.15em] uppercase font-light group-hover:text-neutral-600 transition-colors">glow</span>
           </Link>
 
           {/* Header */}

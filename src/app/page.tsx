@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { LandingHeader } from "@/components/landing-header"
 import { HeroRhode } from "@/components/hero-rhode"
-import { FlaskConical, Droplets, Package } from "lucide-react"
+import { Store, Share2, TrendingUp } from "lucide-react"
 
 export default function HomePage() {
   return (
@@ -18,31 +18,31 @@ export default function HomePage() {
             How It Works
           </p>
           <h2 className="font-serif text-3xl md:text-5xl italic leading-tight mb-6">
-            Where aspiring influencers become founders.
+            Your own beauty business, simplified.
           </h2>
           <p className="text-sm text-neutral-400 max-w-xl mx-auto mb-20 uppercase tracking-wide">
-            Design your formula. Build your brand. We handle the rest.
+            Open your storefront. Share products you love. Earn commissions on every sale.
           </p>
 
           <div className="grid md:grid-cols-3 gap-12 md:gap-16">
             {[
               {
                 step: "01",
-                icon: FlaskConical,
-                title: "Glow Designs",
-                desc: "We build your signature serum formula and branded store — your name, your product, zero hassle.",
+                icon: Store,
+                title: "Open Your Store",
+                desc: "Get your own branded storefront in minutes — your name, your link, your beauty business.",
               },
               {
                 step: "02",
-                icon: Droplets,
-                title: "Market & Connect",
-                desc: "Use the Glow platform to market your product and build a community with other aspiring Glow Girls.",
+                icon: Share2,
+                title: "Share & Sell",
+                desc: "Share Glow products with your audience and community. We handle fulfillment and shipping.",
               },
               {
                 step: "03",
-                icon: Package,
+                icon: TrendingUp,
                 title: "Earn & Grow",
-                desc: "Earn passive income through commissions, recruit your own Pod, and scale your beauty empire.",
+                desc: "Earn commissions on every sale, build your Pod, and unlock bonuses as you grow.",
               },
             ].map((item) => (
               <div key={item.step} className="flex flex-col items-center">
@@ -71,11 +71,11 @@ export default function HomePage() {
                   Glow Girl Opportunity
                 </p>
                 <h2 className="font-serif text-3xl md:text-4xl italic leading-tight">
-                  Turn your expertise into a business.
+                  Turn your passion into a paycheck.
                 </h2>
                 <p className="text-sm text-neutral-400 leading-relaxed">
-                  Design custom serums, build your brand, and earn through our
-                  multi-stream compensation plan.
+                  Launch your own beauty storefront, sell curated Glow products,
+                  and earn through our multi-stream compensation plan.
                 </p>
                 <Link href="/glow-girls">
                   <button className="mt-2 h-11 px-7 rounded-full bg-white text-neutral-900 text-xs uppercase tracking-[0.15em] font-medium hover:bg-neutral-200 transition-colors cursor-pointer">
@@ -119,7 +119,7 @@ export default function HomePage() {
             {[
               {
                 quote:
-                  "I launched my brand in a weekend and had my first sale within days.",
+                  "I opened my store in a weekend and had my first sale within days.",
                 name: "Jessica M.",
                 img: "/hero/headshot1.jpg",
               },
@@ -131,7 +131,7 @@ export default function HomePage() {
               },
               {
                 quote:
-                  "My family and friends love my own custom formula. It sells itself.",
+                  "The products sell themselves — my friends and family are obsessed.",
                 name: "Taylor K.",
                 img: "/hero/headshot3.jpg",
               },
@@ -156,6 +156,33 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Glow Girls Reels */}
+      <section className="bg-neutral-100 py-24 md:py-32">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <h2 className="font-serif text-3xl md:text-4xl italic leading-tight mb-16">
+            From Our Glow Girls
+          </h2>
+          <div className="grid sm:grid-cols-3 gap-6 md:gap-10 max-w-6xl mx-auto">
+            {[
+              "/reels/insta1.mp4",
+              "/reels/insta2.mp4",
+              "/reels/instas3.mp4",
+            ].map((src) => (
+              <div key={src} className="rounded-2xl overflow-hidden bg-neutral-900 shadow-sm p-2 md:p-3">
+                <video
+                  src={src}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-auto block rounded-xl"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Bottom CTA */}
       <section className="bg-neutral-950 text-white py-24 md:py-32 text-center">
         <div className="max-w-2xl mx-auto px-6">
@@ -163,18 +190,18 @@ export default function HomePage() {
             Ready to glow?
           </h2>
           <p className="text-sm text-neutral-400 mb-10 max-w-md mx-auto">
-            Whether you&apos;re looking for the perfect serum or building a
-            skincare brand — we&apos;ve got you.
+            Shop premium beauty products or start your own Glow Girl
+            business — we&apos;ve got you either way.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/login">
+            <Link href="/shop">
               <button className="h-12 px-8 rounded-full bg-white text-neutral-900 text-sm font-medium hover:bg-neutral-200 transition-colors cursor-pointer">
-                Find Your Serum
+                Shop Products
               </button>
             </Link>
             <Link href="/glow-girls">
               <button className="h-12 px-8 rounded-full bg-transparent text-white border border-neutral-700 text-sm font-medium hover:border-neutral-500 transition-colors cursor-pointer">
-                Start Your Brand
+                Become a Glow Girl
               </button>
             </Link>
           </div>
@@ -184,7 +211,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-neutral-950 border-t border-neutral-800 py-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center text-xs text-neutral-500">
-          <span>Glow Custom Serum</span>
+          <span>Glow Beauty</span>
           <span>
             Cosmetic products only. Not intended to diagnose or treat any
             condition.
