@@ -83,7 +83,7 @@ export function HeroRhode() {
             transition={{ duration: 0.5, delay: 0.25 }}
             className="mt-5"
           >
-            <Link href="/login">
+            <Link href="/welcome">
               <button className="h-9 px-5 rounded-full bg-white text-neutral-900 text-[11px] uppercase tracking-[0.18em] font-medium font-inter hover:bg-white/90 transition-colors cursor-pointer">
                 Start Your Journey
               </button>

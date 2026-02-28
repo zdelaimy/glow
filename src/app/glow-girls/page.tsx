@@ -70,7 +70,7 @@ export default async function GlowGirlsOpportunityPage({
             <p className="text-sm md:text-base text-[#6E6A62]/60 max-w-xl mx-auto mb-10">
               Open your own beauty storefront, sell curated Glow products, and earn commissions, bonuses, and rewards every month.
             </p>
-            <Link href="/login">
+            <Link href="/apply">
               <button className="h-12 px-8 rounded-full bg-[#6E6A62] text-white text-sm font-medium hover:bg-[#5E5A52] transition-colors cursor-pointer font-inter">
                 Start Your Glow Business
               </button>
@@ -239,7 +239,7 @@ export default async function GlowGirlsOpportunityPage({
               Join Glow Girls building their own beauty businesses. No inventory, no minimums, no risk.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/login">
+              <Link href="/welcome">
                 <button className="h-12 px-8 rounded-full bg-[#6E6A62] text-white text-sm font-medium hover:bg-[#5E5A52] transition-colors cursor-pointer font-inter">
                   Become a Glow Girl
                 </button>

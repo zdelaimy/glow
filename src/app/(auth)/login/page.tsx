@@ -69,7 +69,7 @@ export default function LoginPage() {
 
         if (application) {
           if (application.status === 'APPROVED') {
-            router.push('/glow-girl/onboarding')
+            router.push('/glow-girl/dashboard')
           } else {
             router.push('/apply/status')
           }
@@ -232,9 +232,14 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="block text-xs font-medium text-[#6E6A62]/70 uppercase tracking-[0.15em] font-inter">
-                Password
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-xs font-medium text-[#6E6A62]/70 uppercase tracking-[0.15em] font-inter">
+                  Password
+                </label>
+                <Link href="/forgot-password" className="text-xs text-[#6E6A62]/50 hover:text-[#6E6A62] underline underline-offset-2 transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"

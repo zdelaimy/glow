@@ -30,7 +30,7 @@ export async function updateSession(request: NextRequest) {
   // Protected routes
   const path = request.nextUrl.pathname
 
-  if (path.startsWith('/admin') || path.startsWith('/glow-girl')) {
+  if (path.startsWith('/admin') || (path.startsWith('/glow-girl') && !path.startsWith('/glow-girls'))) {
     if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'

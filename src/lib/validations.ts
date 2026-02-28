@@ -40,6 +40,7 @@ export const glowGirlApplicationSchema = z.object({
   why_glow: z.string().min(10).max(500),
   previous_direct_sales: z.boolean(),
   previous_company: z.string().max(100).nullable(),
+  referral_code: z.string().max(20).nullable(),
   agreed_to_terms: z.literal(true, { message: 'You must agree to the terms' }),
 })
 

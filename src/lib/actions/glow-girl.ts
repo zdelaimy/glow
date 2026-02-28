@@ -1,91 +1,9 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { glowGirlBrandSchema, glowGirlSignatureSchema, glowGirlApplicationSchema } from '@/lib/validations'
+import { glowGirlSignatureSchema, glowGirlApplicationSchema } from '@/lib/validations'
 import { revalidatePath } from 'next/cache'
-import type { GlowGirlBrandInput, GlowGirlSignatureInput, GlowGirlApplicationInput } from '@/lib/validations'
-
-export async function createGlowGirlProfile(input: GlowGirlBrandInput) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
-
-  const parsed = glowGirlBrandSchema.parse(input)
-
-  // Update profile role to GLOW_GIRL
-  await supabase
-    .from('profiles')
-    .update({ role: 'GLOW_GIRL' })
-    .eq('id', user.id)
-
-  // Generate unique referral code
-  const referralCode = parsed.slug.toUpperCase().replace(/-/g, '').slice(0, 6) +
-    Math.random().toString(36).slice(2, 6).toUpperCase()
-
-  // Check for referred_by_code from user metadata (set during auth callback)
-  const referredByCode = (user.user_metadata?.referred_by_code as string) || null
-
-  // Create glow girl record
-  const { data, error } = await supabase
-    .from('glow_girls')
-    .insert({
-      user_id: user.id,
-      slug: parsed.slug,
-      brand_name: parsed.brand_name,
-      hero_headline: parsed.hero_headline,
-      benefits: parsed.benefits,
-      story: parsed.story,
-      label_template: parsed.label_template,
-      accent_color: parsed.accent_color,
-      referral_code: referralCode,
-      referred_by_code: referredByCode,
-    })
-    .select()
-    .single()
-
-  if (error) {
-    if (error.code === '23505') throw new Error('This handle is already taken')
-    throw new Error(error.message)
-  }
-
-  // If referred by someone, create the referral relationship
-  if (referredByCode) {
-    const { data: referrer } = await supabase
-      .from('glow_girls')
-      .select('id')
-      .eq('referral_code', referredByCode)
-      .single()
-
-    if (referrer && referrer.id !== data.id) {
-      const expiresAt = new Date()
-      expiresAt.setMonth(expiresAt.getMonth() + 12)
-
-      await supabase.from('glow_girl_referrals').insert({
-        referrer_id: referrer.id,
-        referred_id: data.id,
-        match_expires_at: expiresAt.toISOString(),
-      })
-    }
-  }
-
-  revalidatePath('/glow-girl')
-  return data
-}
-
-export async function updateGlowGirlBrand(glowGirlId: string, input: Partial<GlowGirlBrandInput> & { logo_url?: string; hero_image_url?: string }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
-
-  const { error } = await supabase
-    .from('glow_girls')
-    .update(input)
-    .eq('id', glowGirlId)
-    .eq('user_id', user.id)
-
-  if (error) throw new Error(error.message)
-  revalidatePath('/glow-girl')
-}
+import type { GlowGirlSignatureInput, GlowGirlApplicationInput } from '@/lib/validations'
 
 export async function createSignature(glowGirlId: string, input: GlowGirlSignatureInput) {
   const supabase = await createClient()
@@ -146,6 +64,14 @@ export async function submitApplication(input: GlowGirlApplicationInput) {
     .from('profiles')
     .update({ full_name: parsed.full_name })
     .eq('id', user.id)
+
+  // If a referral code was provided, store it in user metadata so
+  // createGlowGirlProfile can pick it up during onboarding
+  if (parsed.referral_code) {
+    await supabase.auth.updateUser({
+      data: { referred_by_code: parsed.referral_code },
+    })
+  }
 
   const { data, error } = await supabase
     .from('glow_girl_applications')
@@ -213,12 +139,92 @@ export async function reviewApplication(applicationId: string, status: 'APPROVED
 
   if (error) throw new Error(error.message)
 
-  // If approved, update user role to GLOW_GIRL
+  // If approved, update user role and auto-create glow_girls record
   if (status === 'APPROVED') {
     await supabase
       .from('profiles')
       .update({ role: 'GLOW_GIRL' })
       .eq('id', application.user_id)
+
+    // Auto-generate slug from full_name
+    const baseSlug = application.full_name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 28)
+
+    // Ensure uniqueness by appending random suffix if needed
+    let slug = baseSlug
+    const { data: existing } = await supabase
+      .from('glow_girls')
+      .select('id')
+      .eq('slug', slug)
+      .single()
+
+    if (existing) {
+      slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`
+    }
+
+    // Generate unique referral code
+    const referralCode = slug.toUpperCase().replace(/-/g, '').slice(0, 6) +
+      Math.random().toString(36).slice(2, 6).toUpperCase()
+
+    // Check for referred_by_code from user metadata
+    const { data: { user: applicantUser } } = await supabase.auth.admin.getUserById(application.user_id)
+    const referredByCode = (applicantUser?.user_metadata?.referred_by_code as string) || null
+
+    // Create glow girl record
+    const { data: glowGirl, error: insertErr } = await supabase
+      .from('glow_girls')
+      .insert({
+        user_id: application.user_id,
+        slug,
+        brand_name: application.full_name,
+        referral_code: referralCode,
+        referred_by_code: referredByCode,
+        approved: true,
+      })
+      .select()
+      .single()
+
+    if (insertErr) throw new Error(insertErr.message)
+
+    // If referred by someone, create the referral relationship
+    if (referredByCode && glowGirl) {
+      const { data: referrer } = await supabase
+        .from('glow_girls')
+        .select('id')
+        .eq('referral_code', referredByCode)
+        .single()
+
+      if (referrer && referrer.id !== glowGirl.id) {
+        const expiresAt = new Date()
+        expiresAt.setMonth(expiresAt.getMonth() + 12)
+
+        await supabase.from('glow_girl_referrals').insert({
+          referrer_id: referrer.id,
+          referred_id: glowGirl.id,
+          match_expires_at: expiresAt.toISOString(),
+        })
+
+        // Auto-join the referrer's pod if they lead one
+        const { data: referrerPod } = await supabase
+          .from('pod_memberships')
+          .select('pod_id')
+          .eq('glow_girl_id', referrer.id)
+          .eq('role', 'LEADER')
+          .is('left_at', null)
+          .single()
+
+        if (referrerPod) {
+          await supabase.from('pod_memberships').insert({
+            pod_id: referrerPod.pod_id,
+            glow_girl_id: glowGirl.id,
+            role: 'MEMBER',
+          })
+        }
+      }
+    }
   }
 
   revalidatePath('/admin')

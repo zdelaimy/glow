@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 
 export function AdminOrderExport() {
@@ -42,8 +41,11 @@ export function AdminOrderExport() {
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={handleExport}>
+    <button
+      onClick={handleExport}
+      className="rounded-full border border-[#6E6A62]/30 px-4 py-1.5 text-xs font-medium text-[#6E6A62] hover:bg-[#f5f0eb] transition-colors"
+    >
       Export CSV
-    </Button>
+    </button>
   )
 }

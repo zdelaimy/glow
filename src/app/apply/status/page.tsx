@@ -28,9 +28,9 @@ export default function ApplicationStatusPage() {
         return
       }
 
-      // If approved, redirect to onboarding
+      // If approved, redirect to dashboard
       if (app.status === 'APPROVED') {
-        router.push('/glow-girl/onboarding')
+        router.push('/glow-girl/dashboard')
         return
       }
 

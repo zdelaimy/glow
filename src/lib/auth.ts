@@ -58,7 +58,7 @@ export async function requireGlowGirl(): Promise<{ user: Awaited<ReturnType<type
     .single()
 
   if (!glowGirl) {
-    redirect('/glow-girl/onboarding')
+    redirect('/')
   }
 
   return { user, profile, glowGirl }

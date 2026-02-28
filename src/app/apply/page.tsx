@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -29,8 +29,8 @@ const FOLLOWER_RANGES = [
 ]
 
 const HEARD_FROM_OPTIONS = [
-  'Social media',
   'Friend or referral',
+  'Social media',
   'Google search',
   'Event',
   'Other',
@@ -52,8 +52,21 @@ const US_STATES = [
   'VA','WA','WV','WI','WY','DC',
 ]
 
-export default function ApplyPage() {
+export default function ApplyPageWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f5f0eb] flex items-center justify-center">
+        <div className="w-5 h-5 border-2 border-[#6E6A62]/20 border-t-[#6E6A62] rounded-full animate-spin" />
+      </div>
+    }>
+      <ApplyPage />
+    </Suspense>
+  )
+}
+
+function ApplyPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
@@ -80,6 +93,7 @@ export default function ApplyPage() {
   const [whyGlow, setWhyGlow] = useState('')
   const [previousDirectSales, setPreviousDirectSales] = useState(false)
   const [previousCompany, setPreviousCompany] = useState('')
+  const [referralCode, setReferralCode] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [agreedToCompPlan, setAgreedToCompPlan] = useState(false)
 
@@ -102,6 +116,15 @@ export default function ApplyPage() {
     }
     check()
   }, [router])
+
+  // Pre-fill referral code from URL ?ref= param
+  useEffect(() => {
+    const ref = searchParams.get('ref')
+    if (ref) {
+      setReferralCode(ref)
+      setHeardFrom('Friend or referral')
+    }
+  }, [searchParams])
 
   function togglePlatform(id: string) {
     setSocialPlatforms(prev =>
@@ -146,6 +169,9 @@ export default function ApplyPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: referralCode ? {
+        data: { referred_by_code: referralCode },
+      } : undefined,
     })
 
     if (error) {
@@ -182,6 +208,7 @@ export default function ApplyPage() {
         why_glow: whyGlow,
         previous_direct_sales: previousDirectSales,
         previous_company: previousDirectSales ? previousCompany || null : null,
+        referral_code: referralCode || null,
         agreed_to_terms: true,
       })
       router.push('/apply/status')
@@ -506,6 +533,25 @@ export default function ApplyPage() {
                     ))}
                   </div>
                 </FieldGroup>
+
+                {heardFrom === 'Friend or referral' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    <FieldGroup label="Referral code">
+                      <Input
+                        value={referralCode}
+                        onChange={(e) => setReferralCode(e.target.value)}
+                        placeholder="e.g., GLOW1234"
+                        maxLength={20}
+                        className="h-12 bg-[#f5f0eb]/50 border-[#6E6A62]/15 rounded-xl text-[#6E6A62] placeholder:text-[#6E6A62]/30 focus-visible:ring-[#6E6A62]/20 focus-visible:border-[#6E6A62]/40"
+                      />
+                      <p className="text-xs text-[#6E6A62]/40 mt-1">Optional — enter if you have one</p>
+                    </FieldGroup>
+                  </motion.div>
+                )}
 
                 <FieldGroup label="What products interest you?">
                   <div className="grid grid-cols-2 gap-2.5">

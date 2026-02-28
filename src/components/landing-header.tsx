@@ -45,7 +45,7 @@ export function LandingHeader({ variant = "hero" }: { variant?: "hero" | "light"
         {/* Right nav */}
         <div className="flex items-center gap-5">
           <Link
-            href="/glow-girls"
+            href="/welcome"
             className={cn(
               "hidden sm:block text-sm md:text-base uppercase tracking-[0.12em] font-medium transition-colors duration-300 px-4 py-1.5 rounded-full border",
               showSolid

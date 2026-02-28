@@ -207,14 +207,14 @@ export default function HomePage() {
             business — we&apos;ve got you either way.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/shop">
+            <Link href="/welcome">
               <button className="h-12 px-8 rounded-full bg-[#6E6A62] text-white text-sm font-medium hover:bg-[#5E5A52] transition-colors cursor-pointer font-inter">
-                Shop Products
+                Become a Glow Girl
               </button>
             </Link>
-            <Link href="/glow-girls">
+            <Link href="/shop">
               <button className="h-12 px-8 rounded-full bg-transparent text-[#6E6A62] border border-[#6E6A62]/30 text-sm font-medium hover:border-[#6E6A62]/60 transition-colors cursor-pointer font-inter">
-                Become a Glow Girl
+                Shop Products
               </button>
             </Link>
           </div>

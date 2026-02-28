@@ -46,7 +46,7 @@ export async function GET(request: Request) {
 
         if (application) {
           if (application.status === 'APPROVED') {
-            return NextResponse.redirect(`${origin}/glow-girl/onboarding`)
+            return NextResponse.redirect(`${origin}/glow-girl/dashboard`)
           }
           return NextResponse.redirect(`${origin}/apply/status`)
         }

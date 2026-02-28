@@ -49,7 +49,7 @@ export default function AboutPage() {
 
           <div className="pt-6">
             <Link
-              href="/glow-girls"
+              href="/welcome"
               className="inline-block bg-[#6E6A62] text-white text-xs uppercase tracking-[0.2em] px-8 py-3 hover:bg-[#5a5751] transition-colors font-inter"
             >
               Become a Glow Girl
