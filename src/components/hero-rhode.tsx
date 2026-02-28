@@ -68,7 +68,7 @@ export function HeroRhode() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.45 }}
             >
-              <h1 className="font-serif text-[2.5rem] md:text-[3.25rem] lg:text-[3.75rem] text-white leading-[1.08] max-w-xl tracking-tight">
+              <h1 className="text-[2.5rem] md:text-[3.25rem] lg:text-[3.75rem] text-white leading-[1.08] max-w-xl tracking-tight">
                 {slide.headline}
               </h1>
               <p className="mt-2.5 text-[13px] md:text-sm text-white/60 max-w-sm tracking-wide font-inter">

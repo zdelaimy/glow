@@ -228,9 +228,8 @@ export default async function GlowGirlsOpportunityPage({
       </main>
 
       <footer className="border-t py-8 mt-8">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center text-sm text-muted-foreground">
-          <span>Glow Beauty</span>
-          <span>Cosmetic products only. Not intended to diagnose or treat any condition.</span>
+        <div className="max-w-7xl mx-auto px-6 text-center text-sm text-muted-foreground">
+          <span>Glow Labs</span>
         </div>
       </footer>
     </div>

@@ -52,8 +52,8 @@ const config: Config = {
   			}
   		},
   		fontFamily: {
-  			inter: ['var(--font-inter)', 'Inter', 'sans-serif'],
-  			serif: ['var(--font-instrument-serif)', 'Georgia', 'serif'],
+  			sans: ['Avenir', 'sans-serif'],
+  			inter: ['Avenir', 'sans-serif'],
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

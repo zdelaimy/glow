@@ -174,7 +174,7 @@ export default async function ProductPage({ params }: Props) {
       </main>
 
       <footer className="border-t py-6 text-center text-sm text-muted-foreground mt-12">
-        <p>Powered by Glow &middot; Cosmetic products only. Not intended to diagnose or treat any condition.</p>
+        <p>Powered by Glow</p>
       </footer>
     </div>
   )

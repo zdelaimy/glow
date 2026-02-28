@@ -173,7 +173,7 @@ export default async function GlowGirlStorefront({ params }: Props) {
       </section>
 
       <footer className="border-t py-6 text-center text-sm text-muted-foreground">
-        <p>Powered by Glow &middot; Cosmetic products only. Not intended to diagnose or treat any condition.</p>
+        <p>Powered by Glow</p>
       </footer>
     </div>
   )

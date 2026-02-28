@@ -56,10 +56,10 @@ export function HeroCurated() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-8 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] text-white"
+          className="mt-8 text-5xl md:text-7xl lg:text-8xl leading-[1.05] text-white"
         >
           Your skin.{" "}
-          <em className="text-amber-300 not-italic font-serif italic">
+          <em className="text-amber-300 not-italic italic">
             Your Glow Girl.
           </em>
           <br />
