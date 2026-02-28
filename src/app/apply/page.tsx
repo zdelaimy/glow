@@ -9,7 +9,7 @@ import { submitApplication, getMyApplication } from '@/lib/actions/glow-girl'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
-const STEPS = ['About You', 'Social', 'Interest', 'Agreement']
+const STEPS = ['Account', 'About You', 'Social', 'Interest', 'Agreement']
 
 const SOCIAL_PLATFORMS = [
   { id: 'instagram', label: 'Instagram' },
@@ -58,6 +58,12 @@ export default function ApplyPage() {
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Account step
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
   // Form state
   const [fullName, setFullName] = useState('')
@@ -81,14 +87,16 @@ export default function ApplyPage() {
     async function check() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/login')
-        return
-      }
-      const application = await getMyApplication()
-      if (application) {
-        router.push('/apply/status')
-        return
+      if (user) {
+        // Already logged in — check if they already applied
+        const application = await getMyApplication()
+        if (application) {
+          router.push('/apply/status')
+          return
+        }
+        // Skip account step
+        setIsAuthenticated(true)
+        setStep(1)
       }
       setChecking(false)
     }
@@ -109,12 +117,50 @@ export default function ApplyPage() {
 
   function canAdvance(): boolean {
     switch (step) {
-      case 0: return !!(fullName && phone && dob && city && state)
-      case 1: return !!(socialPlatforms.length > 0 && followerRange)
-      case 2: return !!(heardFrom && interestedProducts.length > 0 && whyGlow.length >= 10)
-      case 3: return agreedToTerms && agreedToCompPlan
+      case 0: return !!(email && password.length >= 8 && password === confirmPassword)
+      case 1: return !!(fullName && phone && dob && city && state)
+      case 2: return !!(socialPlatforms.length > 0 && followerRange)
+      case 3: return !!(heardFrom && interestedProducts.length > 0 && whyGlow.length >= 10)
+      case 4: return agreedToTerms && agreedToCompPlan
       default: return false
     }
+  }
+
+  async function handleCreateAccount() {
+    setLoading(true)
+    setError(null)
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      setLoading(false)
+      return
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      setLoading(false)
+      return
+    }
+
+    const supabase = createClient()
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    })
+
+    if (error) {
+      if (error.message.includes('already registered')) {
+        setError('An account with this email already exists. Try signing in instead.')
+      } else {
+        setError(error.message)
+      }
+      setLoading(false)
+      return
+    }
+
+    setIsAuthenticated(true)
+    setStep(1)
+    setLoading(false)
   }
 
   async function handleSubmit() {
@@ -145,6 +191,15 @@ export default function ApplyPage() {
     setLoading(false)
   }
 
+  function handleNext() {
+    if (step === 0 && !isAuthenticated) {
+      handleCreateAccount()
+    } else if (step < STEPS.length - 1) {
+      setError(null)
+      setStep(s => s + 1)
+    }
+  }
+
   if (checking) {
     return (
       <div className="min-h-screen bg-[#f5f0eb] flex items-center justify-center">
@@ -173,17 +228,21 @@ export default function ApplyPage() {
         {/* Progress */}
         <div className="mb-10">
           <div className="flex justify-between mb-3">
-            {STEPS.map((s, i) => (
-              <button
-                key={s}
-                onClick={() => i < step && setStep(i)}
-                className={`text-xs font-inter uppercase tracking-[0.15em] transition-colors ${
-                  i <= step ? 'text-[#6E6A62]' : 'text-[#6E6A62]/30'
-                } ${i < step ? 'cursor-pointer hover:text-[#5E5A52]' : 'cursor-default'}`}
-              >
-                {s}
-              </button>
-            ))}
+            {STEPS.map((s, i) => {
+              // If already authenticated, hide "Account" label
+              if (i === 0 && isAuthenticated) return <span key={s} />
+              return (
+                <button
+                  key={s}
+                  onClick={() => i < step && (!isAuthenticated || i > 0) && setStep(i)}
+                  className={`text-xs font-inter uppercase tracking-[0.15em] transition-colors ${
+                    i <= step ? 'text-[#6E6A62]' : 'text-[#6E6A62]/30'
+                  } ${i < step && (!isAuthenticated || i > 0) ? 'cursor-pointer hover:text-[#5E5A52]' : 'cursor-default'}`}
+                >
+                  {s}
+                </button>
+              )
+            })}
           </div>
           <div className="h-0.5 bg-[#6E6A62]/10 rounded-full overflow-hidden">
             <motion.div
@@ -204,24 +263,81 @@ export default function ApplyPage() {
           transition={{ duration: 0.3 }}
         >
           <h1 className="text-[1.75rem] font-light text-[#6E6A62] tracking-tight leading-tight">
-            {step === 0 && 'Tell us about yourself'}
-            {step === 1 && 'Your social presence'}
-            {step === 2 && "What brings you to Glow?"}
-            {step === 3 && 'Almost there'}
+            {step === 0 && 'Create your account'}
+            {step === 1 && 'Tell us about yourself'}
+            {step === 2 && 'Your social presence'}
+            {step === 3 && "What brings you to Glow?"}
+            {step === 4 && 'Almost there'}
           </h1>
           <p className="text-[#6E6A62]/50 text-sm mt-2">
-            {step === 0 && "We'd love to get to know you."}
-            {step === 1 && 'Where do you connect with your audience?'}
-            {step === 2 && 'Help us understand what excites you.'}
-            {step === 3 && 'Review and submit your application.'}
+            {step === 0 && "You'll use this to sign into your Glow account."}
+            {step === 1 && "We'd love to get to know you."}
+            {step === 2 && 'Where do you connect with your audience?'}
+            {step === 3 && 'Help us understand what excites you.'}
+            {step === 4 && 'Review and submit your application.'}
           </p>
         </motion.div>
 
         {/* Form steps */}
         <div className="bg-white rounded-2xl border border-[#6E6A62]/10 p-6 sm:p-8">
           <AnimatePresence mode="wait">
-            {/* Step 0: About You */}
-            {step === 0 && (
+            {/* Step 0: Account */}
+            {step === 0 && !isAuthenticated && (
+              <motion.div
+                key="account"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-5"
+              >
+                <FieldGroup label="Email address">
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="h-12 bg-[#f5f0eb]/50 border-[#6E6A62]/15 rounded-xl text-[#6E6A62] placeholder:text-[#6E6A62]/30 focus-visible:ring-[#6E6A62]/20 focus-visible:border-[#6E6A62]/40"
+                  />
+                </FieldGroup>
+
+                <FieldGroup label="Create a password">
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                    className="h-12 bg-[#f5f0eb]/50 border-[#6E6A62]/15 rounded-xl text-[#6E6A62] placeholder:text-[#6E6A62]/30 focus-visible:ring-[#6E6A62]/20 focus-visible:border-[#6E6A62]/40"
+                  />
+                  {password.length > 0 && password.length < 8 && (
+                    <p className="text-xs text-rose-400 mt-1">Must be at least 8 characters</p>
+                  )}
+                </FieldGroup>
+
+                <FieldGroup label="Confirm password">
+                  <Input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    className="h-12 bg-[#f5f0eb]/50 border-[#6E6A62]/15 rounded-xl text-[#6E6A62] placeholder:text-[#6E6A62]/30 focus-visible:ring-[#6E6A62]/20 focus-visible:border-[#6E6A62]/40"
+                  />
+                  {confirmPassword.length > 0 && password !== confirmPassword && (
+                    <p className="text-xs text-rose-400 mt-1">Passwords don&apos;t match</p>
+                  )}
+                </FieldGroup>
+
+                <p className="text-xs text-[#6E6A62]/40 pt-1">
+                  Already have an account?{' '}
+                  <Link href="/login" className="text-[#6E6A62] underline underline-offset-2 hover:text-[#5E5A52] transition-colors font-medium">
+                    Sign in
+                  </Link>
+                </p>
+              </motion.div>
+            )}
+
+            {/* Step 1: About You */}
+            {step === 1 && (
               <motion.div
                 key="about"
                 initial={{ opacity: 0, x: 20 }}
@@ -283,8 +399,8 @@ export default function ApplyPage() {
               </motion.div>
             )}
 
-            {/* Step 1: Social Presence */}
-            {step === 1 && (
+            {/* Step 2: Social Presence */}
+            {step === 2 && (
               <motion.div
                 key="social"
                 initial={{ opacity: 0, x: 20 }}
@@ -362,8 +478,8 @@ export default function ApplyPage() {
               </motion.div>
             )}
 
-            {/* Step 2: Interest */}
-            {step === 2 && (
+            {/* Step 3: Interest */}
+            {step === 3 && (
               <motion.div
                 key="interest"
                 initial={{ opacity: 0, x: 20 }}
@@ -458,8 +574,8 @@ export default function ApplyPage() {
               </motion.div>
             )}
 
-            {/* Step 3: Agreement */}
-            {step === 3 && (
+            {/* Step 4: Agreement */}
+            {step === 4 && (
               <motion.div
                 key="agreement"
                 initial={{ opacity: 0, x: 20 }}
@@ -550,7 +666,7 @@ export default function ApplyPage() {
           <div className="flex justify-between mt-8 pt-6 border-t border-[#6E6A62]/10">
             <button
               onClick={() => setStep(s => s - 1)}
-              disabled={step === 0}
+              disabled={step === 0 || (isAuthenticated && step === 1)}
               className="px-5 py-2.5 text-sm text-[#6E6A62] hover:text-[#5E5A52] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               Back
@@ -558,13 +674,24 @@ export default function ApplyPage() {
 
             {step < STEPS.length - 1 ? (
               <motion.button
-                onClick={() => setStep(s => s + 1)}
-                disabled={!canAdvance()}
-                className="px-6 py-2.5 rounded-full text-sm font-medium text-white bg-[#6E6A62] hover:bg-[#5E5A52] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                whileHover={{ scale: canAdvance() ? 1.02 : 1 }}
-                whileTap={{ scale: canAdvance() ? 0.98 : 1 }}
+                onClick={handleNext}
+                disabled={!canAdvance() || loading}
+                className="px-6 py-2.5 rounded-full text-sm font-medium text-white bg-[#6E6A62] hover:bg-[#5E5A52] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                whileHover={{ scale: canAdvance() && !loading ? 1.02 : 1 }}
+                whileTap={{ scale: canAdvance() && !loading ? 0.98 : 1 }}
               >
-                Continue
+                {loading ? (
+                  <>
+                    <motion.div
+                      className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                    />
+                    Creating account...
+                  </>
+                ) : (
+                  'Continue'
+                )}
               </motion.button>
             ) : (
               <motion.button

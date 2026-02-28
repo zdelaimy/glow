@@ -88,14 +88,14 @@ export default function ApplicationStatusPage() {
               </motion.div>
 
               <h1 className="text-[1.75rem] font-light text-[#6E6A62] tracking-tight mb-3">
-                Application submitted
+                Your application is in progress
               </h1>
               <p className="text-[#6E6A62]/60 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
-                Thanks, {application?.full_name?.split(' ')[0]}! We&apos;re reviewing your application
-                and will be in touch soon. This usually takes 1–2 business days.
+                Thanks, {application?.full_name?.split(' ')[0]}! Our team is reviewing your application.
+                We&apos;ll notify you by email once you&apos;ve been accepted. This usually takes 1–2 business days.
               </p>
 
-              <div className="bg-white rounded-xl border border-[#6E6A62]/10 p-5 text-left space-y-2 text-sm">
+              <div className="bg-white rounded-xl border border-[#6E6A62]/10 p-5 text-left space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-[#6E6A62]/50">Status</span>
                   <span className="text-[#6E6A62] font-medium flex items-center gap-1.5">
@@ -110,6 +110,13 @@ export default function ApplicationStatusPage() {
                       month: 'short', day: 'numeric', year: 'numeric'
                     })}
                   </span>
+                </div>
+                <div className="pt-2 border-t border-[#6E6A62]/5">
+                  <p className="text-xs text-[#6E6A62]/40 leading-relaxed">
+                    You can sign back in anytime at{' '}
+                    <Link href="/login" className="text-[#6E6A62] underline underline-offset-2">glow.co/login</Link>
+                    {' '}to check your status.
+                  </p>
                 </div>
               </div>
             </>
