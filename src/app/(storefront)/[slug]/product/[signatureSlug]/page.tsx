@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ProductCheckout } from '@/components/product-checkout'
+import { Footer } from "@/components/footer"
 import type { GlowGirl, BaseFormula, Booster, Texture, Scent } from '@/types/database'
 
 interface Props {
@@ -173,9 +174,7 @@ export default async function ProductPage({ params }: Props) {
         </div>
       </main>
 
-      <footer className="border-t py-6 text-center text-sm text-muted-foreground mt-12">
-        <p>Powered by Glow</p>
-      </footer>
+      <Footer />
     </div>
   )
 }

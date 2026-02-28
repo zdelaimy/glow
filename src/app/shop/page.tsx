@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { LandingHeader } from "@/components/landing-header"
+import { Footer } from "@/components/footer"
 
 const products = [
   {
@@ -188,12 +189,7 @@ export default function ShopPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-[#f5f0eb]">
-        <div className="max-w-7xl mx-auto px-6 py-12 text-center text-xs text-[#6E6A62]/60">
-          <span className="font-medium text-[#6E6A62]">&copy; {new Date().getFullYear()} Glow Labs</span>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

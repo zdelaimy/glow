@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { StorefrontTracker } from '@/components/storefront-tracker'
+import { Footer } from "@/components/footer"
 import type { GlowGirl, GlowGirlSignature, BaseFormula, Booster } from '@/types/database'
 
 interface Props {
@@ -172,9 +173,7 @@ export default async function GlowGirlStorefront({ params }: Props) {
         </div>
       </section>
 
-      <footer className="border-t py-6 text-center text-sm text-muted-foreground">
-        <p>Powered by Glow</p>
-      </footer>
+      <Footer />
     </div>
   )
 }
