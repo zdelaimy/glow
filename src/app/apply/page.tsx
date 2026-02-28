@@ -72,6 +72,7 @@ function ApplyPage() {
   const [checking, setChecking] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [needsPassword, setNeedsPassword] = useState(false)
 
   // Account step
   const [email, setEmail] = useState('')
@@ -108,8 +109,9 @@ function ApplyPage() {
           router.push('/apply/status')
           return
         }
-        // Skip account step
+        // Skip account step — user likely came via OTP welcome flow
         setIsAuthenticated(true)
+        setNeedsPassword(true)
         setStep(1)
       }
       setChecking(false)
@@ -141,7 +143,13 @@ function ApplyPage() {
   function canAdvance(): boolean {
     switch (step) {
       case 0: return !!(email && password.length >= 8 && password === confirmPassword)
-      case 1: return !!(fullName && phone && dob && city && state)
+      case 1: {
+        const baseValid = !!(fullName && phone && dob && city && state)
+        if (needsPassword) {
+          return baseValid && password.length >= 8 && password === confirmPassword
+        }
+        return baseValid
+      }
       case 2: return !!(socialPlatforms.length > 0 && followerRange)
       case 3: return !!(heardFrom && interestedProducts.length > 0 && whyGlow.length >= 10)
       case 4: return agreedToTerms && agreedToCompPlan
@@ -218,9 +226,23 @@ function ApplyPage() {
     setLoading(false)
   }
 
-  function handleNext() {
+  async function handleNext() {
     if (step === 0 && !isAuthenticated) {
       handleCreateAccount()
+    } else if (step === 1 && needsPassword) {
+      // Set password for OTP users before advancing
+      setLoading(true)
+      setError(null)
+      const supabase = createClient()
+      const { error } = await supabase.auth.updateUser({ password })
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+      setNeedsPassword(false)
+      setStep(2)
+      setLoading(false)
     } else if (step < STEPS.length - 1) {
       setError(null)
       setStep(s => s + 1)
@@ -373,6 +395,44 @@ function ApplyPage() {
                 transition={{ duration: 0.3 }}
                 className="space-y-5"
               >
+                {needsPassword && (
+                  <>
+                    <div className="rounded-xl bg-[#f5f0eb]/60 px-4 py-3">
+                      <p className="text-sm text-[#6E6A62]/70">
+                        Create a password so you can sign in to your account later.
+                      </p>
+                    </div>
+
+                    <FieldGroup label="Create a password">
+                      <Input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="At least 8 characters"
+                        className="h-12 bg-[#f5f0eb]/50 border-[#6E6A62]/15 rounded-xl text-[#6E6A62] placeholder:text-[#6E6A62]/30 focus-visible:ring-[#6E6A62]/20 focus-visible:border-[#6E6A62]/40"
+                      />
+                      {password.length > 0 && password.length < 8 && (
+                        <p className="text-xs text-rose-400 mt-1">Must be at least 8 characters</p>
+                      )}
+                    </FieldGroup>
+
+                    <FieldGroup label="Confirm password">
+                      <Input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Re-enter your password"
+                        className="h-12 bg-[#f5f0eb]/50 border-[#6E6A62]/15 rounded-xl text-[#6E6A62] placeholder:text-[#6E6A62]/30 focus-visible:ring-[#6E6A62]/20 focus-visible:border-[#6E6A62]/40"
+                      />
+                      {confirmPassword.length > 0 && password !== confirmPassword && (
+                        <p className="text-xs text-rose-400 mt-1">Passwords don&apos;t match</p>
+                      )}
+                    </FieldGroup>
+
+                    <div className="border-b border-[#6E6A62]/10" />
+                  </>
+                )}
+
                 <FieldGroup label="Full name">
                   <Input
                     value={fullName}
@@ -733,7 +793,7 @@ function ApplyPage() {
                       animate={{ rotate: 360 }}
                       transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
                     />
-                    Creating account...
+                    {step === 0 ? 'Creating account...' : 'Saving...'}
                   </>
                 ) : (
                   'Continue'
