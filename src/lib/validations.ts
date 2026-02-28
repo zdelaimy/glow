@@ -25,5 +25,24 @@ export const glowGirlSignatureSchema = z.object({
   ritual_instructions: z.string().max(1000).nullable(),
 })
 
+export const glowGirlApplicationSchema = z.object({
+  full_name: z.string().min(2).max(100),
+  phone: z.string().min(7).max(20),
+  date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  city: z.string().min(2).max(100),
+  state: z.string().min(2).max(100),
+  social_platforms: z.array(z.string()).min(1),
+  primary_handle: z.string().max(100).nullable(),
+  follower_range: z.string().min(1),
+  creates_content: z.boolean(),
+  heard_from: z.string().min(1),
+  interested_products: z.array(z.string()).min(1),
+  why_glow: z.string().min(10).max(500),
+  previous_direct_sales: z.boolean(),
+  previous_company: z.string().max(100).nullable(),
+  agreed_to_terms: z.literal(true, { message: 'You must agree to the terms' }),
+})
+
 export type GlowGirlBrandInput = z.infer<typeof glowGirlBrandSchema>
 export type GlowGirlSignatureInput = z.infer<typeof glowGirlSignatureSchema>
+export type GlowGirlApplicationInput = z.infer<typeof glowGirlApplicationSchema>

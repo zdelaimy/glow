@@ -36,6 +36,22 @@ export async function GET(request: Request) {
         if (profile?.role === 'GLOW_GIRL') {
           return NextResponse.redirect(`${origin}/glow-girl/dashboard`)
         }
+
+        // Check for existing application
+        const { data: application } = await supabase
+          .from('glow_girl_applications')
+          .select('status')
+          .eq('user_id', user.id)
+          .single()
+
+        if (application) {
+          if (application.status === 'APPROVED') {
+            return NextResponse.redirect(`${origin}/glow-girl/onboarding`)
+          }
+          return NextResponse.redirect(`${origin}/apply/status`)
+        }
+
+        return NextResponse.redirect(`${origin}/apply`)
       }
       return NextResponse.redirect(`${origin}${redirect}`)
     }

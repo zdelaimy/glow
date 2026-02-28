@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/input'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,11 +10,14 @@ import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [step, setStep] = useState<'email' | 'code'>('email')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const searchParams = useSearchParams()
+  const router = useRouter()
   const refCode = searchParams.get('ref')
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const supabase = createClient()
 
@@ -24,7 +27,7 @@ export default function LoginPage() {
     }
   }, [refCode])
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleSendCode(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -32,47 +35,158 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        shouldCreateUser: true,
       },
     })
 
     if (error) {
       setError(error.message)
     } else {
-      setSent(true)
+      setStep('code')
+      setTimeout(() => inputRefs.current[0]?.focus(), 100)
+    }
+    setLoading(false)
+  }
+
+  async function handleVerifyCode(code: string) {
+    setLoading(true)
+    setError(null)
+
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: code,
+      type: 'email',
+    })
+
+    if (error) {
+      setError('Invalid code. Please try again.')
+      setOtp(['', '', '', '', '', ''])
+      setTimeout(() => inputRefs.current[0]?.focus(), 100)
+    } else {
+      // Store referral code if present
+      if (refCode) {
+        await supabase.auth.updateUser({
+          data: { referred_by_code: refCode },
+        })
+      }
+
+      // Role-based redirect
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.role === 'ADMIN') {
+          router.push('/admin')
+        } else if (profile?.role === 'GLOW_GIRL') {
+          router.push('/glow-girl/dashboard')
+        } else {
+          // Check if they have a pending application
+          const { data: application } = await supabase
+            .from('glow_girl_applications')
+            .select('status')
+            .eq('user_id', user.id)
+            .single()
+
+          if (application) {
+            if (application.status === 'APPROVED') {
+              router.push('/glow-girl/onboarding')
+            } else {
+              router.push('/apply/status')
+            }
+          } else {
+            router.push('/apply')
+          }
+        }
+      } else {
+        router.push('/')
+      }
+    }
+    setLoading(false)
+  }
+
+  function handleOtpChange(index: number, value: string) {
+    if (!/^\d*$/.test(value)) return
+
+    const newOtp = [...otp]
+    newOtp[index] = value.slice(-1)
+    setOtp(newOtp)
+
+    // Auto-advance to next input
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus()
+    }
+
+    // Auto-submit when all 6 digits entered
+    const code = newOtp.join('')
+    if (code.length === 6) {
+      handleVerifyCode(code)
+    }
+  }
+
+  function handleOtpKeyDown(index: number, e: React.KeyboardEvent) {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus()
+    }
+  }
+
+  function handleOtpPaste(e: React.ClipboardEvent) {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (pasted.length === 0) return
+
+    const newOtp = [...otp]
+    for (let i = 0; i < 6; i++) {
+      newOtp[i] = pasted[i] || ''
+    }
+    setOtp(newOtp)
+
+    if (pasted.length === 6) {
+      handleVerifyCode(pasted)
+    } else {
+      inputRefs.current[pasted.length]?.focus()
+    }
+  }
+
+  async function handleResendCode() {
+    setLoading(true)
+    setError(null)
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+      },
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setOtp(['', '', '', '', '', ''])
+      setError(null)
+      setTimeout(() => inputRefs.current[0]?.focus(), 100)
     }
     setLoading(false)
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-[#f5f0eb]">
       {/* Left — Brand Panel */}
-      <div className="relative hidden lg:flex lg:w-[52%] overflow-hidden items-center justify-center bg-[#0c0a14]">
-        {/* Gradient orbs — static for performance */}
-        <div className="absolute inset-0">
+      <div className="relative hidden lg:flex lg:w-[52%] overflow-hidden items-center justify-center bg-white">
+        {/* Subtle decorative circles */}
+        <div className="absolute inset-0 overflow-hidden">
           <div
-            className="absolute w-[600px] h-[600px] rounded-full opacity-30"
-            style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)', top: '-10%', left: '-10%' }}
+            className="absolute w-[500px] h-[500px] rounded-full opacity-[0.04]"
+            style={{ background: 'radial-gradient(circle, #6E6A62 0%, transparent 70%)', top: '-15%', right: '-10%' }}
           />
           <div
-            className="absolute w-[500px] h-[500px] rounded-full opacity-25"
-            style={{ background: 'radial-gradient(circle, #e11d89 0%, transparent 70%)', bottom: '-5%', right: '-5%' }}
-          />
-          <div
-            className="absolute w-[300px] h-[300px] rounded-full opacity-20"
-            style={{ background: 'radial-gradient(circle, #f472b6 0%, transparent 70%)', top: '40%', left: '50%' }}
+            className="absolute w-[400px] h-[400px] rounded-full opacity-[0.03]"
+            style={{ background: 'radial-gradient(circle, #6E6A62 0%, transparent 70%)', bottom: '-10%', left: '-5%' }}
           />
         </div>
-
-        {/* Grain texture overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'repeat',
-            backgroundSize: '128px 128px',
-          }}
-        />
 
         {/* Brand content */}
         <div className="relative z-10 px-16 max-w-lg">
@@ -82,58 +196,70 @@ export default function LoginPage() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 mb-16 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-400 to-rose-400 flex items-center justify-center">
-                <span className="text-white font-bold text-base">g</span>
-              </div>
-              <span className="text-white/90 text-lg tracking-[0.2em] uppercase font-light group-hover:text-white transition-colors">glow</span>
+            <Link href="/" className="block mb-16 group">
+              <span className="font-inter text-[2rem] tracking-tight text-[#6E6A62] font-medium group-hover:text-[#5E5A52] transition-colors leading-none">
+                GLOW
+              </span>
             </Link>
 
             {/* Headline */}
-            <h1 className="text-white text-[2.75rem] leading-[1.1] font-light tracking-tight mb-6">
+            <h1 className="text-[#6E6A62] text-[2.75rem] leading-[1.1] font-light tracking-tight mb-6">
               Your beauty business,{' '}
-              <span className="bg-gradient-to-r from-violet-300 to-rose-300 bg-clip-text text-transparent font-normal">
+              <span className="italic">
                 your way
               </span>
             </h1>
 
-            <p className="text-white/50 text-base leading-relaxed mb-12 max-w-sm">
+            <p className="text-[#6E6A62]/60 text-base leading-relaxed mb-12 max-w-sm">
               Open your storefront, share products you love, and earn commissions on every sale.
             </p>
 
-            {/* Product images */}
+            {/* Glow Girl headshots */}
             <div className="flex items-center gap-4">
               <div className="flex -space-x-3">
                 {[
-                  '/hero/1571781926291-c477ebfd024b.jpg',
-                  '/hero/1612817288484-6f916006741a.jpg',
-                  '/hero/1556228578-0d85b1a4d571.jpg',
+                  '/hero/headshot1.jpg',
+                  '/hero/headshot2.jpg',
+                  '/hero/headshot3.jpg',
                 ].map((src, i) => (
                   <motion.img
                     key={i}
                     src={src}
-                    alt="Product"
-                    className="w-10 h-10 rounded-full object-cover border-2 border-[#0c0a14]"
+                    alt="Glow Girl"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-white"
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 + i * 0.1 }}
                   />
                 ))}
               </div>
-              <span className="text-white/40 text-sm">Join 50+ Glow Girls</span>
+              <span className="text-[#6E6A62]/50 text-sm font-inter">Join 50+ Glow Girls</span>
+            </div>
+
+            {/* Stats row */}
+            <div className="flex gap-8 mt-14 pt-10 border-t border-neutral-200/60">
+              {[
+                { stat: '25%', label: 'Commission' },
+                { stat: '$0', label: 'To start' },
+                { stat: 'Weekly', label: 'Payouts' },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 + i * 0.1 }}
+                >
+                  <div className="text-2xl text-[#6E6A62] font-light">{item.stat}</div>
+                  <div className="text-xs text-[#6E6A62]/50 mt-1 uppercase tracking-[0.15em] font-inter">{item.label}</div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         </div>
-
-        {/* Bottom edge fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0c0a14] to-transparent" />
       </div>
 
       {/* Right — Form Panel */}
-      <div className="flex-1 flex items-center justify-center px-6 py-16 lg:px-16 bg-white relative">
-        {/* Subtle top-right accent for mobile */}
-        <div className="absolute top-0 right-0 w-64 h-64 opacity-[0.04] blur-[80px] bg-violet-500 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none lg:hidden" />
-
+      <div className="flex-1 flex items-center justify-center px-6 py-16 lg:px-16 relative">
         <motion.div
           className="w-full max-w-[380px]"
           initial={{ opacity: 0, y: 16 }}
@@ -141,11 +267,10 @@ export default function LoginPage() {
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           {/* Mobile logo */}
-          <Link href="/" className="flex items-center gap-2.5 mb-10 lg:hidden group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-rose-400 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">g</span>
-            </div>
-            <span className="text-neutral-800 text-base tracking-[0.15em] uppercase font-light group-hover:text-neutral-600 transition-colors">glow</span>
+          <Link href="/" className="block mb-10 lg:hidden group">
+            <span className="font-inter text-[2rem] tracking-tight text-[#6E6A62] font-medium group-hover:text-[#5E5A52] transition-colors leading-none">
+              GLOW
+            </span>
           </Link>
 
           {/* Header */}
@@ -155,13 +280,13 @@ export default function LoginPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.25 }}
           >
-            <h2 className="text-[1.7rem] font-light text-neutral-900 tracking-tight leading-tight">
-              {sent ? 'Check your inbox' : 'Welcome back'}
+            <h2 className="text-[1.7rem] font-light text-[#6E6A62] tracking-tight leading-tight">
+              {step === 'code' ? 'Enter your code' : 'Welcome back'}
             </h2>
-            <p className="text-neutral-400 text-[0.95rem] mt-2">
-              {sent
-                ? 'We sent you a link to sign in.'
-                : 'Enter your email to receive a sign-in link.'
+            <p className="text-[#6E6A62]/50 text-[0.95rem] mt-2">
+              {step === 'code'
+                ? <>We sent a 6-digit code to <span className="text-[#6E6A62] font-medium">{email}</span></>
+                : 'Enter your email to receive a sign-in code.'
               }
             </p>
           </motion.div>
@@ -177,56 +302,83 @@ export default function LoginPage() {
           )}
 
           <AnimatePresence mode="wait">
-            {sent ? (
+            {step === 'code' ? (
               <motion.div
-                key="sent"
+                key="code"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.4 }}
                 className="space-y-6"
               >
-                {/* Animated envelope */}
-                <div className="relative w-20 h-20 mx-auto my-4">
-                  <motion.div
-                    className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-100 to-rose-50"
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.svg
-                      className="w-9 h-9 text-violet-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                      initial={{ y: 4, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                {/* 6-digit OTP input */}
+                <div className="flex justify-center gap-2.5">
+                  {otp.map((digit, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => { inputRefs.current[i] = el }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(i, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                      onPaste={i === 0 ? handleOtpPaste : undefined}
+                      disabled={loading}
+                      className="w-12 h-14 text-center text-xl font-medium text-[#6E6A62] bg-white border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6E6A62]/20 focus:border-[#6E6A62]/40 transition-all duration-200 disabled:opacity-50"
+                    />
+                  ))}
+                </div>
+
+                <AnimatePresence>
+                  {error && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-sm text-rose-500 flex items-center justify-center gap-1.5"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                    </motion.svg>
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                      </svg>
+                      {error}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+
+                {loading && (
+                  <div className="flex items-center justify-center gap-2 text-[#6E6A62]/50 text-sm">
+                    <motion.div
+                      className="w-4 h-4 border-2 border-[#6E6A62]/20 border-t-[#6E6A62] rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                    />
+                    Verifying...
                   </div>
-                </div>
+                )}
 
-                <div className="text-center space-y-1.5">
-                  <p className="text-neutral-900 font-medium text-[0.95rem]">{email}</p>
-                  <p className="text-neutral-400 text-sm">
-                    Click the link in the email to sign in.
-                  </p>
+                <div className="flex items-center justify-center gap-4 text-sm">
+                  <button
+                    onClick={handleResendCode}
+                    disabled={loading}
+                    className="text-[#6E6A62] hover:text-[#5E5A52] transition-colors underline underline-offset-4 decoration-[#6E6A62]/30 hover:decoration-[#6E6A62]/60 disabled:opacity-50"
+                  >
+                    Resend code
+                  </button>
+                  <span className="text-[#6E6A62]/20">|</span>
+                  <button
+                    onClick={() => { setStep('email'); setOtp(['', '', '', '', '', '']); setError(null) }}
+                    disabled={loading}
+                    className="text-[#6E6A62] hover:text-[#5E5A52] transition-colors underline underline-offset-4 decoration-[#6E6A62]/30 hover:decoration-[#6E6A62]/60 disabled:opacity-50"
+                  >
+                    Use a different email
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => setSent(false)}
-                  className="block mx-auto text-sm text-violet-600 hover:text-violet-700 transition-colors underline underline-offset-4 decoration-violet-200 hover:decoration-violet-400"
-                >
-                  Use a different email
-                </button>
               </motion.div>
             ) : (
               <motion.form
                 key="form"
-                onSubmit={handleLogin}
+                onSubmit={handleSendCode}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
@@ -234,7 +386,7 @@ export default function LoginPage() {
                 className="space-y-5"
               >
                 <div className="space-y-2">
-                  <label htmlFor="email" className="block text-sm font-medium text-neutral-600 tracking-wide">
+                  <label htmlFor="email" className="block text-xs font-medium text-[#6E6A62]/70 uppercase tracking-[0.15em] font-inter">
                     Email address
                   </label>
                   <Input
@@ -244,7 +396,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="h-12 bg-neutral-50/80 border-neutral-200 rounded-xl px-4 text-neutral-900 placeholder:text-neutral-300 focus-visible:ring-violet-400/40 focus-visible:border-violet-300 transition-all duration-200"
+                    className="h-12 bg-white border-neutral-200 rounded-xl px-4 text-[#6E6A62] placeholder:text-[#6E6A62]/30 focus-visible:ring-[#6E6A62]/20 focus-visible:border-[#6E6A62]/40 transition-all duration-200"
                   />
                 </div>
 
@@ -267,14 +419,10 @@ export default function LoginPage() {
                 <motion.button
                   type="submit"
                   disabled={loading}
-                  className="relative w-full h-12 rounded-xl text-[0.95rem] font-medium text-white overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed group"
+                  className="relative w-full h-12 rounded-full text-[0.95rem] font-medium text-white overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed group bg-[#6E6A62] hover:bg-[#5E5A52] transition-colors cursor-pointer"
                   whileHover={{ scale: loading ? 1 : 1.01 }}
                   whileTap={{ scale: loading ? 1 : 0.985 }}
                 >
-                  {/* Button gradient bg */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-violet-500 to-rose-500 transition-opacity duration-300" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-violet-700 via-violet-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     {loading ? (
                       <>
@@ -283,7 +431,7 @@ export default function LoginPage() {
                           animate={{ rotate: 360 }}
                           transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
                         />
-                        Sending link...
+                        Sending code...
                       </>
                     ) : (
                       <>
@@ -296,22 +444,49 @@ export default function LoginPage() {
                   </span>
                 </motion.button>
 
-                <p className="text-xs text-center text-neutral-400 pt-1 leading-relaxed">
-                  No password needed. We&apos;ll email you a secure link.
+                <p className="text-xs text-center text-[#6E6A62]/40 pt-1 leading-relaxed">
+                  No password needed. We&apos;ll email you a 6-digit code.
                 </p>
               </motion.form>
             )}
           </AnimatePresence>
 
-          {/* Bottom */}
+          {/* Mobile headshots */}
           <motion.div
-            className="mt-12 pt-6 border-t border-neutral-100"
+            className="mt-10 flex items-center justify-center gap-3 lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            <p className="text-xs text-neutral-300 text-center">
-              By continuing, you agree to Glow&apos;s Terms of Service and Privacy Policy.
+            <div className="flex -space-x-2.5">
+              {[
+                '/hero/headshot1.jpg',
+                '/hero/headshot2.jpg',
+                '/hero/headshot3.jpg',
+              ].map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt="Glow Girl"
+                  className="w-8 h-8 rounded-full object-cover border-2 border-[#f5f0eb]"
+                />
+              ))}
+            </div>
+            <span className="text-[#6E6A62]/50 text-xs font-inter">Join 50+ Glow Girls</span>
+          </motion.div>
+
+          {/* Bottom */}
+          <motion.div
+            className="mt-12 pt-6 border-t border-[#6E6A62]/10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <p className="text-xs text-[#6E6A62]/40 text-center">
+              By continuing, you agree to Glow&apos;s{' '}
+              <Link href="/terms" className="underline underline-offset-2 hover:text-[#6E6A62]/60 transition-colors">Terms of Service</Link>
+              {' '}and{' '}
+              <Link href="/privacy" className="underline underline-offset-2 hover:text-[#6E6A62]/60 transition-colors">Privacy Policy</Link>.
             </p>
           </motion.div>
         </motion.div>

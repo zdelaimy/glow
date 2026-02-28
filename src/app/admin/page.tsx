@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SignOutButton } from '@/components/sign-out-button'
 import { AdminGlowGirlActions } from '@/components/admin-glow-girl-actions'
 import { AdminOrderExport } from '@/components/admin-order-export'
+import { AdminApplicationActions } from '@/components/admin-application-actions'
 import Link from 'next/link'
 
 export default async function AdminDashboard() {
@@ -40,6 +41,14 @@ export default async function AdminDashboard() {
   const { count: totalGlowGirls } = await supabase
     .from('glow_girls')
     .select('*', { count: 'exact', head: true })
+
+  // Fetch applications
+  const { data: applications } = await supabase
+    .from('glow_girl_applications')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  const pendingApplications = (applications || []).filter(a => a.status === 'PENDING')
 
   // Top glow girls by events
   const { data: topGlowGirls } = await supabase
@@ -95,12 +104,58 @@ export default async function AdminDashboard() {
           ))}
         </div>
 
-        <Tabs defaultValue="glow-girls">
+        <Tabs defaultValue={pendingApplications.length > 0 ? 'applications' : 'glow-girls'}>
           <TabsList>
+            <TabsTrigger value="applications" className="relative">
+              Applications
+              {pendingApplications.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-rose-500 rounded-full">
+                  {pendingApplications.length}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="glow-girls">Glow Girls</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="applications" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Glow Girl Applications</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="divide-y">
+                  {(applications || []).map((app) => (
+                    <div key={app.id} className="py-4 flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium">{app.full_name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {app.city}, {app.state} &middot; {app.follower_range} followers &middot; {app.social_platforms.join(', ')}
+                        </p>
+                        {app.primary_handle && (
+                          <p className="text-sm text-muted-foreground">{app.primary_handle}</p>
+                        )}
+                        <p className="text-sm mt-1 text-muted-foreground line-clamp-2">&ldquo;{app.why_glow}&rdquo;</p>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <Badge variant="outline" className="text-xs">{app.heard_from}</Badge>
+                          {app.creates_content && <Badge variant="outline" className="text-xs">Content creator</Badge>}
+                          {app.previous_direct_sales && <Badge variant="outline" className="text-xs">DS experience{app.previous_company ? `: ${app.previous_company}` : ''}</Badge>}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Applied {new Date(app.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <AdminApplicationActions applicationId={app.id} status={app.status} />
+                    </div>
+                  ))}
+                  {(!applications || applications.length === 0) && (
+                    <p className="py-8 text-center text-muted-foreground">No applications yet.</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="glow-girls" className="mt-6">
             <Card>

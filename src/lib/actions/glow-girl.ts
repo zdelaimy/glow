@@ -1,9 +1,9 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { glowGirlBrandSchema, glowGirlSignatureSchema } from '@/lib/validations'
+import { glowGirlBrandSchema, glowGirlSignatureSchema, glowGirlApplicationSchema } from '@/lib/validations'
 import { revalidatePath } from 'next/cache'
-import type { GlowGirlBrandInput, GlowGirlSignatureInput } from '@/lib/validations'
+import type { GlowGirlBrandInput, GlowGirlSignatureInput, GlowGirlApplicationInput } from '@/lib/validations'
 
 export async function createGlowGirlProfile(input: GlowGirlBrandInput) {
   const supabase = await createClient()
@@ -132,6 +132,97 @@ export async function updateSignature(signatureId: string, input: Partial<GlowGi
 
   if (error) throw new Error(error.message)
   revalidatePath('/glow-girl')
+}
+
+export async function submitApplication(input: GlowGirlApplicationInput) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const parsed = glowGirlApplicationSchema.parse(input)
+
+  // Update profile full_name
+  await supabase
+    .from('profiles')
+    .update({ full_name: parsed.full_name })
+    .eq('id', user.id)
+
+  const { data, error } = await supabase
+    .from('glow_girl_applications')
+    .insert({
+      user_id: user.id,
+      ...parsed,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    if (error.code === '23505') throw new Error('You have already submitted an application')
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/apply')
+  return data
+}
+
+export async function getMyApplication() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data } = await supabase
+    .from('glow_girl_applications')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  return data
+}
+
+export async function reviewApplication(applicationId: string, status: 'APPROVED' | 'REJECTED') {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'ADMIN') throw new Error('Not authorized')
+
+  // Get the application
+  const { data: application } = await supabase
+    .from('glow_girl_applications')
+    .select('*')
+    .eq('id', applicationId)
+    .single()
+
+  if (!application) throw new Error('Application not found')
+
+  // Update application status
+  const { error } = await supabase
+    .from('glow_girl_applications')
+    .update({
+      status,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: user.id,
+    })
+    .eq('id', applicationId)
+
+  if (error) throw new Error(error.message)
+
+  // If approved, update user role to GLOW_GIRL
+  if (status === 'APPROVED') {
+    await supabase
+      .from('profiles')
+      .update({ role: 'GLOW_GIRL' })
+      .eq('id', application.user_id)
+  }
+
+  revalidatePath('/admin')
+  revalidatePath('/apply')
 }
 
 export async function approveGlowGirl(glowGirlId: string, approved: boolean) {

@@ -266,6 +266,34 @@ export interface Payout {
   created_at: string
 }
 
+// Applications
+export type ApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+export interface GlowGirlApplication {
+  id: string
+  user_id: string
+  full_name: string
+  phone: string
+  date_of_birth: string
+  city: string
+  state: string
+  social_platforms: string[]
+  primary_handle: string | null
+  follower_range: string
+  creates_content: boolean
+  heard_from: string
+  interested_products: string[]
+  why_glow: string
+  previous_direct_sales: boolean
+  previous_company: string | null
+  agreed_to_terms: boolean
+  status: ApplicationStatus
+  reviewed_at: string | null
+  reviewed_by: string | null
+  created_at: string
+  updated_at: string
+}
+
 // Pods
 export interface Pod {
   id: string
