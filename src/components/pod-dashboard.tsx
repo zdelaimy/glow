@@ -1,11 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { createPod, joinPod, leavePod, disbandPod } from '@/lib/actions/pods'
 
 interface PodMember {
@@ -109,8 +106,8 @@ export function PodDashboard({ podData: initialData, podStats }: Props) {
     return (
       <div className="space-y-6">
         <div className="text-center py-8">
-          <h3 className="text-xl font-semibold mb-2">Join or Create a Pod</h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
+          <h3 className="text-xl font-light text-[#6E6A62]">Join or Create a Pod</h3>
+          <p className="text-[#6E6A62]/50 max-w-md mx-auto mt-2">
             Pods are small teams of Glow Girls. Pod leaders earn a 5% override on their members&apos; sales.
           </p>
         </div>
@@ -118,11 +115,11 @@ export function PodDashboard({ podData: initialData, podStats }: Props) {
         {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
         <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Create a Pod</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="bg-white rounded-2xl border border-neutral-200/60">
+            <div className="px-6 py-4 border-b border-neutral-200/60">
+              <h4 className="text-xs uppercase tracking-[0.15em] text-[#6E6A62]/70 font-medium">Create a Pod</h4>
+            </div>
+            <div className="p-6 space-y-4">
               <div className="space-y-2">
                 <Label>Pod Name</Label>
                 <Input
@@ -131,17 +128,21 @@ export function PodDashboard({ podData: initialData, podStats }: Props) {
                   placeholder="My Glow Squad"
                 />
               </div>
-              <Button onClick={handleCreate} disabled={loading || !podName.trim()} className="w-full">
+              <button
+                onClick={handleCreate}
+                disabled={loading || !podName.trim()}
+                className="w-full rounded-full bg-[#6E6A62] text-white py-2.5 text-sm font-medium hover:bg-[#5a5650] transition-colors disabled:opacity-50"
+              >
                 {loading ? 'Creating...' : 'Create Pod'}
-              </Button>
-            </CardContent>
-          </Card>
+              </button>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Join a Pod</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="bg-white rounded-2xl border border-neutral-200/60">
+            <div className="px-6 py-4 border-b border-neutral-200/60">
+              <h4 className="text-xs uppercase tracking-[0.15em] text-[#6E6A62]/70 font-medium">Join a Pod</h4>
+            </div>
+            <div className="p-6 space-y-4">
               <div className="space-y-2">
                 <Label>Pod Code</Label>
                 <Input
@@ -151,11 +152,15 @@ export function PodDashboard({ podData: initialData, podStats }: Props) {
                   className="uppercase"
                 />
               </div>
-              <Button onClick={handleJoin} disabled={loading || !podCode.trim()} variant="outline" className="w-full">
+              <button
+                onClick={handleJoin}
+                disabled={loading || !podCode.trim()}
+                className="w-full rounded-full border border-[#6E6A62]/30 text-[#6E6A62] py-2.5 text-sm font-medium hover:bg-[#f5f0eb] transition-colors disabled:opacity-50"
+              >
                 {loading ? 'Joining...' : 'Join Pod'}
-              </Button>
-            </CardContent>
-          </Card>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -166,17 +171,17 @@ export function PodDashboard({ podData: initialData, podStats }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-semibold">{podData.pod.name}</h3>
-          <p className="text-sm text-muted-foreground">
+          <h3 className="text-xl font-light text-[#6E6A62]">{podData.pod.name}</h3>
+          <p className="text-sm text-[#6E6A62]/50">
             {podData.isLeader ? 'You are the pod leader' : `Led by ${podData.pod.leader.brand_name}`}
           </p>
         </div>
         {podData.isLeader && (
           <div className="text-right">
-            <p className="text-xs text-muted-foreground mb-1">Share this code</p>
-            <Badge variant="outline" className="text-lg font-mono px-4 py-1.5">
+            <p className="text-xs text-[#6E6A62]/50 mb-1">Share this code</p>
+            <span className="font-mono text-lg px-4 py-1.5 bg-[#f5f0eb] border border-[#6E6A62]/10 rounded-full text-[#6E6A62]">
               {podData.pod.pod_code}
-            </Badge>
+            </span>
           </div>
         )}
       </div>
@@ -186,67 +191,71 @@ export function PodDashboard({ podData: initialData, podStats }: Props) {
       {/* Stats */}
       {podStats && (
         <div className="grid grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <p className="text-2xl font-semibold">{podStats.memberCount}</p>
-              <p className="text-xs text-muted-foreground">Members</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <p className="text-2xl font-semibold">${(podStats.totalSalesCents / 100).toFixed(0)}</p>
-              <p className="text-xs text-muted-foreground">Pod Sales (this month)</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <p className="text-2xl font-semibold">${(podStats.overrideCents / 100).toFixed(2)}</p>
-              <p className="text-xs text-muted-foreground">Override Earned</p>
-            </CardContent>
-          </Card>
+          {[
+            { label: 'Members', value: podStats.memberCount },
+            { label: 'Pod Sales (this month)', value: `$${(podStats.totalSalesCents / 100).toFixed(0)}` },
+            { label: 'Override Earned', value: `$${(podStats.overrideCents / 100).toFixed(2)}` },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-2xl border border-neutral-200/60 p-4 text-center">
+              <p className="text-2xl font-light text-[#6E6A62]">{stat.value}</p>
+              <p className="text-xs uppercase tracking-[0.15em] text-[#6E6A62]/50 mt-1">{stat.label}</p>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Members */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Members</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-white rounded-2xl border border-neutral-200/60">
+        <div className="px-6 py-4 border-b border-neutral-200/60">
+          <h4 className="text-xs uppercase tracking-[0.15em] text-[#6E6A62]/70 font-medium">Members</h4>
+        </div>
+        <div className="p-6">
           <div className="space-y-3">
             {podData.members.map((m) => {
               const gg = Array.isArray(m.glow_girl) ? m.glow_girl[0] : m.glow_girl
               return (
-              <div key={m.id} className="flex items-center justify-between py-2 border-b last:border-0">
+              <div key={m.id} className="flex items-center justify-between py-2 border-b border-neutral-200/60 last:border-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-xs font-bold text-violet-600">
+                  <div className="w-8 h-8 rounded-full bg-[#f5f0eb] flex items-center justify-center text-xs font-bold text-[#6E6A62]">
                     {gg?.brand_name?.charAt(0) || '?'}
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{gg?.brand_name}</p>
-                    <p className="text-xs text-muted-foreground">Joined {new Date(m.joined_at).toLocaleDateString()}</p>
+                    <p className="text-sm font-medium text-[#6E6A62]">{gg?.brand_name}</p>
+                    <p className="text-xs text-[#6E6A62]/50">Joined {new Date(m.joined_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <Badge variant={m.role === 'LEADER' ? 'default' : 'secondary'} className="text-xs">
+                <span className={`rounded-full px-2.5 py-0.5 text-xs ${
+                  m.role === 'LEADER'
+                    ? 'bg-[#6E6A62] text-white'
+                    : 'bg-[#f5f0eb] text-[#6E6A62]'
+                }`}>
                   {m.role}
-                </Badge>
+                </span>
               </div>
               )
             })}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Actions */}
       <div className="flex justify-end gap-3">
         {podData.isLeader ? (
-          <Button variant="destructive" size="sm" onClick={handleDisband} disabled={loading}>
+          <button
+            onClick={handleDisband}
+            disabled={loading}
+            className="rounded-full border border-rose-300 text-rose-500 px-4 py-2 text-sm font-medium hover:bg-rose-50 transition-colors disabled:opacity-50"
+          >
             {loading ? 'Disbanding...' : 'Disband Pod'}
-          </Button>
+          </button>
         ) : (
-          <Button variant="outline" size="sm" onClick={handleLeave} disabled={loading}>
+          <button
+            onClick={handleLeave}
+            disabled={loading}
+            className="rounded-full border border-[#6E6A62]/30 text-[#6E6A62] px-4 py-2 text-sm font-medium hover:bg-[#f5f0eb] transition-colors disabled:opacity-50"
+          >
             {loading ? 'Leaving...' : 'Leave Pod'}
-          </Button>
+          </button>
         )}
       </div>
     </div>

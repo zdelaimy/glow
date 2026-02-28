@@ -10,12 +10,12 @@ interface Props {
 }
 
 const TIER_COLORS: Record<RewardTier, string> = {
-  PEARL: 'bg-gray-200',
-  OPAL: 'bg-blue-200',
-  ROSE_QUARTZ: 'bg-pink-300',
-  AMETHYST: 'bg-purple-400',
-  SAPPHIRE: 'bg-blue-500',
-  DIAMOND: 'bg-gradient-to-r from-cyan-300 to-violet-400',
+  PEARL: 'bg-neutral-300',
+  OPAL: 'bg-[#b8c4c0]',
+  ROSE_QUARTZ: 'bg-[#c4a68a]',
+  AMETHYST: 'bg-[#8a7e72]',
+  SAPPHIRE: 'bg-[#6E6A62]',
+  DIAMOND: 'bg-gradient-to-r from-[#8a7e72] to-[#6E6A62]',
 }
 
 export function TierProgressBar({ totalPoints, currentTier, milestones }: Props) {
@@ -40,20 +40,20 @@ export function TierProgressBar({ totalPoints, currentTier, milestones }: Props)
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-2xl font-bold">{totalPoints.toLocaleString()}</span>
-          <span className="text-muted-foreground ml-2">points</span>
+          <span className="text-2xl font-light text-[#6E6A62]">{totalPoints.toLocaleString()}</span>
+          <span className="text-[#6E6A62]/50 ml-2">points</span>
         </div>
         {currentTier && (
-          <span className={`px-3 py-1 rounded-full text-sm font-medium text-white ${TIER_COLORS[currentTier] || 'bg-gray-400'}`}>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium text-white ${TIER_COLORS[currentTier] || 'bg-[#6E6A62]'}`}>
             {REWARD_TIERS.find(t => t.tier === currentTier)?.label || currentTier}
           </span>
         )}
       </div>
 
       {/* Progress bar */}
-      <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden">
+      <div className="relative h-4 bg-[#f5f0eb] rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-violet-400 to-violet-600 rounded-full transition-all duration-700"
+          className="h-full bg-[#6E6A62] rounded-full transition-all duration-700"
           style={{ width: `${progressPct}%` }}
         />
         {/* Tier markers */}
@@ -76,10 +76,10 @@ export function TierProgressBar({ totalPoints, currentTier, milestones }: Props)
             key={t.tier}
             className={`text-center p-2 rounded-lg text-xs ${
               achievedTiers.has(t.tier)
-                ? 'bg-violet-100 text-violet-700 font-medium'
+                ? 'bg-[#f5f0eb] text-[#6E6A62] font-medium'
                 : totalPoints >= t.minPoints
-                  ? 'bg-violet-50 text-violet-600'
-                  : 'bg-gray-50 text-muted-foreground'
+                  ? 'bg-[#f5f0eb]/60 text-[#6E6A62]/70'
+                  : 'bg-neutral-50 text-[#6E6A62]/40'
             }`}
           >
             <div className="font-medium">{t.label}</div>
@@ -89,7 +89,7 @@ export function TierProgressBar({ totalPoints, currentTier, milestones }: Props)
       </div>
 
       {nextTier && (
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-sm text-[#6E6A62]/60 text-center">
           <strong>{(nextTier.minPoints - totalPoints).toLocaleString()}</strong> more points to reach{' '}
           <strong>{nextTier.label}</strong>
         </p>
