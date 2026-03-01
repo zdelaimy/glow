@@ -15,7 +15,7 @@ export async function GET(request: Request) {
       if (user) {
         // Read referral cookie and store on profile
         const cookieStore = await cookies()
-        const refCode = cookieStore.get('glow_ref')?.value
+        const refCode = cookieStore.get('glow_referral')?.value
         if (refCode) {
           // Store referred_by_code on the glow girl record when they onboard
           // For now, store it as user metadata so onboarding can read it

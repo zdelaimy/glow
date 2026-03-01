@@ -30,10 +30,10 @@ export default async function GlowGirlsOpportunityPage({
 }) {
   const params = await searchParams
 
-  // Store referral code in cookie if present
+  // Store referral code in a separate cookie (not glow_ref, which is for sales attribution)
   if (params.ref) {
     const cookieStore = await cookies()
-    cookieStore.set('glow_ref', params.ref, {
+    cookieStore.set('glow_referral', params.ref, {
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: '/',
       httpOnly: true,
