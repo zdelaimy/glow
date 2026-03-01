@@ -22,8 +22,14 @@ function ProductCard({ product }: { product: Product }) {
         }),
       })
       const data = await res.json()
-      if (data.url) window.location.href = data.url
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert('Checkout is not available yet — launching soon!')
+        setLoading(false)
+      }
     } catch {
+      alert('Checkout is not available yet — launching soon!')
       setLoading(false)
     }
   }
