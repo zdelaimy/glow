@@ -1,12 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import Image from 'next/image'
 import { StorefrontTracker } from '@/components/storefront-tracker'
+import { LandingHeader } from '@/components/landing-header'
 import { Footer } from "@/components/footer"
-import type { GlowGirl, GlowGirlSignature, BaseFormula, Booster } from '@/types/database'
+import type { GlowGirl, Product } from '@/types/database'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -16,7 +15,6 @@ export default async function GlowGirlStorefront({ params }: Props) {
   const { slug: rawSlug } = await params
   const supabase = await createClient()
 
-  // The slug in the URL may be prefixed with @ for vanity; strip it
   const slug = rawSlug.replace(/^@/, '')
 
   const { data: glowGirl } = await supabase
@@ -28,148 +26,86 @@ export default async function GlowGirlStorefront({ params }: Props) {
 
   if (!glowGirl) notFound()
 
-  const { data: signatures } = await supabase
-    .from('glow_girl_signatures')
-    .select(`
-      *,
-      base:base_formulas(*),
-      booster_primary:boosters!glow_girl_signatures_booster_primary_id_fkey(*),
-      booster_secondary:boosters!glow_girl_signatures_booster_secondary_id_fkey(*)
-    `)
-    .eq('glow_girl_id', glowGirl.id)
-    .eq('publish_status', 'PUBLISHED')
-
   const g = glowGirl as GlowGirl
 
-  return (
-    <div className="min-h-screen">
-      <StorefrontTracker glowGirlId={glowGirl.id} />
+  // If the Glow Girl has selected specific products, show only those; otherwise show all
+  let productsQuery = supabase
+    .from('products')
+    .select('*')
+    .eq('active', true)
+    .order('sort_order')
 
-      {/* Hero */}
-      <section
-        className="relative py-24 md:py-32 px-6"
-        style={{
-          background: `linear-gradient(135deg, ${g.accent_color}10, ${g.accent_color}25, ${g.accent_color}10)`,
-        }}
-      >
-        <div className="max-w-4xl mx-auto text-center">
-          {g.logo_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={g.logo_url} alt={g.brand_name || ''} className="h-16 mx-auto mb-6 object-contain" />
-          )}
-          <h1 className="text-4xl md:text-6xl font-light tracking-tight mb-4">
-            {g.hero_headline || g.brand_name}
-          </h1>
-          {g.benefits && g.benefits.length > 0 && (
-            <div className="flex flex-wrap gap-2 justify-center mb-8">
-              {g.benefits.map((b, i) => (
-                <Badge key={i} variant="secondary" className="text-sm px-4 py-1.5">
-                  {b}
-                </Badge>
+  if (g.selected_product_ids && g.selected_product_ids.length > 0) {
+    productsQuery = productsQuery.in('id', g.selected_product_ids)
+  }
+
+  const { data: products } = await productsQuery
+
+  return (
+    <div className="min-h-screen bg-white">
+      <StorefrontTracker glowGirlId={glowGirl.id} />
+      <LandingHeader variant="light" />
+
+      <section className="pt-32 pb-24 md:pb-32">
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-5xl italic leading-tight mb-5">
+              {g.brand_name ? `${g.brand_name}'s Picks` : 'The Essentials'}
+            </h1>
+            <p className="text-sm text-neutral-400 max-w-md mx-auto leading-relaxed">
+              Premium Glow products, curated just for you.
+            </p>
+          </div>
+
+          {/* Product grid */}
+          {products && products.length > 0 ? (
+            <div className="grid sm:grid-cols-3 gap-6 md:gap-8">
+              {products.map((product: Product) => (
+                <Link
+                  key={product.id}
+                  href={`/${slug}/product/${product.slug}`}
+                  className="group flex flex-col"
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-[#f5f0eb]">
+                    {product.image_url && (
+                      <Image
+                        src={product.image_url}
+                        alt={product.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-neutral-950/90 backdrop-blur-sm px-5 py-4 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-400 ease-out">
+                      <span className="block text-center text-white text-sm tracking-[0.15em] uppercase font-medium">
+                        View Product — ${(product.price_cents / 100).toFixed(0)}.00
+                      </span>
+                    </div>
+                  </div>
+                  <div className="pt-5 space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-[0.12em]">
+                        {product.name}
+                      </h3>
+                      <span className="text-sm text-neutral-900 shrink-0">
+                        ${(product.price_cents / 100).toFixed(0)}.00
+                      </span>
+                    </div>
+                    {product.tagline && (
+                      <p className="text-[13px] text-neutral-400 leading-relaxed">
+                        {product.tagline}
+                      </p>
+                    )}
+                  </div>
+                </Link>
               ))}
             </div>
+          ) : (
+            <div className="text-center text-neutral-400 py-12">
+              No products available yet.
+            </div>
           )}
-          <Link href={`/${slug}/quiz`}>
-            <Button
-              size="lg"
-              className="h-14 px-10 text-lg rounded-full"
-              style={{ backgroundColor: g.accent_color }}
-            >
-              Find Your Blend
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Story */}
-      {g.story && (
-        <section className="py-16 px-6 max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl font-semibold mb-4">Our Story</h2>
-          <p className="text-muted-foreground text-lg leading-relaxed">{g.story}</p>
-        </section>
-      )}
-
-      {/* Signature Products */}
-      {signatures && signatures.length > 0 && (
-        <section className="py-16 px-6 bg-gray-50">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-2xl font-semibold text-center mb-8">Signature Serums</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {signatures.map((sig) => {
-                const s = sig as GlowGirlSignature & { base: BaseFormula; booster_primary: Booster; booster_secondary: Booster | null }
-                return (
-                  <Card key={s.id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
-                    <div
-                      className="h-40 flex items-end p-5"
-                      style={{ background: `linear-gradient(135deg, ${g.accent_color}20, ${g.accent_color}40)` }}
-                    >
-                      <h3 className="text-xl font-semibold">{s.signature_name}</h3>
-                    </div>
-                    <CardContent className="pt-4 space-y-3">
-                      <div className="flex gap-2 flex-wrap">
-                        <Badge variant="outline">{s.base?.name}</Badge>
-                        <Badge variant="outline">{s.booster_primary?.name}</Badge>
-                        {s.booster_secondary && <Badge variant="outline">{s.booster_secondary.name}</Badge>}
-                      </div>
-                      {s.benefit_bullets && s.benefit_bullets.length > 0 && (
-                        <ul className="text-sm text-muted-foreground space-y-1">
-                          {s.benefit_bullets.map((b, i) => (
-                            <li key={i} className="flex gap-2">
-                              <span style={{ color: g.accent_color }}>-</span> {b}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      <div className="flex items-baseline gap-2 pt-2">
-                        <span className="text-xl font-semibold">${(s.subscription_price_cents / 100).toFixed(2)}</span>
-                        <span className="text-sm text-muted-foreground">/month</span>
-                        <span className="text-sm text-muted-foreground ml-auto">
-                          or ${(s.one_time_price_cents / 100).toFixed(2)}
-                        </span>
-                      </div>
-                      <Link href={`/${slug}/product/${s.slug}`} className="block">
-                        <Button className="w-full" style={{ backgroundColor: g.accent_color }}>
-                          View Product
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Quiz CTA */}
-      <section className="py-20 px-6 text-center">
-        <h2 className="text-3xl font-light tracking-tight mb-3">
-          Not sure which blend is right for you?
-        </h2>
-        <p className="text-muted-foreground mb-6">Take our quick skin quiz and we&apos;ll find your match.</p>
-        <Link href={`/${slug}/quiz`}>
-          <Button size="lg" variant="outline" className="h-12 px-8 rounded-full">
-            Take the Quiz
-          </Button>
-        </Link>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-16 px-6 bg-gray-50">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <h2 className="text-2xl font-semibold text-center mb-8">FAQ</h2>
-          {[
-            { q: 'What\'s included in my order?', a: 'Your order includes your selected Glow product, beautifully packaged and ready to use.' },
-            { q: 'How do I use the products?', a: 'Each product comes with simple instructions. Apply as part of your daily beauty ritual for best results.' },
-            { q: 'Is this safe for sensitive skin?', a: 'Our products use gentle, well-tolerated cosmetic ingredients. If you have specific concerns, we recommend consulting with a dermatologist.' },
-            { q: 'Can I cancel my subscription?', a: 'Yes! You can cancel or pause your subscription at any time. No commitments, no hassle.' },
-            { q: 'What\'s your return policy?', a: 'We offer a 30-day satisfaction guarantee. If you\'re not happy with your purchase, reach out to our team.' },
-          ].map((faq, i) => (
-            <div key={i} className="space-y-1">
-              <h3 className="font-medium">{faq.q}</h3>
-              <p className="text-sm text-muted-foreground">{faq.a}</p>
-            </div>
-          ))}
         </div>
       </section>
 

@@ -1,36 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import { trackEvent } from '@/lib/actions/events'
 
 interface Props {
-  signatureId: string
+  productId: string
   slug: string
   glowGirlId: string
-  subscriptionPrice: number
-  oneTimePrice: number
-  accentColor: string
+  price: number
 }
 
-export function ProductCheckout({ signatureId, slug, glowGirlId, subscriptionPrice, oneTimePrice, accentColor }: Props) {
-  const [isSubscription, setIsSubscription] = useState(true)
+export function ProductCheckout({ productId, slug, glowGirlId, price }: Props) {
   const [loading, setLoading] = useState(false)
-
-  const price = isSubscription ? subscriptionPrice : oneTimePrice
 
   async function handleCheckout() {
     setLoading(true)
-    trackEvent('add_to_cart', glowGirlId, signatureId)
+    trackEvent('add_to_cart', glowGirlId)
 
     const res = await fetch('/api/stripe/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        signatureId,
-        mode: isSubscription ? 'subscription' : 'payment',
+        items: [{ productId, quantity: 1 }],
+        glowGirlId,
         slug,
       }),
     })
@@ -44,34 +36,17 @@ export function ProductCheckout({ signatureId, slug, glowGirlId, subscriptionPri
 
   return (
     <div className="space-y-4 pt-2">
-      <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
-        <div className="flex items-center gap-3">
-          <Switch
-            checked={isSubscription}
-            onCheckedChange={setIsSubscription}
-          />
-          <Label className="cursor-pointer">
-            {isSubscription ? 'Subscribe & Save' : 'One-time purchase'}
-          </Label>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-semibold">${(price / 100).toFixed(2)}</p>
-          {isSubscription && <p className="text-xs text-muted-foreground">per month</p>}
-        </div>
+      <div className="flex items-center justify-between px-4 py-3 rounded-sm bg-[#f5f0eb]">
+        <span className="text-xs uppercase tracking-[0.15em] text-[#6E6A62]/60">Price</span>
+        <p className="text-2xl font-light text-neutral-900">${(price / 100).toFixed(2)}</p>
       </div>
-      {isSubscription && (
-        <p className="text-xs text-muted-foreground text-center">
-          Save ${((oneTimePrice - subscriptionPrice) / 100).toFixed(2)} vs. one-time purchase. Cancel anytime.
-        </p>
-      )}
-      <Button
-        className="w-full h-14 text-base rounded-full"
-        style={{ backgroundColor: accentColor }}
+      <button
+        className="w-full h-12 rounded-sm bg-[#6E6A62] text-white text-xs uppercase tracking-[0.15em] font-medium hover:bg-[#5a5650] transition-colors disabled:opacity-50"
         onClick={handleCheckout}
         disabled={loading}
       >
-        {loading ? 'Redirecting...' : isSubscription ? 'Subscribe Now' : 'Buy Now'}
-      </Button>
+        {loading ? 'Redirecting...' : 'Buy Now'}
+      </button>
     </div>
   )
 }

@@ -2,14 +2,7 @@ import Link from 'next/link'
 import { LandingHeader } from '@/components/landing-header'
 import { Footer } from '@/components/footer'
 
-interface Props {
-  params: Promise<{ slug: string }>
-}
-
-export default async function OrderSuccess({ params }: Props) {
-  const { slug: rawSlug } = await params
-  const slug = rawSlug.replace(/^@/, '')
-
+export default function OrderSuccess() {
   return (
     <div className="min-h-screen bg-[#f5f0eb]">
       <LandingHeader variant="light" />
@@ -26,7 +19,7 @@ export default async function OrderSuccess({ params }: Props) {
             Your order is on its way. Check your email for order details and tracking information.
           </p>
           <Link
-            href={`/${slug}`}
+            href="/shop"
             className="inline-block rounded-full bg-[#6E6A62] text-white px-8 py-3 text-sm font-medium hover:bg-[#5a5650] transition-colors"
           >
             Continue Shopping

@@ -1,61 +1,52 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { LandingHeader } from "@/components/landing-header"
 import { Footer } from "@/components/footer"
+import { createClient } from "@/lib/supabase/client"
+import type { Product } from "@/types/database"
 
-const products = [
-  {
-    name: "Shine Shampoo",
-    tagline: "Argan & silk protein gloss shampoo",
-    desc: "A sulfate-free, salon-grade shampoo infused with argan oil, silk amino acids, and panthenol that cleanses gently while leaving hair impossibly glossy and smooth.",
-    price: 42,
-    img: "/shop/shampoo2.png",
-    ingredients: ["Argan Oil", "Silk Amino Acids", "Panthenol"],
-  },
-  {
-    name: "Glow Serum",
-    tagline: "Vitamin C & hyaluronic radiance serum",
-    desc: "A potent brightening serum combining 15% vitamin C, niacinamide, and triple-weight hyaluronic acid for glass-skin radiance and visibly faded dark spots.",
-    price: 54,
-    img: "/shop/serum2.png",
-    ingredients: ["15% Vitamin C", "Niacinamide", "Hyaluronic Acid"],
-  },
-  {
-    name: "Beauty Gummies",
-    tagline: "Collagen + biotin daily supplement",
-    desc: "Delicious strawberry-flavored gummies packed with marine collagen, biotin, and vitamin C — your daily beauty ritual from the inside out. 30-day supply.",
-    price: 44,
-    img: "/shop/gummies.png",
-    ingredients: ["Marine Collagen", "Biotin", "Vitamin C"],
-  },
-]
-
-function ProductCard({
-  product,
-}: {
-  product: (typeof products)[number]
-}) {
+function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  async function handleBuy() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: [{ productId: product.id, quantity: 1 }],
+        }),
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch {
+      setLoading(false)
+    }
+  }
 
   return (
     <div
-      className="group relative flex flex-col cursor-pointer"
+      className="group relative flex flex-col"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image container */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-[#f5f0eb]">
-        <Image
-          src={product.img}
-          alt={product.name}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 33vw"
-        />
+      <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-[#f5f0eb] cursor-pointer" onClick={handleBuy}>
+        {product.image_url && (
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        )}
 
-        {/* Hover CTA bar — slides up from bottom */}
+        {/* Hover CTA bar */}
         <div
           className={`absolute bottom-0 left-0 right-0 bg-neutral-950/90 backdrop-blur-sm px-5 py-4 transition-all duration-400 ease-out ${
             hovered
@@ -64,7 +55,7 @@ function ProductCard({
           }`}
         >
           <span className="block text-center text-white text-sm tracking-[0.15em] uppercase font-medium">
-            Buy {product.name} — ${product.price}.00
+            {loading ? 'Redirecting...' : `Buy ${product.name} — $${(product.price_cents / 100).toFixed(0)}.00`}
           </span>
         </div>
       </div>
@@ -76,12 +67,19 @@ function ProductCard({
             {product.name}
           </h3>
           <span className="text-sm text-neutral-900 shrink-0">
-            ${product.price}.00
+            ${(product.price_cents / 100).toFixed(0)}.00
           </span>
         </div>
         <p className="text-[13px] text-neutral-400 leading-relaxed">
           {product.tagline}
         </p>
+        <button
+          onClick={handleBuy}
+          disabled={loading}
+          className="mt-3 w-full h-11 rounded-sm bg-[#6E6A62] text-white text-xs uppercase tracking-[0.15em] font-medium hover:bg-[#5a5650] transition-colors disabled:opacity-50"
+        >
+          {loading ? 'Redirecting...' : 'Buy Now'}
+        </button>
       </div>
     </div>
   )
@@ -154,6 +152,23 @@ function FeedbackForm() {
 }
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .eq('active', true)
+        .order('sort_order')
+      setProducts(data || [])
+      setLoading(false)
+    }
+    load()
+  }, [])
+
   return (
     <div className="min-h-screen bg-white">
       <LandingHeader variant="light" />
@@ -172,11 +187,15 @@ export default function ShopPage() {
           </div>
 
           {/* Product grid */}
-          <div className="grid sm:grid-cols-3 gap-6 md:gap-8">
-            {products.map((product) => (
-              <ProductCard key={product.name} product={product} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center text-neutral-400 py-12">Loading products...</div>
+          ) : (
+            <div className="grid sm:grid-cols-3 gap-6 md:gap-8">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
 
           {/* More products coming soon + feedback */}
           <div className="mt-20 text-center border-t border-neutral-100 pt-16">

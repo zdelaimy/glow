@@ -25,6 +25,7 @@ export interface GlowGirl {
   accent_color: string
   referral_code: string | null
   referred_by_code: string | null
+  selected_product_ids: string[]
   created_at: string
   updated_at: string
 }
@@ -125,11 +126,63 @@ export interface AnalyticsEvent {
 
 export type EventType = 'storefront_view' | 'quiz_start' | 'quiz_complete' | 'add_to_cart' | 'purchase'
 
+export type FulfillmentStatus = 'UNFULFILLED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'
+export type ReturnStatus = 'REQUESTED' | 'APPROVED' | 'DENIED' | 'COMPLETED'
+export type ReturnReason = 'DAMAGED' | 'WRONG_ITEM' | 'NOT_AS_DESCRIBED' | 'CHANGED_MIND' | 'OTHER'
+
+export interface Product {
+  id: string
+  name: string
+  slug: string
+  tagline: string | null
+  description: string | null
+  price_cents: number
+  compare_at_price_cents: number | null
+  image_url: string | null
+  ingredients: string[]
+  category: string | null
+  sku: string | null
+  weight_oz: number | null
+  active: boolean
+  sort_order: number
+  stripe_price_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface OrderItem {
+  id: string
+  order_id: string
+  product_id: string | null
+  quantity: number
+  unit_price_cents: number
+  total_cents: number
+  created_at: string
+  // Joined
+  product?: Product
+}
+
+export interface ReturnRequest {
+  id: string
+  order_id: string
+  customer_email: string
+  reason: ReturnReason
+  reason_detail: string | null
+  status: ReturnStatus
+  refund_amount_cents: number | null
+  admin_notes: string | null
+  created_at: string
+  updated_at: string
+  // Joined
+  order?: Order
+}
+
 export interface Order {
   id: string
   customer_id: string | null
   glow_girl_id: string
-  signature_id: string
+  signature_id: string | null
+  product_id: string | null
   stripe_checkout_session_id: string | null
   stripe_payment_intent_id: string | null
   status: string
@@ -140,11 +193,20 @@ export interface Order {
   shipping_address: Record<string, unknown> | null
   line_items: Record<string, unknown>[]
   blend_components: Record<string, unknown>
+  fulfillment_status: FulfillmentStatus
+  tracking_number: string | null
+  tracking_carrier: string | null
+  tracking_url: string | null
+  shipped_at: string | null
+  delivered_at: string | null
+  customer_email: string | null
   created_at: string
   updated_at: string
   // Joined
   signature?: GlowGirlSignature
   glow_girl?: GlowGirl
+  product?: Product
+  order_items?: OrderItem[]
 }
 
 export interface Subscription {
@@ -176,6 +238,7 @@ export interface CommissionSettings {
   id: string
   commission_rate: number
   referral_match_rate: number
+  level2_referral_match_rate: number
   new_creator_bonus_cents: number
   new_creator_bonus_window_days: number
   points_personal_multiplier: number

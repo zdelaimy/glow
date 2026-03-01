@@ -7,6 +7,7 @@ import { ReferralShare } from '@/components/referral-share'
 import { TierProgressBar } from '@/components/tier-progress-bar'
 import { getRewardTier } from '@/lib/commissions/calculate'
 import { PodDashboard } from '@/components/pod-dashboard'
+import { AffiliateLink } from '@/components/affiliate-link'
 import { getMyPod, getPodStats } from '@/lib/actions/pods'
 import type { MonthlyBonusTier, RewardTier } from '@/types/database'
 
@@ -15,13 +16,6 @@ export default async function GlowGirlDashboard() {
   const supabase = await createClient()
   const currentPeriod = new Date().toISOString().slice(0, 7)
 
-  // Fetch signatures
-  const { data: signatures } = await supabase
-    .from('glow_girl_signatures')
-    .select('*, base:base_formulas(name), booster_primary:boosters!glow_girl_signatures_booster_primary_id_fkey(name)')
-    .eq('glow_girl_id', glowGirl.id)
-    .order('created_at', { ascending: false })
-
   // Fetch analytics
   const { count: viewCount } = await supabase
     .from('events')
@@ -29,11 +23,11 @@ export default async function GlowGirlDashboard() {
     .eq('glow_girl_id', glowGirl.id)
     .eq('event_type', 'storefront_view')
 
-  const { count: quizCount } = await supabase
-    .from('events')
+  const { count: productsSoldCount } = await supabase
+    .from('orders')
     .select('*', { count: 'exact', head: true })
     .eq('glow_girl_id', glowGirl.id)
-    .eq('event_type', 'quiz_complete')
+    .eq('status', 'paid')
 
   const { count: purchaseCount } = await supabase
     .from('events')
@@ -49,7 +43,7 @@ export default async function GlowGirlDashboard() {
     .eq('status', 'paid')
 
   const totalRevenue = (orders || []).reduce((sum, o) => sum + o.amount_cents, 0)
-  const conversionRate = (viewCount && quizCount) ? ((purchaseCount || 0) / viewCount * 100).toFixed(1) : '0'
+  const conversionRate = (viewCount && purchaseCount) ? ((purchaseCount || 0) / viewCount * 100).toFixed(1) : '0'
 
   // Earnings data
   const { data: monthCommissions } = await supabase
@@ -203,11 +197,11 @@ export default async function GlowGirlDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href={`/@${glowGirl.slug}`}
+              href="/shop"
               target="_blank"
               className="rounded-full border border-[#6E6A62]/30 px-4 py-2 text-sm text-[#6E6A62] hover:bg-[#f5f0eb] transition-colors"
             >
-              View Storefront
+              View Shop
             </Link>
             <SignOutButton />
           </div>
@@ -238,8 +232,8 @@ export default async function GlowGirlDashboard() {
           <TabsContent value="overview" className="space-y-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Storefront Views', value: viewCount || 0 },
-                { label: 'Quiz Completions', value: quizCount || 0 },
+                { label: 'Link Clicks', value: viewCount || 0 },
+                { label: 'Products Sold', value: productsSoldCount || 0 },
                 { label: 'Conversion Rate', value: `${conversionRate}%` },
                 { label: 'Revenue', value: `$${(totalRevenue / 100).toFixed(2)}` },
               ].map((stat) => (
@@ -250,61 +244,7 @@ export default async function GlowGirlDashboard() {
               ))}
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-light text-[#6E6A62]">Your Serums</h2>
-                <Link
-                  href="/glow-girl/signature"
-                  className="rounded-full bg-[#6E6A62] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#5a5650] transition-colors"
-                >
-                  Create New Serum
-                </Link>
-              </div>
-
-              {(!signatures || signatures.length === 0) ? (
-                <div className="bg-white rounded-2xl border border-neutral-200/60 py-12 text-center">
-                  <p className="text-[#6E6A62]/50 mb-4">You haven&apos;t created any serums yet.</p>
-                  <Link
-                    href="/glow-girl/signature"
-                    className="inline-block rounded-full bg-[#6E6A62] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#5a5650] transition-colors"
-                  >
-                    Create your first signature serum
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {signatures.map((sig) => (
-                    <div key={sig.id} className="bg-white rounded-2xl border border-neutral-200/60">
-                      <div className="px-6 py-4 border-b border-neutral-200/60 flex items-center justify-between">
-                        <h3 className="font-medium text-[#6E6A62]">{sig.signature_name}</h3>
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs ${
-                          sig.publish_status === 'PUBLISHED'
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-[#f5f0eb] text-[#6E6A62]'
-                        }`}>
-                          {sig.publish_status}
-                        </span>
-                      </div>
-                      <div className="p-6">
-                        <div className="text-sm text-[#6E6A62]/60 space-y-1">
-                          <p>Base: {(sig.base as { name: string })?.name}</p>
-                          <p>Booster: {(sig.booster_primary as { name: string })?.name}</p>
-                          <p className="font-medium text-[#6E6A62] mt-2">
-                            ${(sig.subscription_price_cents / 100).toFixed(2)}/mo &middot; ${(sig.one_time_price_cents / 100).toFixed(2)} one-time
-                          </p>
-                        </div>
-                        <Link
-                          href={`/@${glowGirl.slug}/product/${sig.slug}`}
-                          className="block mt-3 w-full rounded-full border border-[#6E6A62]/30 text-center py-2 text-sm text-[#6E6A62] hover:bg-[#f5f0eb] transition-colors"
-                        >
-                          View Product
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <AffiliateLink slug={glowGirl.slug} />
 
             <div>
               <h2 className="text-xl font-light text-[#6E6A62] mb-4">Recent Orders</h2>
@@ -538,16 +478,37 @@ async function OrdersList({ glowGirlId }: { glowGirlId: string }) {
               <p className="text-sm text-[#6E6A62]/50">
                 {new Date(order.created_at).toLocaleDateString()}
               </p>
+              {order.tracking_number && (
+                <p className="text-xs text-[#6E6A62]/50 mt-0.5">
+                  {order.tracking_carrier ? `${order.tracking_carrier}: ` : ''}
+                  {order.tracking_url ? (
+                    <a href={order.tracking_url} target="_blank" rel="noopener noreferrer" className="underline">{order.tracking_number}</a>
+                  ) : order.tracking_number}
+                </p>
+              )}
             </div>
             <div className="text-right">
               <p className="font-medium text-[#6E6A62]">${(order.amount_cents / 100).toFixed(2)}</p>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs ${
-                order.status === 'paid'
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'bg-[#f5f0eb] text-[#6E6A62]'
-              }`}>
-                {order.status}
-              </span>
+              <div className="flex items-center gap-1 justify-end mt-0.5">
+                <span className={`rounded-full px-2.5 py-0.5 text-xs ${
+                  order.status === 'paid'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-[#f5f0eb] text-[#6E6A62]'
+                }`}>
+                  {order.status}
+                </span>
+                {order.fulfillment_status && order.fulfillment_status !== 'UNFULFILLED' && (
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs ${
+                    order.fulfillment_status === 'DELIVERED'
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : order.fulfillment_status === 'SHIPPED'
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'bg-[#f5f0eb] text-[#6E6A62]'
+                  }`}>
+                    {order.fulfillment_status}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}

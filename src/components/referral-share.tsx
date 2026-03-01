@@ -9,7 +9,7 @@ export function ReferralShare({ referralCode }: { referralCode: string | null })
 
   if (!referralCode) return null
 
-  const referralLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/glow-girls?ref=${referralCode}`
+  const referralLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://glowlabs.nyc'}/glow-girls?ref=${referralCode}`
 
   function copyToClipboard(text: string, type: 'link' | 'code') {
     navigator.clipboard.writeText(text)

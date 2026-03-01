@@ -1,73 +1,87 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-    const { signatureId, mode, slug } = await request.json()
-
-    // Fetch signature with relations
-    const { data: signature } = await supabase
-      .from('glow_girl_signatures')
-      .select(`
-        *,
-        base:base_formulas(*),
-        booster_primary:boosters!glow_girl_signatures_booster_primary_id_fkey(*),
-        booster_secondary:boosters!glow_girl_signatures_booster_secondary_id_fkey(*),
-        glow_girl:glow_girls(*)
-      `)
-      .eq('id', signatureId)
-      .single()
-
-    if (!signature) {
-      return NextResponse.json({ error: 'Signature not found' }, { status: 404 })
+    const body = await request.json() as {
+      items: { productId: string; quantity: number }[]
+      glowGirlId?: string
+      slug?: string
     }
 
-    const isSubscription = mode === 'subscription'
-    const priceCents = isSubscription
-      ? signature.subscription_price_cents
-      : signature.one_time_price_cents
+    const { items } = body
 
-    const glowGirl = signature.glow_girl as { slug: string; brand_name: string }
+    if (!items || items.length === 0) {
+      return NextResponse.json({ error: 'No items provided' }, { status: 400 })
+    }
+
+    // Resolve the Glow Girl: explicit param or affiliate cookie
+    let glowGirlId = body.glowGirlId || null
+    if (!glowGirlId) {
+      const cookieStore = await cookies()
+      const ref = cookieStore.get('glow_ref')?.value
+      if (ref) {
+        const { data: gg } = await supabase
+          .from('glow_girls')
+          .select('id')
+          .eq('slug', ref)
+          .eq('approved', true)
+          .single()
+        if (gg) glowGirlId = gg.id
+      }
+    }
+
+    // Fetch all products
+    const productIds = items.map(i => i.productId)
+    const { data: products } = await supabase
+      .from('products')
+      .select('*')
+      .in('id', productIds)
+      .eq('active', true)
+
+    if (!products || products.length !== productIds.length) {
+      return NextResponse.json({ error: 'One or more products not found' }, { status: 404 })
+    }
+
+    // Build Stripe line items
+    const lineItems = items.map(item => {
+      const product = products.find(p => p.id === item.productId)!
+      return {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: product.name,
+            description: product.tagline || undefined,
+            images: product.image_url ? [`${process.env.NEXT_PUBLIC_APP_URL}${product.image_url}`] : undefined,
+            metadata: {
+              product_id: product.id,
+            },
+          },
+          unit_amount: product.price_cents,
+        },
+        quantity: item.quantity,
+      }
+    })
+
+    const metadata: Record<string, string> = {
+      items: JSON.stringify(items),
+    }
+    if (glowGirlId) metadata.glow_girl_id = glowGirlId
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://glowlabs.nyc'
 
     const session = await stripe.checkout.sessions.create({
-      mode: isSubscription ? 'subscription' : 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: signature.signature_name,
-              description: `Custom serum by ${glowGirl.brand_name}`,
-              metadata: {
-                signature_id: signature.id,
-                glow_girl_id: signature.glow_girl_id,
-              },
-            },
-            unit_amount: priceCents,
-            ...(isSubscription
-              ? { recurring: { interval: 'month' as const } }
-              : {}),
-          },
-          quantity: 1,
-        },
-      ],
+      mode: 'payment',
+      line_items: lineItems,
       shipping_address_collection: {
         allowed_countries: ['US', 'CA', 'GB', 'AU'],
       },
-      metadata: {
-        signature_id: signature.id,
-        glow_girl_id: signature.glow_girl_id,
-        is_subscription: String(isSubscription),
-        blend_components: JSON.stringify({
-          base: (signature.base as { name: string })?.name,
-          booster_primary: (signature.booster_primary as { name: string })?.name,
-          booster_secondary: (signature.booster_secondary as { name: string } | null)?.name,
-        }),
-      },
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/@${slug}/order-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/@${slug}`,
+      metadata,
+      success_url: `${appUrl}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/shop`,
     })
 
     return NextResponse.json({ url: session.url })
