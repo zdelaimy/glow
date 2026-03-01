@@ -18,11 +18,13 @@ export class ManualFulfillmentProvider implements FulfillmentProvider {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getOrderStatus(_externalId: string): Promise<FulfillmentStatusUpdate | null> {
     // Manual provider doesn't track status externally
     return null
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async cancelOrder(_externalId: string): Promise<{ success: boolean }> {
     // No-op: admin handles cancellation manually
     return { success: true }
