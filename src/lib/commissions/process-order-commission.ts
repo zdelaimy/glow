@@ -50,6 +50,7 @@ export async function processOrderCommission(
     .single()
 
   if (referral) {
+    // Level 1 referral match (10%)
     const matchAmount = calculateCommission(personalAmount, settings.referral_match_rate)
     if (matchAmount > 0) {
       await supabase.from('commissions').insert({
@@ -67,6 +68,35 @@ export async function processOrderCommission(
       await insertPointsAndCheckMilestones(
         supabase, referral.referrer_id, orderId, referralPoints, 'REFERRAL_MATCH', 'Referral match points'
       )
+    }
+
+    // Level 2 referral match (5%) — referrer's referrer
+    const level2Rate = settings.level2_referral_match_rate || 0.05
+    const { data: level2Referral } = await supabase
+      .from('glow_girl_referrals')
+      .select('referrer_id')
+      .eq('referred_id', referral.referrer_id)
+      .gt('match_expires_at', new Date().toISOString())
+      .single()
+
+    if (level2Referral) {
+      const level2Amount = calculateCommission(personalAmount, level2Rate)
+      if (level2Amount > 0) {
+        await supabase.from('commissions').insert({
+          glow_girl_id: level2Referral.referrer_id,
+          order_id: orderId,
+          commission_type: 'REFERRAL_MATCH',
+          amount_cents: level2Amount,
+          rate: level2Rate,
+          status: 'PENDING',
+          period,
+        })
+
+        const level2Points = calculatePoints(orderAmountCents, 'REFERRAL_MATCH', settings as CommissionSettings)
+        await insertPointsAndCheckMilestones(
+          supabase, level2Referral.referrer_id, orderId, level2Points, 'REFERRAL_MATCH', 'Level 2 referral match points'
+        )
+      }
     }
   }
 

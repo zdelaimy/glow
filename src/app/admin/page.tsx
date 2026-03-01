@@ -5,6 +5,8 @@ import { SignOutButton } from '@/components/sign-out-button'
 import { AdminGlowGirlActions } from '@/components/admin-glow-girl-actions'
 import { AdminOrderExport } from '@/components/admin-order-export'
 import { AdminApplicationActions } from '@/components/admin-application-actions'
+import { AdminFulfillmentActions } from '@/components/admin-fulfillment-actions'
+import { AdminReturnActions } from '@/components/admin-return-actions'
 import Link from 'next/link'
 
 export default async function AdminDashboard() {
@@ -48,6 +50,18 @@ export default async function AdminDashboard() {
 
   const pendingApplications = (applications || []).filter(a => a.status === 'PENDING')
 
+  // Fetch products
+  const { data: products } = await supabase
+    .from('products')
+    .select('*')
+    .order('sort_order')
+
+  // Fetch return requests
+  const { data: returnRequests } = await supabase
+    .from('return_requests')
+    .select('*, order:orders(id, amount_cents, shipping_name, customer_email)')
+    .order('created_at', { ascending: false })
+
   // Top glow girls by events
   const { data: topGlowGirls } = await supabase
     .from('events')
@@ -64,6 +78,8 @@ export default async function AdminDashboard() {
     glowGirlCounts[ev.glow_girl_id!].count++
   }
   const topGlowGirlsList = Object.values(glowGirlCounts).sort((a, b) => b.count - a.count).slice(0, 5)
+
+  const pendingReturns = (returnRequests || []).filter(r => r.status === 'REQUESTED')
 
   return (
     <div className="min-h-screen bg-[#f5f0eb] font-inter">
@@ -95,8 +111,8 @@ export default async function AdminDashboard() {
           ))}
         </div>
 
-        <Tabs defaultValue={pendingApplications.length > 0 ? 'applications' : 'glow-girls'}>
-          <TabsList className="bg-[#f5f0eb] border border-[#6E6A62]/10 rounded-full p-1">
+        <Tabs defaultValue={pendingApplications.length > 0 ? 'applications' : 'orders'}>
+          <TabsList className="bg-[#f5f0eb] border border-[#6E6A62]/10 rounded-full p-1 flex-wrap h-auto">
             <TabsTrigger value="applications" className="relative rounded-full text-xs uppercase tracking-[0.15em] font-inter text-[#6E6A62]/60 data-[state=active]:bg-white data-[state=active]:text-[#6E6A62] data-[state=active]:shadow-sm">
               Applications
               {pendingApplications.length > 0 && (
@@ -107,6 +123,15 @@ export default async function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="glow-girls" className="rounded-full text-xs uppercase tracking-[0.15em] font-inter text-[#6E6A62]/60 data-[state=active]:bg-white data-[state=active]:text-[#6E6A62] data-[state=active]:shadow-sm">Glow Girls</TabsTrigger>
             <TabsTrigger value="orders" className="rounded-full text-xs uppercase tracking-[0.15em] font-inter text-[#6E6A62]/60 data-[state=active]:bg-white data-[state=active]:text-[#6E6A62] data-[state=active]:shadow-sm">Orders</TabsTrigger>
+            <TabsTrigger value="products" className="rounded-full text-xs uppercase tracking-[0.15em] font-inter text-[#6E6A62]/60 data-[state=active]:bg-white data-[state=active]:text-[#6E6A62] data-[state=active]:shadow-sm">Products</TabsTrigger>
+            <TabsTrigger value="returns" className="relative rounded-full text-xs uppercase tracking-[0.15em] font-inter text-[#6E6A62]/60 data-[state=active]:bg-white data-[state=active]:text-[#6E6A62] data-[state=active]:shadow-sm">
+              Returns
+              {pendingReturns.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-rose-400 rounded-full">
+                  {pendingReturns.length}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="analytics" className="rounded-full text-xs uppercase tracking-[0.15em] font-inter text-[#6E6A62]/60 data-[state=active]:bg-white data-[state=active]:text-[#6E6A62] data-[state=active]:shadow-sm">Analytics</TabsTrigger>
           </TabsList>
 
@@ -196,25 +221,114 @@ export default async function AdminDashboard() {
                     return (
                       <div key={order.id} className="py-3 flex items-center justify-between">
                         <div>
-                          <p className="font-medium text-[#6E6A62]">{order.shipping_name || 'Customer'}</p>
+                          <p className="font-medium text-[#6E6A62]">{order.shipping_name || order.customer_email || 'Customer'}</p>
                           <p className="text-sm text-[#6E6A62]/60">
                             {glowGirl?.brand_name} &middot; {new Date(order.created_at).toLocaleDateString()}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-medium text-[#6E6A62]">${(order.amount_cents / 100).toFixed(2)}</p>
-                          <div className="flex items-center gap-1">
-                            {order.is_subscription && <span className="inline-flex items-center rounded-full bg-[#f5f0eb] px-2 py-0.5 text-xs text-[#6E6A62]">Sub</span>}
-                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${order.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-[#f5f0eb] text-[#6E6A62]'}`}>
-                              {order.status}
-                            </span>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className="font-medium text-[#6E6A62]">${(order.amount_cents / 100).toFixed(2)}</p>
+                            <div className="flex items-center gap-1">
+                              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${order.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-[#f5f0eb] text-[#6E6A62]'}`}>
+                                {order.status}
+                              </span>
+                              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${
+                                order.fulfillment_status === 'DELIVERED' ? 'bg-emerald-50 text-emerald-700'
+                                : order.fulfillment_status === 'SHIPPED' ? 'bg-blue-50 text-blue-700'
+                                : 'bg-[#f5f0eb] text-[#6E6A62]'
+                              }`}>
+                                {order.fulfillment_status || 'UNFULFILLED'}
+                              </span>
+                            </div>
                           </div>
+                          <AdminFulfillmentActions
+                            orderId={order.id}
+                            currentStatus={order.fulfillment_status || 'UNFULFILLED'}
+                          />
                         </div>
                       </div>
                     )
                   })}
                   {(!orders || orders.length === 0) && (
                     <p className="py-8 text-center text-[#6E6A62]/50">No orders yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="products" className="mt-6">
+            <div className="bg-white rounded-2xl border border-neutral-200/60">
+              <div className="px-6 py-4 border-b border-neutral-200/60">
+                <h2 className="text-xs uppercase tracking-[0.15em] text-[#6E6A62]/50 font-inter">Product Catalog</h2>
+              </div>
+              <div className="px-6">
+                <div className="divide-y divide-neutral-200/60">
+                  {(products || []).map((product) => (
+                    <div key={product.id} className="py-4 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-[#6E6A62]">{product.name}</p>
+                        <p className="text-sm text-[#6E6A62]/60">
+                          {product.sku} &middot; ${(product.price_cents / 100).toFixed(2)} &middot; {product.category}
+                        </p>
+                      </div>
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs ${product.active ? 'bg-emerald-50 text-emerald-700' : 'bg-[#f5f0eb] text-[#6E6A62]'}`}>
+                        {product.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  ))}
+                  {(!products || products.length === 0) && (
+                    <p className="py-8 text-center text-[#6E6A62]/50">No products yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="returns" className="mt-6">
+            <div className="bg-white rounded-2xl border border-neutral-200/60">
+              <div className="px-6 py-4 border-b border-neutral-200/60">
+                <h2 className="text-xs uppercase tracking-[0.15em] text-[#6E6A62]/50 font-inter">Return Requests</h2>
+              </div>
+              <div className="px-6">
+                <div className="divide-y divide-neutral-200/60">
+                  {(returnRequests || []).map((req) => {
+                    const order = req.order as unknown as { id: string; amount_cents: number; shipping_name: string | null; customer_email: string | null } | null
+                    return (
+                      <div key={req.id} className="py-4 flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-[#6E6A62]">{req.customer_email}</p>
+                          <p className="text-sm text-[#6E6A62]/60">
+                            Reason: {req.reason.replace(/_/g, ' ')} &middot; Order: ${((order?.amount_cents || 0) / 100).toFixed(2)}
+                          </p>
+                          {req.reason_detail && (
+                            <p className="text-sm text-[#6E6A62]/60 mt-1 line-clamp-2">&ldquo;{req.reason_detail}&rdquo;</p>
+                          )}
+                          <p className="text-xs text-[#6E6A62]/40 mt-1">
+                            {new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs ${
+                            req.status === 'APPROVED' || req.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700'
+                            : req.status === 'DENIED' ? 'bg-red-50 text-red-700'
+                            : 'bg-amber-50 text-amber-700'
+                          }`}>
+                            {req.status}
+                          </span>
+                          {req.status === 'REQUESTED' && (
+                            <AdminReturnActions
+                              returnRequestId={req.id}
+                              orderAmountCents={order?.amount_cents || 0}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                  {(!returnRequests || returnRequests.length === 0) && (
+                    <p className="py-8 text-center text-[#6E6A62]/50">No return requests yet.</p>
                   )}
                 </div>
               </div>

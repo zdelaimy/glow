@@ -1,56 +1,9 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { glowGirlSignatureSchema, glowGirlApplicationSchema } from '@/lib/validations'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { glowGirlApplicationSchema } from '@/lib/validations'
 import { revalidatePath } from 'next/cache'
-import type { GlowGirlSignatureInput, GlowGirlApplicationInput } from '@/lib/validations'
-
-export async function createSignature(glowGirlId: string, input: GlowGirlSignatureInput) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
-
-  const parsed = glowGirlSignatureSchema.parse(input)
-
-  const { data, error } = await supabase
-    .from('glow_girl_signatures')
-    .insert({
-      glow_girl_id: glowGirlId,
-      ...parsed,
-    })
-    .select()
-    .single()
-
-  if (error) throw new Error(error.message)
-
-  revalidatePath('/glow-girl')
-  return data
-}
-
-export async function updateSignature(signatureId: string, input: Partial<GlowGirlSignatureInput> & { publish_status?: string }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
-
-  // Verify ownership via join
-  const { data: sig } = await supabase
-    .from('glow_girl_signatures')
-    .select('glow_girl_id, glow_girls!inner(user_id)')
-    .eq('id', signatureId)
-    .single()
-
-  if (!sig || (sig.glow_girls as unknown as { user_id: string }).user_id !== user.id) {
-    throw new Error('Not authorized')
-  }
-
-  const { error } = await supabase
-    .from('glow_girl_signatures')
-    .update(input)
-    .eq('id', signatureId)
-
-  if (error) throw new Error(error.message)
-  revalidatePath('/glow-girl')
-}
+import type { GlowGirlApplicationInput } from '@/lib/validations'
 
 export async function submitApplication(input: GlowGirlApplicationInput) {
   const supabase = await createClient()
@@ -73,11 +26,15 @@ export async function submitApplication(input: GlowGirlApplicationInput) {
     })
   }
 
+  // Separate referral_code from the rest of the fields to insert explicitly
+  const { referral_code, ...applicationFields } = parsed
+
   const { data, error } = await supabase
     .from('glow_girl_applications')
     .insert({
       user_id: user.id,
-      ...parsed,
+      ...applicationFields,
+      referral_code: referral_code || null,
     })
     .select()
     .single()
@@ -170,7 +127,8 @@ export async function reviewApplication(applicationId: string, status: 'APPROVED
       Math.random().toString(36).slice(2, 6).toUpperCase()
 
     // Check for referred_by_code from user metadata
-    const { data: { user: applicantUser } } = await supabase.auth.admin.getUserById(application.user_id)
+    const serviceClient = await createServiceClient()
+    const { data: { user: applicantUser } } = await serviceClient.auth.admin.getUserById(application.user_id)
     const referredByCode = (applicantUser?.user_metadata?.referred_by_code as string) || null
 
     // Create glow girl record

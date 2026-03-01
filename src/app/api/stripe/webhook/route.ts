@@ -28,29 +28,65 @@ export async function POST(request: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session
       const meta = session.metadata || {}
 
+      // Parse items from metadata
+      const items: { productId: string; quantity: number }[] = meta.items
+        ? JSON.parse(meta.items)
+        : []
+
+      // Use the first product_id for the order's product_id column (primary product)
+      const primaryProductId = items.length > 0 ? items[0].productId : null
+
+      const customerEmail = session.customer_details?.email || null
+
       const orderData = {
         stripe_checkout_session_id: session.id,
         stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : null,
         glow_girl_id: meta.glow_girl_id,
-        signature_id: meta.signature_id,
+        signature_id: null,
+        product_id: primaryProductId,
         status: 'paid',
-        is_subscription: meta.is_subscription === 'true',
+        is_subscription: false,
         amount_cents: session.amount_total || 0,
         currency: session.currency || 'usd',
         shipping_name: (session as unknown as { shipping_details?: { name?: string; address?: unknown } }).shipping_details?.name || null,
         shipping_address: (session as unknown as { shipping_details?: { name?: string; address?: unknown } }).shipping_details?.address || null,
-        line_items: [{ name: 'Custom Serum', quantity: 1 }],
-        blend_components: meta.blend_components ? JSON.parse(meta.blend_components) : {},
+        line_items: items.map(i => ({ product_id: i.productId, quantity: i.quantity })),
+        blend_components: {},
+        customer_email: customerEmail,
+        fulfillment_status: 'UNFULFILLED' as const,
       }
 
       const { data: order } = await supabase.from('orders').insert(orderData).select('id').single()
+
+      // Insert order_items
+      if (order && items.length > 0) {
+        const productIds = items.map(i => i.productId)
+        const { data: products } = await supabase
+          .from('products')
+          .select('id, price_cents')
+          .in('id', productIds)
+
+        if (products) {
+          const orderItems = items.map(item => {
+            const product = products.find(p => p.id === item.productId)
+            const unitPrice = product?.price_cents || 0
+            return {
+              order_id: order.id,
+              product_id: item.productId,
+              quantity: item.quantity,
+              unit_price_cents: unitPrice,
+              total_cents: unitPrice * item.quantity,
+            }
+          })
+          await supabase.from('order_items').insert(orderItems)
+        }
+      }
 
       // Track purchase event
       await supabase.from('events').insert({
         event_type: 'purchase',
         glow_girl_id: meta.glow_girl_id,
-        signature_id: meta.signature_id,
-        metadata: { amount_cents: session.amount_total },
+        metadata: { amount_cents: session.amount_total, items },
       })
 
       // Process commissions and points
@@ -58,23 +94,6 @@ export async function POST(request: NextRequest) {
         await processOrderCommission(supabase, order.id, meta.glow_girl_id, session.amount_total)
       }
 
-      // If subscription, create subscription record
-      if (meta.is_subscription === 'true' && session.subscription) {
-        const subResponse = await stripe.subscriptions.retrieve(session.subscription as string)
-        const sub = subResponse as unknown as {
-          id: string; customer: string | { id: string }; status: string;
-          current_period_start: number; current_period_end: number;
-        }
-        await supabase.from('subscriptions').insert({
-          glow_girl_id: meta.glow_girl_id,
-          signature_id: meta.signature_id,
-          stripe_subscription_id: sub.id,
-          stripe_customer_id: typeof sub.customer === 'string' ? sub.customer : sub.customer.id,
-          status: sub.status,
-          current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-        })
-      }
       break
     }
 

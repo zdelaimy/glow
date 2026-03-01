@@ -32,16 +32,15 @@ export function Footer() {
   return (
     <footer className="bg-[#f5f0eb]">
       <div className="max-w-7xl mx-auto px-6">
-        {/* GLOW logo — full width, centered */}
+        {/* GLOW LABS logo — aligned with content columns */}
         <div className="overflow-hidden pt-12 pb-4">
           <h2
-            className="text-[20vw] md:text-[16vw] leading-[0.85] tracking-tight text-[#6E6A62] text-center select-none"
+            className="text-[30.7vw] md:text-[23.2vw] lg:text-[19.3vw] xl:text-[17.3rem] leading-[0.85] tracking-tight text-[#6E6A62] text-center select-none whitespace-nowrap w-full"
             aria-hidden="true"
           >
-            GLOW
+            Glow Labs
           </h2>
         </div>
-
         {/* Horizontal divider */}
         <div className="border-t border-[#6E6A62]/30" />
 

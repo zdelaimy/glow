@@ -38,7 +38,7 @@ export function LandingHeader({ variant = "hero" }: { variant?: "hero" | "light"
                 : "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
             )}
           >
-            GLOW
+            Glow Labs
           </span>
         </Link>
 
