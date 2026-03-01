@@ -2,8 +2,8 @@ export const heroSlides = [
   {
     src: "/hero/videos/first.mp4",
     alt: "Woman showcasing beauty products",
-    headline: "Your store. Your rules.",
-    subtitle: "Open your own beauty storefront and start earning today.",
+    headline: "The glow-up is real.",
+    subtitle: "Premium beauty, made for your ritual.",
   },
   {
     src: "/hero/videos/second.mp4",

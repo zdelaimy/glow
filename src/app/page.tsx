@@ -18,7 +18,7 @@ export default function HomePage() {
         <div className="inline-flex animate-[marquee_40s_linear_infinite]">
           {[...Array(2)].map((_, i) => (
             <span key={i} className="text-xs uppercase tracking-[0.2em] text-[#6E6A62] font-medium font-inter">
-              Build Your Business&ensp;&bull;&ensp;Earn 25% Commission&ensp;&bull;&ensp;Free Shipping Over $50&ensp;&bull;&ensp;Premium Clean Ingredients&ensp;&bull;&ensp;Become a Glow Girl&ensp;&bull;&ensp;Build Your Business&ensp;&bull;&ensp;Earn 25% Commission&ensp;&bull;&ensp;Free Shipping Over $50&ensp;&bull;&ensp;Premium Clean Ingredients&ensp;&bull;&ensp;Become a Glow Girl&ensp;&bull;&ensp;
+              Build Your Business&ensp;&bull;&ensp;Earn 25% Commission&ensp;&bull;&ensp;Premium Clean Ingredients&ensp;&bull;&ensp;Become a Glow Girl&ensp;&bull;&ensp;Build Your Business&ensp;&bull;&ensp;Earn 25% Commission&ensp;&bull;&ensp;Premium Clean Ingredients&ensp;&bull;&ensp;Become a Glow Girl&ensp;&bull;&ensp;
             </span>
           ))}
         </div>
