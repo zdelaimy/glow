@@ -185,6 +185,7 @@ export interface Order {
   product_id: string | null
   stripe_checkout_session_id: string | null
   stripe_payment_intent_id: string | null
+  square_payment_id: string | null
   status: string
   is_subscription: boolean
   amount_cents: number
