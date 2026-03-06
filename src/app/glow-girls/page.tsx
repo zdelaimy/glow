@@ -1,27 +1,8 @@
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { EarningsCalculator } from '@/components/earnings-calculator'
 import { LandingHeader } from '@/components/landing-header'
-import { Footer } from "@/components/footer"
-import type { MonthlyBonusTier, CommissionSettings } from '@/types/database'
-
-const TIER_COLORS: Record<string, { bg: string; text: string }> = {
-  starter: { bg: 'bg-neutral-100', text: 'text-neutral-500' },
-  bronze: { bg: 'bg-amber-100/80', text: 'text-amber-700' },
-  silver: { bg: 'bg-slate-200/60', text: 'text-slate-600' },
-  gold: { bg: 'bg-yellow-100/80', text: 'text-yellow-700' },
-  platinum: { bg: 'bg-indigo-100/60', text: 'text-indigo-600' },
-  ruby: { bg: 'bg-rose-100/80', text: 'text-rose-600' },
-  emerald: { bg: 'bg-emerald-100/80', text: 'text-emerald-700' },
-  sapphire: { bg: 'bg-blue-100/80', text: 'text-blue-600' },
-  diamond: { bg: 'bg-violet-100/80', text: 'text-violet-600' },
-}
-
-function getTierColors(label: string) {
-  const key = label.toLowerCase().replace(/\s+/g, '').replace(/\+$/, '')
-  return TIER_COLORS[key] || { bg: 'bg-[#f5f0eb]', text: 'text-[#6E6A62]' }
-}
+import { Footer } from '@/components/footer'
+import { Store, Share2, TrendingUp } from 'lucide-react'
 
 export default async function GlowGirlsOpportunityPage({
   searchParams,
@@ -41,28 +22,13 @@ export default async function GlowGirlsOpportunityPage({
     })
   }
 
-  const supabase = await createClient()
-
-  const { data: settings } = await supabase
-    .from('commission_settings')
-    .select('*')
-    .single()
-
-  const { data: tiers } = await supabase
-    .from('monthly_bonus_tiers')
-    .select('*')
-    .order('sort_order')
-
-  const commissionSettings = settings as CommissionSettings
-  const bonusTiers = (tiers || []) as MonthlyBonusTier[]
-
   return (
     <div className="min-h-screen bg-[#f5f0eb]">
-      <LandingHeader variant="light" />
+      <LandingHeader variant="light" hideNav />
 
       <main>
         {/* Hero */}
-        <section className="pt-32 pb-24 md:pt-40 md:pb-32 text-center">
+        <section className="bg-white pt-32 pb-24 md:pt-40 md:pb-32 text-center">
           <div className="max-w-3xl mx-auto px-6">
             <h1 className="text-4xl md:text-6xl leading-[1.08] tracking-tight mb-6 text-[#6E6A62]">
               Your glow. <span className="italic">Your business.</span>
@@ -70,7 +36,7 @@ export default async function GlowGirlsOpportunityPage({
             <p className="text-sm md:text-base text-[#6E6A62]/60 max-w-xl mx-auto mb-10">
               Open your own beauty storefront, sell curated Glow products, and earn commissions, bonuses, and rewards every month.
             </p>
-            <Link href="/apply">
+            <Link href="/welcome">
               <button className="h-12 px-8 rounded-full bg-[#6E6A62] text-white text-sm font-medium hover:bg-[#5E5A52] transition-colors cursor-pointer font-inter">
                 Start Your Glow Business
               </button>
@@ -78,8 +44,67 @@ export default async function GlowGirlsOpportunityPage({
           </div>
         </section>
 
-        {/* Three Income Streams */}
+        {/* Marquee ticker */}
+        <div className="bg-[#f5f0eb] py-3 overflow-hidden whitespace-nowrap">
+          <div className="inline-flex animate-[marquee_40s_linear_infinite]">
+            {[...Array(2)].map((_, i) => (
+              <span key={i} className="text-xs uppercase tracking-[0.2em] text-[#6E6A62] font-medium font-inter">
+                $10K in Sales in 10 Months · 10 Hrs/Week&ensp;&bull;&ensp;Earn 25% Commission&ensp;&bull;&ensp;$0 to Start&ensp;&bull;&ensp;$10K in Sales in 10 Months · 10 Hrs/Week&ensp;&bull;&ensp;Earn 25% Commission&ensp;&bull;&ensp;$0 to Start&ensp;&bull;&ensp;
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* How It Works */}
         <section className="bg-white py-24 md:py-32">
+          <div className="max-w-5xl mx-auto px-6 text-center">
+            <p className="text-xs uppercase tracking-[0.25em] text-[#6E6A62]/60 mb-6 font-inter">
+              How It Works
+            </p>
+            <h2 className="text-3xl md:text-5xl leading-tight mb-6 text-[#6E6A62]">
+              Your own beauty business, simplified.
+            </h2>
+            <div className="mb-20" />
+
+            <div className="grid md:grid-cols-3 gap-12 md:gap-16">
+              {[
+                {
+                  step: "01",
+                  icon: Store,
+                  title: "Open Your Store",
+                  desc: "Get your own branded storefront in minutes — your name, your link, your beauty business.",
+                },
+                {
+                  step: "02",
+                  icon: Share2,
+                  title: "Share & Sell",
+                  desc: "Share Glow products with your audience and community. We handle the rest.",
+                },
+                {
+                  step: "03",
+                  icon: TrendingUp,
+                  title: "Earn & Grow",
+                  desc: "Earn commissions on every sale, build your Pod, and unlock bonuses as you grow.",
+                },
+              ].map((item) => (
+                <div key={item.step} className="flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-full border border-neutral-200 bg-neutral-50 flex items-center justify-center mb-6">
+                    <item.icon className="w-6 h-6 text-[#6E6A62]" />
+                  </div>
+                  <h3 className="text-xs uppercase tracking-[0.2em] font-semibold mb-3 text-[#6E6A62] font-inter">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-[#6E6A62]/70 leading-relaxed max-w-xs">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Three Income Streams */}
+        <section className="bg-[#f5f0eb] py-24 md:py-32">
           <div className="max-w-5xl mx-auto px-6">
             <h2 className="text-3xl md:text-5xl leading-tight mb-16 text-[#6E6A62] text-center">
               Three ways to <span className="italic">earn</span>
@@ -94,18 +119,18 @@ export default async function GlowGirlsOpportunityPage({
                 },
                 {
                   step: '02',
-                  title: 'Refer',
-                  subtitle: '10% referral match',
-                  desc: 'Invite other Glow Girls. Earn a percentage match on their commissions for 12 months.',
+                  title: 'Build Your Team',
+                  subtitle: 'Up to 26% in overrides',
+                  desc: 'Earn overrides on sales from up to 7 levels deep in your team. The more you build, the more levels you unlock.',
                 },
                 {
                   step: '03',
-                  title: 'Pod Override',
-                  subtitle: '5% override',
-                  desc: 'Build your pod. Earn a 5% override on every sale from your pod members.',
+                  title: 'Monthly Bonuses',
+                  subtitle: 'Up to $12,500+',
+                  desc: 'Hit commission milestones each month and unlock bonus payouts on top of your earnings.',
                 },
               ].map((stream) => (
-                <div key={stream.title} className="bg-[#f5f0eb] rounded-2xl p-6 md:p-8 space-y-4">
+                <div key={stream.title} className="bg-white rounded-2xl p-6 md:p-8 space-y-4">
                   <span className="text-xs text-[#6E6A62]/40 font-inter uppercase tracking-[0.15em]">{stream.step}</span>
                   <div>
                     <h3 className="text-xl text-[#6E6A62] mb-1">{stream.title}</h3>
@@ -118,66 +143,47 @@ export default async function GlowGirlsOpportunityPage({
           </div>
         </section>
 
-        {/* Monthly Bonus Tier Table */}
-        <section className="bg-[#f5f0eb] py-24 md:py-32">
+        {/* Glow Girl Opportunity Stats */}
+        <section className="bg-white py-24 md:py-32">
           <div className="max-w-5xl mx-auto px-6">
-            <h2 className="text-3xl md:text-5xl leading-tight text-center mb-4 text-[#6E6A62]">
-              Monthly <span className="italic">bonus tiers</span>
-            </h2>
-            <p className="text-center text-sm text-[#6E6A62]/60 mb-12 max-w-lg mx-auto">
-              Hit commission milestones each month and unlock bonus payouts on top of your earnings.
-            </p>
-            <div className="max-w-3xl mx-auto">
-              <div className="bg-white rounded-2xl overflow-hidden border border-neutral-200/60">
-                <div className="grid grid-cols-3 px-6 py-3 text-xs font-medium text-[#6E6A62]/50 uppercase tracking-[0.15em] border-b border-neutral-100 font-inter">
-                  <span>Monthly Commissions</span>
-                  <span className="text-center">Tier</span>
-                  <span className="text-right">Bonus</span>
+            <div className="bg-[#f5f0eb] rounded-2xl p-8 md:p-14 border border-neutral-200">
+              <h2 className="text-3xl md:text-4xl font-bold leading-tight text-[#6E6A62] mb-10 text-center">
+                Turn your passion into a paycheck.
+              </h2>
+              <div className="grid md:grid-cols-2 gap-10 items-center">
+                <div className="space-y-5">
+                  <p className="text-3xl md:text-4xl italic leading-tight text-[#6E6A62]">
+                    $10,000 in sales.<br />
+                    10 months.<br />
+                    10 hours a week.<br />
+                    That&apos;s the goal.
+                  </p>
+                  <Link href="/welcome">
+                    <button className="mt-2 h-11 px-7 rounded-full bg-[#6E6A62] text-white text-xs uppercase tracking-[0.15em] font-medium hover:bg-[#5E5A52] transition-colors cursor-pointer font-inter">
+                      Get Started
+                    </button>
+                  </Link>
                 </div>
-                {bonusTiers.map((tier, i) => (
-                  <div
-                    key={tier.id}
-                    className={`grid grid-cols-3 px-6 py-3.5 text-sm items-center ${
-                      i % 2 === 0 ? '' : 'bg-[#f5f0eb]/30'
-                    }`}
-                  >
-                    <span className="text-[#6E6A62]">
-                      ${(tier.min_commission_cents / 100).toLocaleString()}
-                      {tier.max_commission_cents ? ` – $${(tier.max_commission_cents / 100).toLocaleString()}` : '+'}
-                    </span>
-                    <span className="text-center">
-                      <span className={`inline-block text-xs uppercase tracking-[0.1em] px-3 py-1 rounded-full font-inter font-medium ${getTierColors(tier.tier_label).bg} ${getTierColors(tier.tier_label).text}`}>
-                        {tier.tier_label}
-                      </span>
-                    </span>
-                    <span className="text-right font-medium text-[#6E6A62]">
-                      {tier.bonus_cents > 0 ? `$${(tier.bonus_cents / 100).toLocaleString()}` : '—'}
-                    </span>
-                  </div>
-                ))}
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { stat: "25%", label: "Commission on every sale" },
+                    { stat: "$0", label: "Cost to start" },
+                    { stat: "Free", label: "Sales training included" },
+                    { stat: "Monthly", label: "Commission payouts" },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="border border-neutral-200 rounded-xl p-4 bg-white"
+                    >
+                      <div className="text-2xl text-[#6E6A62]">{item.stat}</div>
+                      <div className="text-xs text-[#6E6A62]/70 mt-1">
+                        {item.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <p className="text-xs text-[#6E6A62]/50 text-center mt-4">
-                Top Sellers ($10K+ commissions): earn an additional $3,000 for every $5,000 above the $10K threshold.
-              </p>
             </div>
-          </div>
-        </section>
-
-        {/* Interactive Earnings Calculator */}
-        <section className="bg-white py-24 md:py-32" id="calculator">
-          <div className="max-w-5xl mx-auto px-6">
-            <p className="text-xs uppercase tracking-[0.25em] text-[#6E6A62]/60 mb-6 font-inter text-center">
-              Earnings Calculator
-            </p>
-            <h2 className="text-3xl md:text-5xl leading-tight text-center mb-4 text-[#6E6A62]">
-              See your <span className="italic">potential</span>
-            </h2>
-            <p className="text-center text-sm text-[#6E6A62]/60 mb-12 max-w-lg mx-auto">
-              Slide to estimate your monthly earnings based on your sales volume.
-            </p>
-            {commissionSettings && (
-              <EarningsCalculator tiers={bonusTiers} settings={commissionSettings} />
-            )}
           </div>
         </section>
 
@@ -195,34 +201,109 @@ export default async function GlowGirlsOpportunityPage({
                 {
                   title: '1-on-1 Mentorship',
                   desc: 'Get paired with a successful Glow Girl who guides you through your first months and beyond.',
+                  video: '/resources/mentorship.mp4',
                 },
                 {
                   title: 'Sales Training',
                   desc: 'Access our library of proven sales strategies, scripts, and techniques built for beauty entrepreneurs.',
+                  video: '/resources/training.mp4',
                 },
                 {
                   title: 'The Glow Girl Network',
                   desc: 'Join a private community of ambitious women sharing tips, wins, and support every day.',
+                  video: '/resources/community.mp4',
                 },
                 {
                   title: 'Dinners & Galas',
                   desc: 'Exclusive in-person events to connect, celebrate milestones, and build relationships that last.',
+                  video: '/resources/gala.mp4',
                 },
                 {
                   title: 'Social Media Growth',
                   desc: 'Learn how to grow your audience, create content that converts, and build your personal brand.',
+                  video: '/resources/social-media.mp4',
                 },
                 {
                   title: 'Monetization Strategy',
                   desc: 'Go beyond commissions — learn how to turn your platform into multiple revenue streams.',
+                  video: '/resources/monetization.mp4',
                 },
               ].map((resource) => (
                 <div
                   key={resource.title}
-                  className="bg-white rounded-2xl p-6 border border-neutral-200/60 space-y-2"
+                  className="bg-white rounded-2xl overflow-hidden border border-neutral-200/60"
                 >
-                  <h3 className="text-lg text-[#6E6A62]">{resource.title}</h3>
-                  <p className="text-sm text-[#6E6A62]/60 leading-relaxed">{resource.desc}</p>
+                  <video
+                    src={resource.video}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-40 object-cover"
+                  />
+                  <div className="p-6 space-y-2">
+                    <h3 className="text-lg text-[#6E6A62]">{resource.title}</h3>
+                    <p className="text-sm text-[#6E6A62]/60 leading-relaxed">{resource.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section className="bg-white py-24 md:py-32">
+          <div className="max-w-6xl mx-auto px-6 text-center">
+            <p className="text-xs uppercase tracking-[0.25em] text-[#6E6A62]/60 mb-6 font-inter">
+              Community
+            </p>
+            <h2 className="text-3xl md:text-4xl leading-tight mb-16 text-[#6E6A62]">
+              From Our Glow Girls
+            </h2>
+
+            <div className="grid sm:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {[
+                {
+                  quote:
+                    "I opened my store in a weekend and had my first sale within days.",
+                  name: "Jessica M.",
+                  location: "Austin, TX",
+                  img: "/hero/headshot1.jpg",
+                },
+                {
+                  quote:
+                    "The bonus tiers keep me motivated. I hit Gold in my second month.",
+                  name: "Aaliyah R.",
+                  location: "Atlanta, GA",
+                  img: "/hero/headshot2.jpg",
+                },
+                {
+                  quote:
+                    "The products sell themselves — my friends and family are obsessed.",
+                  name: "Taylor K.",
+                  location: "San Diego, CA",
+                  img: "/hero/headshot3.jpg",
+                },
+              ].map((t, i) => (
+                <div key={i} className="bg-[#f5f0eb] rounded-2xl p-6 text-left space-y-4 border border-neutral-200/60">
+                  <p className="text-sm text-[#6E6A62] leading-relaxed italic">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <img
+                      src={t.img}
+                      alt={t.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <p className="text-xs font-medium text-[#6E6A62]">
+                        {t.name}
+                      </p>
+                      <p className="text-[11px] text-[#6E6A62]/50">
+                        {t.location}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -230,7 +311,7 @@ export default async function GlowGirlsOpportunityPage({
         </section>
 
         {/* Bottom CTA */}
-        <section className="bg-white py-24 md:py-32 text-center">
+        <section className="bg-[#f5f0eb] py-24 md:py-32 text-center">
           <div className="max-w-2xl mx-auto px-6">
             <h2 className="text-3xl md:text-5xl italic leading-tight mb-4 text-[#6E6A62]">
               Start your glow business

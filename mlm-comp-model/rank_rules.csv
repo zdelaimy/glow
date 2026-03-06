@@ -1,0 +1,7 @@
+rank,min_gv,min_legs,rank_pct,generation_bonus_pct
+New,0,0,0%,0%
+Associate,500,0,5%,0%
+Builder,2000,1,10%,0%
+Senior,5000,2,15%,1%
+Director,15000,2,25%,3%
+VP,40000,3,25%,5%

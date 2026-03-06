@@ -1,0 +1,10 @@
+scenario,description,who_earns,calculation,amount
+Retail Sale,"Alice sells $100 product (cost $60)",Alice,Retail price - wholesale cost,$40.00
+Level 1 Override,"Alice sells $100 — You are her L1 sponsor",You,10% of $100 (L1 override rate),$10.00
+Level 2 Override,"Bob sells $100 — You are his L2 (Alice→Bob)",You,5% of $100 (L2 override rate),$5.00
+Team Differential,"Alice's leg has $8000 GV. You=25% Alice=15%",You,(25%-15%) × $8000 = 10% × $8000,$800.00
+Team Differential,"Dave's leg has $400 GV. You=25% Dave=5%",You,(25%-5%) × $400 = 20% × $400,$80.00
+Team Differential,"Bob under Alice. Alice=15% Bob=10%",Alice,(15%-10%) × Bob's sub-GV $500,$25.00
+Generation Bonus,"Alice hits Senior (same-rank breakaway). Her whole team = Gen 1 for You",You,3% × Alice's total leg GV $8000,$240.00
+No Payout (compressed),"If Alice also hit Director (25%) — differential = 0%",You,25%-25% = 0% on Alice's leg,$0.00
+Gen 2 Bonus,"Bob hits Senior under Alice (who is Director). Bob's team = Gen 2 for You",You,2% × Bob's sub-GV $500,$10.00

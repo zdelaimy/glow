@@ -3,6 +3,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { glowGirlApplicationSchema } from '@/lib/validations'
 import { revalidatePath } from 'next/cache'
+import { onboardGlowGirlToSlack } from '@/lib/slack'
 import type { GlowGirlApplicationInput } from '@/lib/validations'
 
 export async function submitApplication(input: GlowGirlApplicationInput) {
@@ -180,6 +181,41 @@ export async function reviewApplication(applicationId: string, status: 'APPROVED
             glow_girl_id: glowGirl.id,
             role: 'MEMBER',
           })
+        }
+      }
+    }
+
+    // Slack onboarding — create pod channel & invite to recruiter's channel
+    if (glowGirl) {
+      const applicantEmail = applicantUser?.email
+      let recruiterSlackChannelId: string | null = null
+
+      if (referredByCode) {
+        const { data: recruiterGirl } = await supabase
+          .from('glow_girls')
+          .select('slack_channel_id')
+          .eq('referral_code', referredByCode)
+          .single()
+        recruiterSlackChannelId = recruiterGirl?.slack_channel_id || null
+      }
+
+      if (applicantEmail) {
+        try {
+          const slackChannelId = await onboardGlowGirlToSlack({
+            brandName: application.full_name,
+            slug,
+            email: applicantEmail,
+            recruiterSlackChannelId,
+          })
+
+          if (slackChannelId) {
+            await supabase
+              .from('glow_girls')
+              .update({ slack_channel_id: slackChannelId })
+              .eq('id', glowGirl.id)
+          }
+        } catch (err) {
+          console.error('[Slack] Onboarding failed (non-blocking):', err)
         }
       }
     }

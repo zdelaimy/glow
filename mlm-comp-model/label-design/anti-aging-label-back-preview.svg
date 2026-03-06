@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="750" viewBox="0 0 360 750">
+  <!--
+    PREVIEW ONLY — simulates white ink on frosted glass
+    Bottle: 4" tall, 1.3" diameter
+    Label:  1.2" wide × 2.5" tall at 300 DPI = 360 × 750 px
+  -->
+
+  <rect width="360" height="750" rx="10" ry="10" fill="#C8C8C8"/>
+
+  <!-- DIRECTIONS header -->
+  <text
+    x="180"
+    y="45"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="500"
+    font-size="11"
+    letter-spacing="3"
+    fill="#FFFFFF"
+    text-anchor="middle"
+  >DIRECTIONS</text>
+
+  <text
+    x="180"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="300"
+    font-size="9"
+    fill="#FFFFFF"
+    opacity="0.85"
+    text-anchor="middle"
+  >
+    <tspan x="180" dy="25">Apply 3-4 drops to clean, dry skin.</tspan>
+    <tspan x="180" dy="14">Use morning and evening.</tspan>
+    <tspan x="180" dy="14">Follow with moisturizer and SPF.</tspan>
+  </text>
+
+  <line x1="80" y1="115" x2="280" y2="115" stroke="#FFFFFF" stroke-width="0.4" opacity="0.4"/>
+
+  <!-- WARNING -->
+  <text
+    x="180"
+    y="138"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="500"
+    font-size="10"
+    letter-spacing="2"
+    fill="#FFFFFF"
+    text-anchor="middle"
+  >⚠ WARNING</text>
+
+  <text
+    x="180"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="300"
+    font-size="8"
+    fill="#FFFFFF"
+    opacity="0.8"
+    text-anchor="middle"
+  >
+    <tspan x="180" dy="20">Use sunscreen while using this product.</tspan>
+    <tspan x="180" dy="13">Contains retinol. Not recommended</tspan>
+    <tspan x="180" dy="13">during pregnancy. Consult your doctor.</tspan>
+  </text>
+
+  <line x1="80" y1="200" x2="280" y2="200" stroke="#FFFFFF" stroke-width="0.4" opacity="0.4"/>
+
+  <!-- INGREDIENTS -->
+  <text
+    x="180"
+    y="222"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="500"
+    font-size="10"
+    letter-spacing="3"
+    fill="#FFFFFF"
+    text-anchor="middle"
+  >INGREDIENTS</text>
+
+  <text
+    x="180"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="300"
+    font-size="7"
+    fill="#FFFFFF"
+    opacity="0.75"
+    text-anchor="middle"
+  >
+    <tspan x="180" dy="18">Aqua (Water), Aloe Barbadensis Leaf</tspan>
+    <tspan x="180" dy="11">Juice, Hamamelis Virginiana (Witch</tspan>
+    <tspan x="180" dy="11">Hazel) Water, Polysorbate 20, Glycerin</tspan>
+    <tspan x="180" dy="11">(Vegetable), Cucumis Sativus</tspan>
+    <tspan x="180" dy="11">(Cucumber) Fruit Water, Simmondsia</tspan>
+    <tspan x="180" dy="11">Chinensis (Organic Jojoba) Seed Oil,</tspan>
+    <tspan x="180" dy="11">Chamomilla Recutita (Matricaria)</tspan>
+    <tspan x="180" dy="11">Flower Extract, Sodium Hyaluronate</tspan>
+    <tspan x="180" dy="11">(Hyaluronic Acid), Phospholipids,</tspan>
+    <tspan x="180" dy="11">Centella Asiatica (Gotu Kola) Extract,</tspan>
+    <tspan x="180" dy="11">Retinol, Camellia Sinensis (Green Tea)</tspan>
+    <tspan x="180" dy="11">Leaf Extract, Tocopheryl Acetate</tspan>
+    <tspan x="180" dy="11">(Vitamin E), Lecithin, Carrageenan,</tspan>
+    <tspan x="180" dy="11">Caprylic/Capric Triglyceride,</tspan>
+    <tspan x="180" dy="11">Acrylates/C10-30 Alkyl Acrylate</tspan>
+    <tspan x="180" dy="11">Crosspolymer, Sodium Hydroxide,</tspan>
+    <tspan x="180" dy="11">Leuconostoc/Radish Root Ferment</tspan>
+    <tspan x="180" dy="11">Filtrate, Hydroxyethylcellulose,</tspan>
+    <tspan x="180" dy="11">Sodium Benzoate, Phenoxyethanol,</tspan>
+    <tspan x="180" dy="11">Ethylhexylglycerin, Potassium</tspan>
+    <tspan x="180" dy="11">Sorbate, Benzoic Acid, Citric Acid.</tspan>
+  </text>
+
+  <line x1="80" y1="590" x2="280" y2="590" stroke="#FFFFFF" stroke-width="0.4" opacity="0.4"/>
+
+  <!-- Company info -->
+  <text
+    x="180"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="300"
+    font-size="8"
+    fill="#FFFFFF"
+    opacity="0.6"
+    text-anchor="middle"
+  >
+    <tspan x="180" dy="610">Glow Labs LLC</tspan>
+    <tspan x="180" dy="13">glowlabs.com</tspan>
+  </text>
+
+  <!-- Lot / Exp -->
+  <text
+    x="180"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="300"
+    font-size="7.5"
+    fill="#FFFFFF"
+    opacity="0.5"
+    text-anchor="middle"
+  >
+    <tspan x="180" dy="652">LOT: ______   EXP: ______</tspan>
+  </text>
+
+  <!-- PAO symbol -->
+  <g transform="translate(155, 670)" opacity="0.5">
+    <rect x="0" y="6" width="16" height="12" rx="1" fill="none" stroke="#FFFFFF" stroke-width="0.8"/>
+    <line x1="0" y1="6" x2="4" y2="1" stroke="#FFFFFF" stroke-width="0.8"/>
+    <line x1="4" y1="1" x2="14" y2="1" stroke="#FFFFFF" stroke-width="0.8"/>
+    <text x="24" y="16" font-family="'Montserrat', Helvetica, Arial, sans-serif" font-weight="300" font-size="8" fill="#FFFFFF">12M</text>
+  </g>
+
+  <!-- Net contents -->
+  <text
+    x="180"
+    y="720"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="300"
+    font-size="8"
+    fill="#FFFFFF"
+    opacity="0.5"
+    text-anchor="middle"
+  >30 mL / 1.0 fl oz</text>
+
+</svg>

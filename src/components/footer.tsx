@@ -62,8 +62,6 @@ export function Footer() {
                 {[
                   { label: "Shop", href: "/shop" },
                   { label: "Our Story", href: "/about" },
-                  { label: "Glow Girls", href: "/glow-girls" },
-                  { label: "Compensation Plan", href: "/glow-girls/compensation" },
                 ].map((link) => (
                   <li key={link.href}>
                     <Link

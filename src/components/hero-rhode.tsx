@@ -6,6 +6,8 @@ import { heroSlides } from "@/lib/hero-images"
 import { useCarousel } from "@/hooks/use-carousel"
 import { useRef, useEffect } from "react"
 
+type Slide = { src: string; alt: string; headline: string; subtitle: string }
+
 function HeroVideo({ src, active }: { src: string; active: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -39,16 +41,24 @@ function HeroVideo({ src, active }: { src: string; active: boolean }) {
   )
 }
 
-export function HeroRhode() {
-  const { current, goTo } = useCarousel(heroSlides.length, 7000)
-  const slide = heroSlides[current]
+export function HeroRhode({
+  slides = heroSlides,
+  ctaText = "Shop Now",
+  ctaHref = "/shop",
+}: {
+  slides?: Slide[]
+  ctaText?: string
+  ctaHref?: string
+}) {
+  const { current, goTo } = useCarousel(slides.length, 7000)
+  const slide = slides[current]
 
   return (
     <section className="bg-[#f5f0eb] px-3 pb-3 pt-3 md:px-4 md:pb-4 md:pt-4">
       {/* Inset video container with rounded corners */}
       <div className="relative w-full h-[calc(100vh-24px)] md:h-[calc(100vh-32px)] rounded-[8px] overflow-hidden">
         {/* Background videos */}
-        {heroSlides.map((s, i) => (
+        {slides.map((s, i) => (
           <HeroVideo key={s.src} src={s.src} active={i === current} />
         ))}
 
@@ -83,9 +93,9 @@ export function HeroRhode() {
             transition={{ duration: 0.5, delay: 0.25 }}
             className="mt-5"
           >
-            <Link href="/welcome">
+            <Link href={ctaHref}>
               <button className="h-9 px-5 rounded-full bg-white text-neutral-900 text-[11px] uppercase tracking-[0.18em] font-medium font-inter hover:bg-white/90 transition-colors cursor-pointer">
-                Start Your Journey
+                {ctaText}
               </button>
             </Link>
           </motion.div>
@@ -98,7 +108,7 @@ export function HeroRhode() {
           transition={{ duration: 0.5, delay: 0.7 }}
           className="absolute bottom-12 right-8 md:right-14 z-[5] flex gap-1.5"
         >
-          {heroSlides.map((_, i) => (
+          {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}

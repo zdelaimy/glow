@@ -119,6 +119,26 @@ export async function getMyRewardPoints() {
   }
 }
 
+export async function getMyRank() {
+  const { glowGirl } = await requireGlowGirl()
+  const supabase = await createClient()
+
+  const { data: rank } = await supabase
+    .from('glow_girl_ranks')
+    .select('*')
+    .eq('glow_girl_id', glowGirl.id)
+    .single()
+
+  return rank || {
+    glow_girl_id: glowGirl.id,
+    personal_recruits: 0,
+    group_volume_cents: 0,
+    unlocked_levels: 0,
+    rank_label: 'Starter',
+    computed_at: new Date().toISOString(),
+  }
+}
+
 export async function getMyReferrals() {
   const { glowGirl } = await requireGlowGirl()
   const supabase = await createClient()
@@ -131,12 +151,12 @@ export async function getMyReferrals() {
     .eq('referrer_id', glowGirl.id)
     .order('created_at', { ascending: false })
 
-  // Referral earnings this month
+  // Referral + override earnings this month
   const { data: refEarnings } = await supabase
     .from('commissions')
     .select('amount_cents')
     .eq('glow_girl_id', glowGirl.id)
-    .eq('commission_type', 'REFERRAL_MATCH')
+    .in('commission_type', ['REFERRAL_MATCH', 'LEVEL_OVERRIDE'])
     .eq('period', currentPeriod)
     .in('status', ['PENDING', 'APPROVED', 'PAID'])
 

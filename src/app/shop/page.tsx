@@ -7,11 +7,15 @@ import { Footer } from "@/components/footer"
 import { createClient } from "@/lib/supabase/client"
 import type { Product } from "@/types/database"
 
+const COMING_SOON_SLUGS = ['shine-shampoo', 'beauty-gummies']
+
 function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
   const [loading, setLoading] = useState(false)
+  const comingSoon = COMING_SOON_SLUGS.includes(product.slug)
 
   async function handleBuy() {
+    if (comingSoon) return
     setLoading(true)
     try {
       const res = await fetch('/api/square/checkout', {
@@ -41,29 +45,40 @@ function ProductCard({ product }: { product: Product }) {
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image container */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-[#f5f0eb] cursor-pointer" onClick={handleBuy}>
+      <div className={`relative aspect-[3/4] overflow-hidden rounded-sm bg-[#f5f0eb] ${comingSoon ? '' : 'cursor-pointer'}`} onClick={handleBuy}>
         {product.image_url && (
           <Image
             src={product.image_url}
             alt={product.name}
             fill
-            className="object-cover"
+            className={`object-cover ${comingSoon ? 'opacity-60' : ''}`}
             sizes="(max-width: 768px) 100vw, 33vw"
           />
         )}
 
+        {/* Coming Soon badge */}
+        {comingSoon && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="bg-white/90 backdrop-blur-sm text-neutral-700 text-xs uppercase tracking-[0.2em] font-medium px-6 py-2.5 rounded-full">
+              Coming Soon
+            </span>
+          </div>
+        )}
+
         {/* Hover CTA bar */}
-        <div
-          className={`absolute bottom-0 left-0 right-0 bg-neutral-950/90 backdrop-blur-sm px-5 py-4 transition-all duration-400 ease-out ${
-            hovered
-              ? "translate-y-0 opacity-100"
-              : "translate-y-full opacity-0"
-          }`}
-        >
-          <span className="block text-center text-white text-sm tracking-[0.15em] uppercase font-medium">
-            {loading ? 'Redirecting...' : `Buy ${product.name} — $${(product.price_cents / 100).toFixed(0)}.00`}
-          </span>
-        </div>
+        {!comingSoon && (
+          <div
+            className={`absolute bottom-0 left-0 right-0 bg-neutral-950/90 backdrop-blur-sm px-5 py-4 transition-all duration-400 ease-out ${
+              hovered
+                ? "translate-y-0 opacity-100"
+                : "translate-y-full opacity-0"
+            }`}
+          >
+            <span className="block text-center text-white text-sm tracking-[0.15em] uppercase font-medium">
+              {loading ? 'Redirecting...' : `Buy ${product.name} — $${(product.price_cents / 100).toFixed(0)}.00`}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Product info below image */}
@@ -79,13 +94,19 @@ function ProductCard({ product }: { product: Product }) {
         <p className="text-[13px] text-neutral-400 leading-relaxed">
           {product.tagline}
         </p>
-        <button
-          onClick={handleBuy}
-          disabled={loading}
-          className="mt-3 w-full h-11 rounded-sm bg-[#6E6A62] text-white text-xs uppercase tracking-[0.15em] font-medium hover:bg-[#5a5650] transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Redirecting...' : 'Buy Now'}
-        </button>
+        {comingSoon ? (
+          <div className="mt-3 w-full h-11 rounded-sm bg-neutral-200 text-neutral-500 text-xs uppercase tracking-[0.15em] font-medium flex items-center justify-center">
+            Coming Soon
+          </div>
+        ) : (
+          <button
+            onClick={handleBuy}
+            disabled={loading}
+            className="mt-3 w-full h-11 rounded-sm bg-[#6E6A62] text-white text-xs uppercase tracking-[0.15em] font-medium hover:bg-[#5a5650] transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Redirecting...' : 'Buy Now'}
+          </button>
+        )}
       </div>
     </div>
   )

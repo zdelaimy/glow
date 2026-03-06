@@ -1,0 +1,8 @@
+rep_id,name,sponsor_id,level,personal_pv,rank,rank_pct
+1,You,,0,500,Director,25%
+2,Alice,1,1,400,Senior,15%
+3,Dave,1,1,300,Associate,5%
+4,Bob,2,2,350,Builder,10%
+5,Carol,2,2,200,Associate,5%
+6,Eve,4,3,150,Associate,5%
+7,Frank,3,2,100,New,0%

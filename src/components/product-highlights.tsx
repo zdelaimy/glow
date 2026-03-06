@@ -6,57 +6,79 @@ import Link from "next/link"
 
 const products = [
   {
+    name: "Glow Serum",
+    tagline: "Vitamin C & hyaluronic radiance serum",
+    price: 80,
+    img: "/shop/serum2.png",
+    comingSoon: false,
+  },
+  {
     name: "Shine Shampoo",
     tagline: "Argan & silk protein gloss shampoo",
     price: 42,
     img: "/shop/shampoo2.png",
-  },
-  {
-    name: "Glow Serum",
-    tagline: "Vitamin C & hyaluronic radiance serum",
-    price: 54,
-    img: "/shop/serum2.png",
+    comingSoon: true,
   },
   {
     name: "Beauty Gummies",
     tagline: "Collagen + biotin daily supplement",
     price: 44,
     img: "/shop/gummies.png",
+    comingSoon: true,
   },
 ]
 
 function ProductCard({ product }: { product: (typeof products)[number] }) {
   const [hovered, setHovered] = useState(false)
 
-  return (
-    <Link
-      href="/shop"
-      className="group relative flex flex-col"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
+  const sharedProps = {
+    className: "group relative flex flex-col",
+    onMouseEnter: () => setHovered(true),
+    onMouseLeave: () => setHovered(false),
+  }
+
+  const wrapper = (children: React.ReactNode) =>
+    product.comingSoon ? (
+      <div {...sharedProps}>{children}</div>
+    ) : (
+      <Link href="/shop" {...sharedProps}>{children}</Link>
+    )
+
+  return wrapper(
+    <>
       {/* Image container */}
       <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-[#eae5df]">
         <Image
           src={product.img}
           alt={product.name}
           fill
-          className="object-cover"
+          className={`object-cover ${product.comingSoon ? "opacity-60" : ""}`}
           sizes="(max-width: 768px) 100vw, 33vw"
         />
 
+        {/* Coming Soon badge */}
+        {product.comingSoon && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="bg-white/90 backdrop-blur-sm text-[#6E6A62] text-xs uppercase tracking-[0.2em] font-medium px-6 py-2.5 rounded-full">
+              Coming Soon
+            </span>
+          </div>
+        )}
+
         {/* Hover CTA bar */}
-        <div
-          className={`absolute bottom-0 left-0 right-0 bg-[#6E6A62]/90 backdrop-blur-sm px-5 py-3.5 transition-all duration-400 ease-out ${
-            hovered
-              ? "translate-y-0 opacity-100"
-              : "translate-y-full opacity-0"
-          }`}
-        >
-          <span className="block text-center text-white text-xs tracking-[0.15em] uppercase font-medium">
-            Buy {product.name} — ${product.price}.00
-          </span>
-        </div>
+        {!product.comingSoon && (
+          <div
+            className={`absolute bottom-0 left-0 right-0 bg-[#6E6A62]/90 backdrop-blur-sm px-5 py-3.5 transition-all duration-400 ease-out ${
+              hovered
+                ? "translate-y-0 opacity-100"
+                : "translate-y-full opacity-0"
+            }`}
+          >
+            <span className="block text-center text-white text-xs tracking-[0.15em] uppercase font-medium">
+              Buy {product.name} — ${product.price}.00
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Product info */}
@@ -73,7 +95,7 @@ function ProductCard({ product }: { product: (typeof products)[number] }) {
           {product.tagline}
         </p>
       </div>
-    </Link>
+    </>
   )
 }
 

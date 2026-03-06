@@ -1,18 +1,20 @@
 import { SupabaseClient } from '@supabase/supabase-js'
-import { calculateCommission, calculatePoints, getNewMilestones } from './calculate'
+import {
+  calculateCommission,
+  calculatePoints,
+  calculateLevelOverride,
+  getLevelOverrideRates,
+  getNewMilestones,
+} from './calculate'
+import { recomputeRanksForUpline } from './rank-update'
 import type { CommissionSettings } from '@/types/database'
 
-/**
- * Process commissions and points for a completed order.
- * Called from the Stripe webhook after order insert.
- */
 export async function processOrderCommission(
   supabase: SupabaseClient,
   orderId: string,
   glowGirlId: string,
   orderAmountCents: number
 ) {
-  // Fetch commission settings
   const { data: settings } = await supabase
     .from('commission_settings')
     .select('*')
@@ -23,9 +25,9 @@ export async function processOrderCommission(
     return
   }
 
-  const period = new Date().toISOString().slice(0, 7) // 'YYYY-MM'
+  const period = new Date().toISOString().slice(0, 7)
 
-  // 1. Insert PERSONAL commission for selling glow girl
+  // 1. PERSONAL commission (25% default)
   const personalAmount = calculateCommission(orderAmountCents, settings.commission_rate)
   await supabase.from('commissions').insert({
     glow_girl_id: glowGirlId,
@@ -37,95 +39,68 @@ export async function processOrderCommission(
     period,
   })
 
-  // 2. Insert personal points
+  // 2. Personal points
   const personalPoints = calculatePoints(orderAmountCents, 'PERSONAL', settings as CommissionSettings)
   await insertPointsAndCheckMilestones(supabase, glowGirlId, orderId, personalPoints, 'PERSONAL', 'Personal sale commission')
 
-  // 3. Check for active referrer → insert REFERRAL_MATCH commission
-  const { data: referral } = await supabase
-    .from('glow_girl_referrals')
-    .select('referrer_id')
-    .eq('referred_id', glowGirlId)
-    .gt('match_expires_at', new Date().toISOString())
-    .single()
+  // 3. Walk 7 levels up via get_upline RPC
+  const { data: upline } = await supabase.rpc('get_upline', {
+    p_glow_girl_id: glowGirlId,
+    p_max_levels: 7,
+  })
 
-  if (referral) {
-    // Level 1 referral match (10%)
-    const matchAmount = calculateCommission(personalAmount, settings.referral_match_rate)
-    if (matchAmount > 0) {
-      await supabase.from('commissions').insert({
-        glow_girl_id: referral.referrer_id,
-        order_id: orderId,
-        commission_type: 'REFERRAL_MATCH',
-        amount_cents: matchAmount,
-        rate: settings.referral_match_rate,
-        status: 'PENDING',
-        period,
-      })
+  if (upline && upline.length > 0) {
+    // Batch-fetch all upline ranks
+    const uplineIds = upline.map((u: { glow_girl_id: string }) => u.glow_girl_id)
+    const { data: ranks } = await supabase
+      .from('glow_girl_ranks')
+      .select('glow_girl_id, unlocked_levels')
+      .in('glow_girl_id', uplineIds)
 
-      // Referral points for the referrer
-      const referralPoints = calculatePoints(orderAmountCents, 'REFERRAL_MATCH', settings as CommissionSettings)
-      await insertPointsAndCheckMilestones(
-        supabase, referral.referrer_id, orderId, referralPoints, 'REFERRAL_MATCH', 'Referral match points'
-      )
+    const rankMap = new Map<string, number>()
+    for (const r of ranks || []) {
+      rankMap.set(r.glow_girl_id, r.unlocked_levels)
     }
 
-    // Level 2 referral match (5%) — referrer's referrer
-    const level2Rate = settings.level2_referral_match_rate || 0.05
-    const { data: level2Referral } = await supabase
-      .from('glow_girl_referrals')
-      .select('referrer_id')
-      .eq('referred_id', referral.referrer_id)
-      .gt('match_expires_at', new Date().toISOString())
-      .single()
+    const overrideRates = getLevelOverrideRates(settings as CommissionSettings)
 
-    if (level2Referral) {
-      const level2Amount = calculateCommission(personalAmount, level2Rate)
-      if (level2Amount > 0) {
+    // Calculate and insert LEVEL_OVERRIDE commissions
+    for (const { level, glow_girl_id: uplineId } of upline as { level: number; glow_girl_id: string }[]) {
+      const unlockedLevels = rankMap.get(uplineId) || 0
+      const overrideAmount = calculateLevelOverride(orderAmountCents, level, unlockedLevels, overrideRates)
+
+      if (overrideAmount > 0) {
         await supabase.from('commissions').insert({
-          glow_girl_id: level2Referral.referrer_id,
+          glow_girl_id: uplineId,
           order_id: orderId,
-          commission_type: 'REFERRAL_MATCH',
-          amount_cents: level2Amount,
-          rate: level2Rate,
+          commission_type: 'LEVEL_OVERRIDE',
+          amount_cents: overrideAmount,
+          rate: overrideRates[level - 1],
+          override_level: level,
           status: 'PENDING',
           period,
         })
 
-        const level2Points = calculatePoints(orderAmountCents, 'REFERRAL_MATCH', settings as CommissionSettings)
+        // Points for override earners (using referral multiplier)
+        const overridePoints = calculatePoints(orderAmountCents, 'REFERRAL_MATCH', settings as CommissionSettings)
         await insertPointsAndCheckMilestones(
-          supabase, level2Referral.referrer_id, orderId, level2Points, 'REFERRAL_MATCH', 'Level 2 referral match points'
+          supabase, uplineId, orderId, overridePoints, 'REFERRAL_MATCH',
+          `L${level} override commission`
         )
       }
     }
-  }
 
-  // 4. Check for pod membership → insert POD_OVERRIDE commission for pod leader
-  const { data: membership } = await supabase
-    .from('pod_memberships')
-    .select('pod_id, pod:pods!inner(leader_id)')
-    .eq('glow_girl_id', glowGirlId)
-    .is('left_at', null)
-    .single()
-
-  if (membership) {
-    const pod = membership.pod as unknown as { leader_id: string }
-    // Pod override only applies if the seller is NOT the pod leader
-    if (pod.leader_id !== glowGirlId) {
-      const podOverrideRate = settings.pod_override_rate || 0.05
-      const podOverrideAmount = calculateCommission(orderAmountCents, podOverrideRate)
-      if (podOverrideAmount > 0) {
-        await supabase.from('commissions').insert({
-          glow_girl_id: pod.leader_id,
-          order_id: orderId,
-          commission_type: 'POD_OVERRIDE',
-          amount_cents: podOverrideAmount,
-          rate: podOverrideRate,
-          status: 'PENDING',
-          period,
-        })
-      }
+    // Increment GV for seller + all upline members
+    await supabase.rpc('increment_gv', { p_glow_girl_id: glowGirlId, p_amount_cents: orderAmountCents })
+    for (const uplineMember of upline as { glow_girl_id: string }[]) {
+      await supabase.rpc('increment_gv', { p_glow_girl_id: uplineMember.glow_girl_id, p_amount_cents: orderAmountCents })
     }
+
+    // Recompute ranks for all upline members after GV changes
+    await recomputeRanksForUpline(supabase, uplineIds, settings as CommissionSettings)
+  } else {
+    // No upline — still increment seller's own GV
+    await supabase.rpc('increment_gv', { p_glow_girl_id: glowGirlId, p_amount_cents: orderAmountCents })
   }
 }
 
@@ -139,7 +114,6 @@ async function insertPointsAndCheckMilestones(
 ) {
   if (points <= 0) return
 
-  // Get current balance before insert
   const { data: balance } = await supabase
     .from('reward_points_balance')
     .select('total_points')
@@ -148,7 +122,6 @@ async function insertPointsAndCheckMilestones(
 
   const prevPoints = balance?.total_points || 0
 
-  // Insert ledger entry (trigger auto-updates balance)
   await supabase.from('reward_points_ledger').insert({
     glow_girl_id: glowGirlId,
     order_id: orderId,
@@ -158,8 +131,6 @@ async function insertPointsAndCheckMilestones(
   })
 
   const newPoints = prevPoints + points
-
-  // Check for new milestones
   const milestones = getNewMilestones(prevPoints, newPoints)
   for (const m of milestones) {
     await supabase.from('reward_milestones').insert({

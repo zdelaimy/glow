@@ -1,0 +1,11 @@
+rep_id,name,personal_pv,group_volume,rank,retail_profit,level_overrides_earned,team_differential_earned,generation_bonus,total_earnings
+1,You,500,2000,Director,200,85,880,240,1405
+2,Alice,400,950,Senior,160,35,25,0,220
+3,Dave,300,400,Associate,120,5,0,0,125
+4,Bob,350,500,Builder,140,8,0,0,148
+5,Carol,200,200,Associate,80,0,0,0,80
+6,Eve,150,150,Associate,60,0,0,0,60
+7,Frank,100,100,New,40,0,0,0,40
+,,,,TOTAL COMPANY PAYOUT,,,,,$2078
+,,,,TOTAL PRODUCT REVENUE (est),,,,,5000
+,,,,PAYOUT RATIO,,,,,41.6%

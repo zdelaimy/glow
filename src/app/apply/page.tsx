@@ -639,7 +639,22 @@ function ApplyPage() {
                     placeholder="Tell us what excites you about Glow..."
                     className="min-h-[120px] bg-[#f5f0eb]/50 border-[#6E6A62]/15 rounded-xl text-[#6E6A62] placeholder:text-[#6E6A62]/30 focus-visible:ring-[#6E6A62]/20 focus-visible:border-[#6E6A62]/40 resize-none"
                   />
-                  <p className="text-xs text-[#6E6A62]/40 mt-1">{whyGlow.length}/500</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className={`text-xs transition-colors ${
+                      whyGlow.length > 0 && whyGlow.length < 10
+                        ? 'text-rose-400'
+                        : whyGlow.length >= 10
+                          ? 'text-emerald-500'
+                          : 'text-[#6E6A62]/40'
+                    }`}>
+                      {whyGlow.length === 0
+                        ? 'Minimum 10 characters'
+                        : whyGlow.length < 10
+                          ? `${10 - whyGlow.length} more character${10 - whyGlow.length === 1 ? '' : 's'} needed`
+                          : 'Looks good!'}
+                    </p>
+                    <p className="text-xs text-[#6E6A62]/40">{whyGlow.length}/500</p>
+                  </div>
                 </FieldGroup>
 
                 <FieldGroup label="Have you sold products through direct sales before?">

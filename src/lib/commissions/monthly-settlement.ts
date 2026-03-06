@@ -23,6 +23,35 @@ export async function runMonthlySettlement(supabase: SupabaseClient, period: str
     return
   }
 
+  // Snapshot GV for all Glow Girls before resetting
+  const { data: allRanks } = await supabase
+    .from('glow_girl_ranks')
+    .select('*')
+
+  if (allRanks) {
+    for (const rank of allRanks) {
+      await supabase.from('glow_girl_gv_snapshots').upsert({
+        glow_girl_id: rank.glow_girl_id,
+        period,
+        group_volume_cents: rank.group_volume_cents,
+        personal_recruits: rank.personal_recruits,
+        unlocked_levels: rank.unlocked_levels,
+        rank_label: rank.rank_label,
+      }, { onConflict: 'glow_girl_id,period' })
+    }
+
+    // Reset GV for new month (keep personal_recruits, they're cumulative)
+    for (const rank of allRanks) {
+      await supabase
+        .from('glow_girl_ranks')
+        .update({
+          group_volume_cents: 0,
+          computed_at: new Date().toISOString(),
+        })
+        .eq('glow_girl_id', rank.glow_girl_id)
+    }
+  }
+
   // Get all glow girls who have approved commissions for this period
   const { data: commissionSums } = await supabase
     .rpc('aggregate_commissions_by_glow_girl', { target_period: period })

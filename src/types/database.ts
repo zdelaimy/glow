@@ -229,7 +229,7 @@ export type NeedKey = 'BARRIER' | 'CLARIFY' | 'BRIGHTEN' | 'HYDRATE' | 'SMOOTH' 
 export type NeedScores = Record<NeedKey, number>
 
 // Compensation enums
-export type CommissionType = 'PERSONAL' | 'REFERRAL_MATCH' | 'POD_OVERRIDE'
+export type CommissionType = 'PERSONAL' | 'REFERRAL_MATCH' | 'POD_OVERRIDE' | 'LEVEL_OVERRIDE'
 export type CommissionStatus = 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'
 export type PayoutStatus = 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED'
 export type BonusType = 'MONTHLY_TIER' | 'NEW_GLOW_GIRL'
@@ -246,6 +246,22 @@ export interface CommissionSettings {
   points_referral_multiplier: number
   commission_hold_days: number
   pod_override_rate: number
+  // 7-level override rates
+  level1_override_rate: number
+  level2_override_rate: number
+  level3_override_rate: number
+  level4_override_rate: number
+  level5_override_rate: number
+  level6_override_rate: number
+  level7_override_rate: number
+  // Rank threshold settings
+  rank_l2_min_recruits: number
+  rank_l3_min_recruits: number
+  rank_l3_min_gv_cents: number
+  rank_l4_min_gv_cents: number
+  rank_l5_min_gv_cents: number
+  rank_l6_min_gv_cents: number
+  rank_l7_min_gv_cents: number
   created_at: string
   updated_at: string
 }
@@ -277,6 +293,7 @@ export interface Commission {
   status: CommissionStatus
   approved_at: string | null
   paid_at: string | null
+  override_level: number | null
   period: string | null
   created_at: string
   // Joined
@@ -382,4 +399,25 @@ export interface PodMembership {
   // Joined
   pod?: Pod
   glow_girl?: GlowGirl
+}
+
+// 7-Level Override Ranks
+export interface GlowGirlRank {
+  glow_girl_id: string
+  personal_recruits: number
+  group_volume_cents: number
+  unlocked_levels: number
+  rank_label: string
+  computed_at: string
+}
+
+export interface GlowGirlGvSnapshot {
+  id: string
+  glow_girl_id: string
+  period: string
+  group_volume_cents: number
+  personal_recruits: number
+  unlocked_levels: number
+  rank_label: string
+  created_at: string
 }
