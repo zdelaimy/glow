@@ -99,7 +99,7 @@ export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/g
               <Link
                 href={ctaHref}
                 className={cn(
-                  "hidden sm:block text-sm md:text-base uppercase tracking-[0.12em] font-medium transition-colors duration-300 px-4 py-1.5 rounded-full border",
+                  "text-xs sm:text-sm md:text-base uppercase tracking-[0.12em] font-medium transition-colors duration-300 px-3 sm:px-4 py-1.5 rounded-full border whitespace-nowrap",
                   showSolid
                     ? "text-[#6E6A62] border-[#6E6A62] hover:bg-[#6E6A62] hover:text-white"
                     : "text-white/90 border-white/60 hover:bg-white hover:text-[#6E6A62] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
@@ -110,7 +110,7 @@ export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/g
               <Link
                 href="/login"
                 className={cn(
-                  "text-sm md:text-base uppercase tracking-[0.12em] font-medium transition-colors duration-300",
+                  "text-xs sm:text-sm md:text-base uppercase tracking-[0.12em] font-medium transition-colors duration-300 text-center whitespace-nowrap",
                   showSolid
                     ? "text-[#6E6A62] hover:text-neutral-600"
                     : "text-white/90 hover:text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]"

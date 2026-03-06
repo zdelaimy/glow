@@ -33,9 +33,9 @@ export function Footer() {
     <footer className="bg-[#f5f0eb]">
       <div className="max-w-7xl mx-auto px-6">
         {/* GLOW LABS logo — aligned with content columns */}
-        <div className="overflow-hidden pt-12 pb-4">
+        <div className="pt-12 pb-4">
           <h2
-            className="text-[30.7vw] md:text-[23.2vw] lg:text-[19.3vw] xl:text-[17.3rem] leading-[0.85] tracking-tight text-[#6E6A62] text-center select-none whitespace-nowrap w-full"
+            className="text-[17vw] sm:text-[20vw] md:text-[23.2vw] lg:text-[19.3vw] xl:text-[17.3rem] leading-[0.85] tracking-tight text-[#6E6A62] text-center select-none whitespace-nowrap w-full"
             aria-hidden="true"
           >
             Glow Labs
@@ -52,7 +52,7 @@ export function Footer() {
           </div>
 
           {/* Right side — 4 link columns */}
-          <div className="lg:flex-1 lg:pl-12 grid grid-cols-2 sm:grid-cols-4 gap-8 pt-14 pb-14">
+          <div className="lg:flex-1 lg:pl-12 grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-10 sm:gap-8 pt-14 pb-14">
             {/* Navigate */}
             <div className="space-y-4">
               <h4 className="text-xs uppercase tracking-[0.2em] font-semibold text-[#6E6A62] font-inter">
