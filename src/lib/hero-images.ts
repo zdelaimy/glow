@@ -28,26 +28,26 @@ export const heroSlides = [
 export const glowGirlSlides = [
   {
     src: "/hero/videos/first.mp4",
-    alt: "Woman showcasing beauty products",
-    headline: "$10,000 in sales. 10 months. 10 hours a week.",
-    subtitle: "That's the goal. We give you the products, training, and tools to get there.",
+    alt: "Woman applying skincare",
+    headline: "Your glow. Your empire.",
+    subtitle: "Turn the products you already love into a business that pays you back.",
   },
   {
     src: "/hero/videos/second.mp4",
     alt: "Beauty products and lifestyle",
-    headline: "Your storefront. Your rules.",
-    subtitle: "Get your own branded shop in minutes — share your link, start earning.",
+    headline: "Ditch the 9-5.",
+    subtitle: "Build a beauty business on your own terms — no boss, no ceiling, no limits.",
   },
   {
     src: "/hero/videos/third.mp4",
-    alt: "Woman sharing beauty tips",
-    headline: "Grow together.",
-    subtitle: "Build your Pod. Mentor your team. Earn as they grow.",
+    alt: "Woman doing her beauty routine",
+    headline: "Look good. Get paid.",
+    subtitle: "Share your routine, earn 25% on every sale. It really is that simple.",
   },
   {
     src: "/hero/videos/fourth.mp4",
     alt: "Women collaborating together",
-    headline: "More than a side hustle.",
-    subtitle: "Commissions, bonuses, and a community that has your back.",
+    headline: "Grow together.",
+    subtitle: "Build your Pod. Mentor your team. Earn as they grow.",
   },
 ]

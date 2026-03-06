@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { LandingHeader } from "@/components/landing-header"
-import { HeroRhode } from "@/components/hero-rhode"
 import { ProductHighlights } from "@/components/product-highlights"
 import { Leaf, Sparkles, Heart } from "lucide-react"
 import { Footer } from "@/components/footer"
@@ -8,10 +7,10 @@ import { Footer } from "@/components/footer"
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#f5f0eb]">
-      <LandingHeader />
+      <LandingHeader variant="light" />
 
-      {/* Hero */}
-      <HeroRhode />
+      {/* Hero — The Essentials */}
+      <ProductHighlights hero />
 
       {/* Marquee ticker */}
       <div className="bg-[#f5f0eb] py-3 overflow-hidden whitespace-nowrap">
@@ -24,11 +23,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Product Highlights */}
-      <ProductHighlights />
-
       {/* Brand Story / Values */}
-      <section className="bg-[#f5f0eb] py-24 md:py-32">
+      <section className="bg-white py-24 md:py-32">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <p className="text-xs uppercase tracking-[0.25em] text-[#6E6A62]/60 mb-6 font-inter">
             Why Glow
@@ -75,7 +71,7 @@ export default function HomePage() {
       </section>
 
       {/* Community Reels */}
-      <section className="bg-white py-24 md:py-32">
+      <section className="bg-[#f5f0eb] py-24 md:py-32">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-xs uppercase tracking-[0.25em] text-[#6E6A62]/60 mb-6 font-inter">
             Community

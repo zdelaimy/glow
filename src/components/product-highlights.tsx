@@ -3,51 +3,88 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 
 const products = [
   {
     name: "Glow Serum",
+    slug: "glow-serum",
     tagline: "Vitamin C & hyaluronic radiance serum",
     price: 80,
-    img: "/shop/serum2.png",
+    img: "/shop/antiaging.png",
     comingSoon: false,
   },
   {
-    name: "Shine Shampoo",
-    tagline: "Argan & silk protein gloss shampoo",
-    price: 42,
-    img: "/shop/shampoo2.png",
-    comingSoon: true,
-  },
-  {
     name: "Beauty Gummies",
+    slug: "beauty-gummies",
     tagline: "Collagen + biotin daily supplement",
     price: 44,
     img: "/shop/gummies.png",
+    comingSoon: true,
+  },
+  {
+    name: "Shine Shampoo",
+    slug: "shine-shampoo",
+    tagline: "Argan & silk protein gloss shampoo",
+    price: 42,
+    img: "/shop/shampoo2.png",
     comingSoon: true,
   },
 ]
 
 function ProductCard({ product }: { product: (typeof products)[number] }) {
   const [hovered, setHovered] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const sharedProps = {
-    className: "group relative flex flex-col",
-    onMouseEnter: () => setHovered(true),
-    onMouseLeave: () => setHovered(false),
+  async function handleBuy() {
+    if (product.comingSoon) return
+    setLoading(true)
+    try {
+      const supabase = createClient()
+      const { data: dbProduct } = await supabase
+        .from('products')
+        .select('id')
+        .eq('slug', product.slug)
+        .eq('active', true)
+        .single()
+
+      if (!dbProduct) {
+        alert('Product not available yet — launching soon!')
+        setLoading(false)
+        return
+      }
+
+      const res = await fetch('/api/square/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: [{ productId: dbProduct.id, quantity: 1 }],
+        }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert('Checkout is not available yet — launching soon!')
+        setLoading(false)
+      }
+    } catch {
+      alert('Checkout is not available yet — launching soon!')
+      setLoading(false)
+    }
   }
 
-  const wrapper = (children: React.ReactNode) =>
-    product.comingSoon ? (
-      <div {...sharedProps}>{children}</div>
-    ) : (
-      <Link href="/shop" {...sharedProps}>{children}</Link>
-    )
-
-  return wrapper(
-    <>
+  return (
+    <div
+      className="group relative flex flex-col"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {/* Image container */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-[#eae5df]">
+      <div
+        className={`relative aspect-[3/4] overflow-hidden rounded-sm bg-[#eae5df] ${product.comingSoon ? '' : 'cursor-pointer'}`}
+        onClick={handleBuy}
+      >
         <Image
           src={product.img}
           alt={product.name}
@@ -75,7 +112,7 @@ function ProductCard({ product }: { product: (typeof products)[number] }) {
             }`}
           >
             <span className="block text-center text-white text-xs tracking-[0.15em] uppercase font-medium">
-              Buy {product.name} — ${product.price}.00
+              {loading ? 'Redirecting...' : `Buy ${product.name} — $${product.price}.00`}
             </span>
           </div>
         )}
@@ -94,16 +131,34 @@ function ProductCard({ product }: { product: (typeof products)[number] }) {
         <p className="text-[12px] text-[#6E6A62]/50 leading-relaxed">
           {product.tagline}
         </p>
+        {product.comingSoon ? (
+          <div className="mt-3 w-full h-11 rounded-sm bg-neutral-200 text-[#6E6A62]/50 text-xs uppercase tracking-[0.15em] font-medium flex items-center justify-center">
+            Coming Soon
+          </div>
+        ) : (
+          <button
+            onClick={handleBuy}
+            disabled={loading}
+            className="mt-3 w-full h-11 rounded-sm bg-[#6E6A62] text-white text-xs uppercase tracking-[0.15em] font-medium hover:bg-[#5a5650] transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? 'Redirecting...' : 'Buy Now'}
+          </button>
+        )}
       </div>
-    </>
+    </div>
   )
 }
 
-export function ProductHighlights() {
+export function ProductHighlights({ hero = false }: { hero?: boolean }) {
   return (
-    <section className="bg-white py-24 md:py-32">
+    <section className={hero ? "bg-white pt-32 pb-12 md:pt-36 md:pb-16" : "bg-white py-24 md:py-32"}>
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-14">
+          {hero && (
+            <p className="text-xs uppercase tracking-[0.25em] text-[#6E6A62]/50 mb-4 font-inter">
+              Laboratory Created &middot; Dermatologist Tested
+            </p>
+          )}
           <h2 className="text-3xl md:text-4xl leading-tight mb-4 text-[#6E6A62]">
             The Essentials
           </h2>

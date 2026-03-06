@@ -5,7 +5,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 
-export function LandingHeader({ variant = "hero", hideNav = false }: { variant?: "hero" | "light"; hideNav?: boolean }) {
+export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/glow-girls" }: { variant?: "hero" | "light"; hideNav?: boolean; ctaHref?: string }) {
   const [scrolled, setScrolled] = useState(false)
   const [userLink, setUserLink] = useState<{ href: string; label: string } | null>(null)
 
@@ -66,21 +66,38 @@ export function LandingHeader({ variant = "hero", hideNav = false }: { variant?:
         {/* Right nav */}
         {!hideNav && <div className="flex items-center gap-5">
           {userLink ? (
-            <Link
-              href={userLink.href}
-              className={cn(
-                "text-sm md:text-base uppercase tracking-[0.12em] font-medium transition-colors duration-300 px-4 py-1.5 rounded-full border",
-                showSolid
-                  ? "text-[#6E6A62] border-[#6E6A62] hover:bg-[#6E6A62] hover:text-white"
-                  : "text-white/90 border-white/60 hover:bg-white hover:text-[#6E6A62] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
-              )}
-            >
-              {userLink.label}
-            </Link>
+            <>
+              <Link
+                href={userLink.href}
+                className={cn(
+                  "text-sm md:text-base uppercase tracking-[0.12em] font-medium transition-colors duration-300 px-4 py-1.5 rounded-full border",
+                  showSolid
+                    ? "text-[#6E6A62] border-[#6E6A62] hover:bg-[#6E6A62] hover:text-white"
+                    : "text-white/90 border-white/60 hover:bg-white hover:text-[#6E6A62] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
+                )}
+              >
+                {userLink.label}
+              </Link>
+              <button
+                onClick={async () => {
+                  const supabase = createClient()
+                  await supabase.auth.signOut()
+                  window.location.href = '/'
+                }}
+                className={cn(
+                  "text-sm md:text-base uppercase tracking-[0.12em] font-medium transition-colors duration-300 cursor-pointer",
+                  showSolid
+                    ? "text-[#6E6A62]/60 hover:text-[#6E6A62]"
+                    : "text-white/60 hover:text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
+                )}
+              >
+                Sign Out
+              </button>
+            </>
           ) : (
             <>
               <Link
-                href="/glow-girls"
+                href={ctaHref}
                 className={cn(
                   "hidden sm:block text-sm md:text-base uppercase tracking-[0.12em] font-medium transition-colors duration-300 px-4 py-1.5 rounded-full border",
                   showSolid

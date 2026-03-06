@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { LandingHeader } from '@/components/landing-header'
+import { HeroRhode } from '@/components/hero-rhode'
+import { glowGirlSlides } from '@/lib/hero-images'
 import { Footer } from '@/components/footer'
 import { Store, Share2, TrendingUp } from 'lucide-react'
 
@@ -24,25 +26,11 @@ export default async function GlowGirlsOpportunityPage({
 
   return (
     <div className="min-h-screen bg-[#f5f0eb]">
-      <LandingHeader variant="light" hideNav />
+      <LandingHeader ctaHref="/welcome" />
 
       <main>
-        {/* Hero */}
-        <section className="bg-white pt-32 pb-24 md:pt-40 md:pb-32 text-center">
-          <div className="max-w-3xl mx-auto px-6">
-            <h1 className="text-4xl md:text-6xl leading-[1.08] tracking-tight mb-6 text-[#6E6A62]">
-              Your glow. <span className="italic">Your business.</span>
-            </h1>
-            <p className="text-sm md:text-base text-[#6E6A62]/60 max-w-xl mx-auto mb-10">
-              Open your own beauty storefront, sell curated Glow products, and earn commissions, bonuses, and rewards every month.
-            </p>
-            <Link href="/welcome">
-              <button className="h-12 px-8 rounded-full bg-[#6E6A62] text-white text-sm font-medium hover:bg-[#5E5A52] transition-colors cursor-pointer font-inter">
-                Start Your Glow Business
-              </button>
-            </Link>
-          </div>
-        </section>
+        {/* Hero — video carousel */}
+        <HeroRhode slides={glowGirlSlides} ctaText="Become a Glow Girl" ctaHref="/welcome" />
 
         {/* Marquee ticker */}
         <div className="bg-[#f5f0eb] py-3 overflow-hidden whitespace-nowrap">
