@@ -117,7 +117,7 @@ export async function getTeamNetwork(glowGirlId: string, period?: string): Promi
   const { data: downlineRows } = await supabase.rpc('get_downline', {
     p_glow_girl_id: glowGirlId,
     p_max_levels: 7,
-  }).catch(() => ({ data: null }))
+  })
 
   let downline: TeamMember[] = []
 
