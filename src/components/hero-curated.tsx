@@ -88,7 +88,7 @@ export function HeroCurated() {
               Find Your Serum
             </button>
           </Link>
-          <Link href="/glow-girls">
+          <Link href="/">
             <button className="h-12 px-8 rounded-full bg-white/10 text-white border border-white/30 font-medium text-sm hover:bg-white/20 transition-colors backdrop-blur-sm cursor-pointer">
               Start Your Brand
             </button>

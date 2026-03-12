@@ -7,9 +7,51 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { submitApplication, getMyApplication } from '@/lib/actions/glow-girl'
 import { createClient } from '@/lib/supabase/client'
+import SquareCardForm from '@/components/square-card-form'
+import { Check } from 'lucide-react'
 import Link from 'next/link'
 
-const STEPS = ['Account', 'About You', 'Social', 'Interest', 'Agreement']
+type Billing = 'monthly' | 'annual'
+type PlanTier = 'pro' | 'elite'
+
+const SUBSCRIPTION_PLANS = {
+  pro: {
+    name: 'Glow Girl Pro',
+    monthlyPrice: 20,
+    description: 'Start selling and earning commissions.',
+    planIds: {
+      monthly: process.env.NEXT_PUBLIC_PAYPAL_PLAN_PRO_MONTHLY!,
+      annual: process.env.NEXT_PUBLIC_PAYPAL_PLAN_PRO_ANNUAL!,
+    },
+    features: [
+      'Personal storefront & referral link',
+      '25% commission on every sale',
+      '10% referral match bonus',
+      'Basic sales training library',
+    ],
+  },
+  elite: {
+    name: 'Glow Girl Elite',
+    monthlyPrice: 200,
+    description: 'Maximum earning potential & exclusive perks.',
+    planIds: {
+      monthly: process.env.NEXT_PUBLIC_PAYPAL_PLAN_ELITE_MONTHLY!,
+      annual: process.env.NEXT_PUBLIC_PAYPAL_PLAN_ELITE_ANNUAL!,
+    },
+    badge: 'Most Popular',
+    features: [
+      'Everything in Pro',
+      '5% pod override earnings',
+      '1-on-1 mentorship',
+      'Full training library access',
+      'Monthly bonus eligibility',
+      'Exclusive events & galas',
+      'Social media growth coaching',
+    ],
+  },
+} as const
+
+const STEPS = ['Account', 'About You', 'Social', 'Interest', 'Choose Plan']
 
 const SOCIAL_PLATFORMS = [
   { id: 'instagram', label: 'Instagram' },
@@ -96,7 +138,13 @@ function ApplyPage() {
   const [previousCompany, setPreviousCompany] = useState('')
   const [referralCode, setReferralCode] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
-  const [agreedToCompPlan, setAgreedToCompPlan] = useState(false)
+  const [agreedToCompPlan] = useState(true)
+  const [billing, setBilling] = useState<Billing>('monthly')
+  const [selectedPlan, setSelectedPlan] = useState<PlanTier | null>(null)
+  const [subscribing, setSubscribing] = useState(false)
+  const [founderCode, setFounderCode] = useState('')
+  const [founderCodeValid, setFounderCodeValid] = useState(false)
+  const [founderCodeChecking, setFounderCodeChecking] = useState(false)
 
   useEffect(() => {
     async function check() {
@@ -152,7 +200,7 @@ function ApplyPage() {
       }
       case 2: return !!(socialPlatforms.length > 0 && followerRange)
       case 3: return !!(heardFrom && interestedProducts.length > 0 && whyGlow.length >= 10)
-      case 4: return agreedToTerms && agreedToCompPlan
+      case 4: return selectedPlan !== null
       default: return false
     }
   }
@@ -274,25 +322,8 @@ function ApplyPage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-10">
-        {/* Progress */}
+        {/* Progress bar (no labels) */}
         <div className="mb-10">
-          <div className="flex justify-between mb-3">
-            {STEPS.map((s, i) => {
-              // If already authenticated, hide "Account" label
-              if (i === 0 && isAuthenticated) return <span key={s} />
-              return (
-                <button
-                  key={s}
-                  onClick={() => i < step && (!isAuthenticated || i > 0) && setStep(i)}
-                  className={`text-xs font-inter uppercase tracking-[0.15em] transition-colors ${
-                    i <= step ? 'text-[#6E6A62]' : 'text-[#6E6A62]/30'
-                  } ${i < step && (!isAuthenticated || i > 0) ? 'cursor-pointer hover:text-[#5E5A52]' : 'cursor-default'}`}
-                >
-                  {s}
-                </button>
-              )
-            })}
-          </div>
           <div className="h-0.5 bg-[#6E6A62]/10 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-[#6E6A62]"
@@ -316,14 +347,14 @@ function ApplyPage() {
             {step === 1 && 'Tell us about yourself'}
             {step === 2 && 'Your social presence'}
             {step === 3 && "What brings you to Glow?"}
-            {step === 4 && 'Almost there'}
+            {step === 4 && 'Choose your plan'}
           </h1>
           <p className="text-[#6E6A62]/50 text-sm mt-2">
             {step === 0 && "You'll use this to sign into your Glow account."}
             {step === 1 && "We'd love to get to know you."}
             {step === 2 && 'Where do you connect with your audience?'}
             {step === 3 && 'Help us understand what excites you.'}
-            {step === 4 && 'Review and submit your application.'}
+            {step === 4 && 'Select a plan and subscribe to start your Glow business.'}
           </p>
         </motion.div>
 
@@ -695,73 +726,316 @@ function ApplyPage() {
               </motion.div>
             )}
 
-            {/* Step 4: Agreement */}
+            {/* Step 4: Choose Plan */}
             {step === 4 && (
               <motion.div
-                key="agreement"
+                key="plan"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
                 className="space-y-6"
               >
-                {/* Summary */}
-                <div className="rounded-xl bg-[#f5f0eb]/60 p-5 space-y-3">
-                  <h3 className="text-sm font-medium text-[#6E6A62] uppercase tracking-[0.1em] font-inter">Your Application</h3>
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                    <SummaryItem label="Name" value={fullName} />
-                    <SummaryItem label="Location" value={`${city}, ${state}`} />
-                    <SummaryItem label="Platforms" value={socialPlatforms.join(', ')} />
-                    <SummaryItem label="Followers" value={followerRange} />
-                    <SummaryItem label="Heard from" value={heardFrom} />
-                    <SummaryItem label="Products" value={interestedProducts.join(', ')} />
+                {/* Billing toggle */}
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => setBilling('monthly')}
+                    className={`px-4 py-2 rounded-full text-xs font-medium font-inter transition-all ${
+                      billing === 'monthly'
+                        ? 'bg-[#6E6A62] text-white'
+                        : 'bg-[#f5f0eb]/60 text-[#6E6A62]/70 hover:bg-[#f5f0eb]'
+                    }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setBilling('annual')}
+                    className={`px-4 py-2 rounded-full text-xs font-medium font-inter transition-all flex items-center gap-1.5 ${
+                      billing === 'annual'
+                        ? 'bg-[#6E6A62] text-white'
+                        : 'bg-[#f5f0eb]/60 text-[#6E6A62]/70 hover:bg-[#f5f0eb]'
+                    }`}
+                  >
+                    Annual
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      billing === 'annual' ? 'bg-white/20' : 'bg-emerald-50 text-emerald-600'
+                    }`}>
+                      Save 15%
+                    </span>
+                  </button>
+                </div>
+
+                {/* Plan cards */}
+                <div className="grid gap-4">
+                  {(['pro', 'elite'] as const).map((tier) => {
+                    const plan = SUBSCRIPTION_PLANS[tier]
+                    const isElite = tier === 'elite'
+                    const annualTotal = plan.monthlyPrice * 12 * 0.85
+                    const perMonth = billing === 'annual' ? annualTotal / 12 : plan.monthlyPrice
+                    const isSelected = selectedPlan === tier
+
+                    return (
+                      <button
+                        key={tier}
+                        type="button"
+                        onClick={() => { setSelectedPlan(tier); setError(null) }}
+                        className={`relative text-left rounded-xl border-2 p-5 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-[#6E6A62] bg-[#f5f0eb]/40'
+                            : 'border-[#6E6A62]/10 hover:border-[#6E6A62]/30'
+                        }`}
+                      >
+                        {isElite && (
+                          <span className="absolute -top-2.5 right-4 bg-[#6E6A62] text-white text-[10px] uppercase tracking-[0.12em] font-medium font-inter px-2.5 py-0.5 rounded-full">
+                            Most Popular
+                          </span>
+                        )}
+
+                        <div className="flex items-start justify-between gap-4 pl-6">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium text-[#6E6A62]">{plan.name}</h4>
+                            <p className="text-xs text-[#6E6A62]/50 mt-0.5">{plan.description}</p>
+                            <ul className="mt-3 space-y-1.5">
+                              {plan.features.map((f) => (
+                                <li key={f} className="flex items-center gap-2 text-xs text-[#6E6A62]/70">
+                                  <Check className="w-3 h-3 text-[#6E6A62] flex-shrink-0" />
+                                  {f}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <span className="text-2xl font-light text-[#6E6A62]">${Math.round(perMonth)}</span>
+                            <span className="text-xs text-[#6E6A62]/50">/mo</span>
+                            {billing === 'annual' && (
+                              <p className="text-[10px] text-emerald-600 mt-0.5">
+                                ${annualTotal.toFixed(0)}/yr
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Radio indicator */}
+                        <div className={`absolute top-5 left-5 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          isSelected ? 'border-[#6E6A62]' : 'border-[#6E6A62]/20'
+                        }`}>
+                          {isSelected && <div className="w-2 h-2 rounded-full bg-[#6E6A62]" />}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Founder code */}
+                <div className="pt-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={founderCode}
+                      onChange={(e) => { setFounderCode(e.target.value.toUpperCase()); setFounderCodeValid(false) }}
+                      placeholder="Have a founder code?"
+                      className="flex-1 h-10 bg-[#f5f0eb]/50 border border-[#6E6A62]/15 rounded-xl px-3 text-sm text-[#6E6A62] placeholder:text-[#6E6A62]/30 focus:outline-none focus:border-[#6E6A62]/40"
+                    />
+                    <button
+                      type="button"
+                      disabled={!founderCode.trim() || founderCodeChecking}
+                      onClick={async () => {
+                        setFounderCodeChecking(true)
+                        setError(null)
+                        try {
+                          const res = await fetch('/api/paypal/validate-founder-code', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ code: founderCode.trim() }),
+                          })
+                          const result = await res.json()
+                          if (result.valid) {
+                            setFounderCodeValid(true)
+                          } else {
+                            setError('Invalid founder code.')
+                            setFounderCodeValid(false)
+                          }
+                        } catch {
+                          setError('Failed to validate code.')
+                        }
+                        setFounderCodeChecking(false)
+                      }}
+                      className="h-10 px-4 rounded-xl text-xs font-medium font-inter bg-[#6E6A62] text-white hover:bg-[#5E5A52] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {founderCodeChecking ? '...' : 'Apply'}
+                    </button>
                   </div>
-                  {whyGlow && (
-                    <div className="pt-2 border-t border-[#6E6A62]/10">
-                      <p className="text-xs text-[#6E6A62]/50 mb-1">Why Glow?</p>
-                      <p className="text-sm text-[#6E6A62]">{whyGlow}</p>
-                    </div>
+                  {founderCodeValid && (
+                    <p className="text-xs text-emerald-600 mt-1.5 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Founder code applied — no payment required!
+                    </p>
                   )}
                 </div>
 
-                {/* Checkboxes */}
-                <div className="space-y-4">
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={agreedToCompPlan}
-                      onChange={(e) => setAgreedToCompPlan(e.target.checked)}
-                      className="mt-0.5 w-5 h-5 rounded border-[#6E6A62]/30 text-[#6E6A62] focus:ring-[#6E6A62]/20 cursor-pointer accent-[#6E6A62]"
-                    />
-                    <span className="text-sm text-[#6E6A62]/70 group-hover:text-[#6E6A62] transition-colors">
-                      I have reviewed the{' '}
-                      <Link href="/glow-girls" className="underline underline-offset-2 text-[#6E6A62]" target="_blank">
-                        compensation plan
-                      </Link>
-                      {' '}and understand how Glow Girl earnings work.
-                    </span>
-                  </label>
-
-                  <label className="flex items-start gap-3 cursor-pointer group">
+                {/* Agreement checkbox */}
+                <div className="space-y-3 pt-2">
+                  <label className="flex items-start gap-2.5 cursor-pointer group">
                     <input
                       type="checkbox"
                       checked={agreedToTerms}
                       onChange={(e) => setAgreedToTerms(e.target.checked)}
-                      className="mt-0.5 w-5 h-5 rounded border-[#6E6A62]/30 text-[#6E6A62] focus:ring-[#6E6A62]/20 cursor-pointer accent-[#6E6A62]"
+                      className="mt-0.5 w-4 h-4 rounded border-[#6E6A62]/30 text-[#6E6A62] focus:ring-[#6E6A62]/20 cursor-pointer accent-[#6E6A62]"
                     />
-                    <span className="text-sm text-[#6E6A62]/70 group-hover:text-[#6E6A62] transition-colors">
+                    <span className="text-xs text-[#6E6A62]/60 group-hover:text-[#6E6A62]/80 transition-colors">
                       I agree to the{' '}
-                      <Link href="/terms" className="underline underline-offset-2 text-[#6E6A62]" target="_blank">
-                        Terms of Service
-                      </Link>
-                      {' '}and{' '}
-                      <Link href="/privacy" className="underline underline-offset-2 text-[#6E6A62]" target="_blank">
-                        Privacy Policy
-                      </Link>
-                      , and I understand I will be an independent contractor.
+                      <Link href="/terms" className="underline underline-offset-2 text-[#6E6A62]" target="_blank">Terms</Link>
+                      {' '}&{' '}
+                      <Link href="/privacy" className="underline underline-offset-2 text-[#6E6A62]" target="_blank">Privacy Policy</Link>.
                     </span>
                   </label>
                 </div>
+
+                {/* Founder code: skip payment button */}
+                {selectedPlan && agreedToTerms && founderCodeValid && (
+                  <motion.button
+                    type="button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    disabled={subscribing}
+                    onClick={async () => {
+                      setSubscribing(true)
+                      setError(null)
+                      try {
+                        await submitApplication({
+                          full_name: fullName,
+                          phone,
+                          date_of_birth: dob,
+                          city,
+                          state,
+                          social_platforms: socialPlatforms,
+                          primary_handle: primaryHandle || null,
+                          follower_range: followerRange,
+                          creates_content: createsContent,
+                          heard_from: heardFrom,
+                          interested_products: interestedProducts,
+                          why_glow: whyGlow,
+                          previous_direct_sales: previousDirectSales,
+                          previous_company: previousDirectSales ? previousCompany || null : null,
+                          referral_code: referralCode || null,
+                          agreed_to_terms: true,
+                        })
+
+                        const res = await fetch('/api/paypal/activate-subscription', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            subscriptionId: `FOUNDER_${founderCode.trim()}`,
+                            plan: selectedPlan,
+                            billing: 'founder',
+                          }),
+                        })
+                        const result = await res.json()
+                        if (result.success) {
+                          router.push('/glow-girl/dashboard')
+                        } else {
+                          setError(result.error || 'Failed to activate. Please contact support.')
+                        }
+                      } catch {
+                        setError('Something went wrong. Please contact support.')
+                      }
+                      setSubscribing(false)
+                    }}
+                    className="w-full h-12 rounded-xl text-sm font-medium font-inter bg-[#6E6A62] text-white hover:bg-[#5E5A52] disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {subscribing ? (
+                      <>
+                        <motion.div
+                          className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                        />
+                        Activating...
+                      </>
+                    ) : (
+                      `Join as ${SUBSCRIPTION_PLANS[selectedPlan].name}`
+                    )}
+                  </motion.button>
+                )}
+
+                {/* PayPal subscribe button (only when no valid founder code) */}
+                {selectedPlan && agreedToTerms && !founderCodeValid && (
+                  <div key={`paypal-${selectedPlan}-${billing}`}>
+                    <PayPalScriptProvider
+                      options={{
+                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
+                        vault: true,
+                        intent: 'subscription',
+                      }}
+                    >
+                      <PayPalButtons
+                        key={`btn-${selectedPlan}-${billing}`}
+                        style={{
+                          layout: 'vertical',
+                          color: 'black',
+                          shape: 'rect',
+                          label: 'subscribe',
+                        }}
+                        createSubscription={(data, actions) => {
+                          return actions.subscription.create({
+                            plan_id: SUBSCRIPTION_PLANS[selectedPlan].planIds[billing],
+                          })
+                        }}
+                        onApprove={async (data) => {
+                          setSubscribing(true)
+                          setError(null)
+                          try {
+                            await submitApplication({
+                              full_name: fullName,
+                              phone,
+                              date_of_birth: dob,
+                              city,
+                              state,
+                              social_platforms: socialPlatforms,
+                              primary_handle: primaryHandle || null,
+                              follower_range: followerRange,
+                              creates_content: createsContent,
+                              heard_from: heardFrom,
+                              interested_products: interestedProducts,
+                              why_glow: whyGlow,
+                              previous_direct_sales: previousDirectSales,
+                              previous_company: previousDirectSales ? previousCompany || null : null,
+                              referral_code: referralCode || null,
+                              agreed_to_terms: true,
+                            })
+
+                            const res = await fetch('/api/paypal/activate-subscription', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                subscriptionId: data.subscriptionID,
+                                plan: selectedPlan,
+                                billing,
+                              }),
+                            })
+                            const result = await res.json()
+                            if (result.success) {
+                              router.push('/glow-girl/dashboard')
+                            } else {
+                              setError(result.error || 'Failed to activate. Please contact support.')
+                            }
+                          } catch {
+                            setError('Something went wrong. Please contact support.')
+                          }
+                          setSubscribing(false)
+                        }}
+                        onError={() => {
+                          setError('Payment failed. Please try again.')
+                        }}
+                      />
+                    </PayPalScriptProvider>
+                  </div>
+                )}
+
+                {selectedPlan && !agreedToTerms && (
+                  <p className="text-xs text-[#6E6A62]/40 text-center">
+                    Please agree to the terms above to continue.
+                  </p>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -793,7 +1067,7 @@ function ApplyPage() {
               Back
             </button>
 
-            {step < STEPS.length - 1 ? (
+            {step < STEPS.length - 1 && (
               <motion.button
                 onClick={handleNext}
                 disabled={!canAdvance() || loading}
@@ -814,27 +1088,17 @@ function ApplyPage() {
                   'Continue'
                 )}
               </motion.button>
-            ) : (
-              <motion.button
-                onClick={handleSubmit}
-                disabled={loading || !canAdvance()}
-                className="px-6 py-2.5 rounded-full text-sm font-medium text-white bg-[#6E6A62] hover:bg-[#5E5A52] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                whileHover={{ scale: canAdvance() && !loading ? 1.02 : 1 }}
-                whileTap={{ scale: canAdvance() && !loading ? 0.98 : 1 }}
-              >
-                {loading ? (
-                  <>
-                    <motion.div
-                      className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                    />
-                    Submitting...
-                  </>
-                ) : (
-                  'Submit Application'
-                )}
-              </motion.button>
+            )}
+
+            {step === STEPS.length - 1 && subscribing && (
+              <div className="flex items-center gap-2 text-sm text-[#6E6A62]/60">
+                <motion.div
+                  className="w-4 h-4 border-2 border-[#6E6A62]/20 border-t-[#6E6A62] rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                />
+                Activating...
+              </div>
             )}
           </div>
         </div>

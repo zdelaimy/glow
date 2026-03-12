@@ -119,6 +119,57 @@ export function getSlackChannelLink(channelId: string): string {
 }
 
 /**
+ * Send a Slack notification when a new order is placed.
+ */
+export async function notifyNewOrder({
+  productNames,
+  amountCents,
+  shippingName,
+  shippingAddress,
+  glowGirlName,
+  orderId,
+}: {
+  productNames: string[]
+  amountCents: number
+  shippingName: string
+  shippingAddress: { email: string; street: string; city: string; state: string; zip: string }
+  glowGirlName?: string | null
+  orderId: string
+}) {
+  const channel = process.env.SLACK_ORDERS_CHANNEL || '#orders'
+  const amount = `$${(amountCents / 100).toFixed(2)}`
+  const items = productNames.join(', ')
+  const address = `${shippingAddress.street}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.zip}`
+  await slackApi('chat.postMessage', {
+    channel,
+    text: `New order! ${items} — ${amount}`,
+    blocks: [
+      {
+        type: 'header',
+        text: { type: 'plain_text', text: 'New Order', emoji: true },
+      },
+      {
+        type: 'section',
+        fields: [
+          { type: 'mrkdwn', text: `*Products:*\n${items}` },
+          { type: 'mrkdwn', text: `*Amount:*\n${amount}` },
+          { type: 'mrkdwn', text: `*Customer:*\n${shippingName}` },
+          { type: 'mrkdwn', text: `*Email:*\n${shippingAddress.email}` },
+          { type: 'mrkdwn', text: `*Ship to:*\n${address}` },
+          { type: 'mrkdwn', text: `*Sold by:*\n${glowGirlName || 'Direct'}` },
+        ],
+      },
+      {
+        type: 'context',
+        elements: [
+          { type: 'mrkdwn', text: `Order ID: \`${orderId}\`` },
+        ],
+      },
+    ],
+  })
+}
+
+/**
  * Full onboarding flow when a Glow Girl is approved:
  * 1. Create her "Glow Babes" channel
  * 2. If she has a recruiter, invite her to the recruiter's channel

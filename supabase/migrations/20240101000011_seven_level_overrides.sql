@@ -8,11 +8,19 @@ ALTER TYPE commission_type ADD VALUE IF NOT EXISTS 'LEVEL_OVERRIDE';
 
 -- 2. Add override_level column to commissions table (1-7 for LEVEL_OVERRIDE rows)
 ALTER TABLE commissions ADD COLUMN IF NOT EXISTS override_level smallint;
-ALTER TABLE commissions ADD CONSTRAINT chk_override_level
-  CHECK (override_level IS NULL OR (override_level >= 1 AND override_level <= 7));
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'chk_override_level'
+  ) THEN
+    ALTER TABLE commissions ADD CONSTRAINT chk_override_level
+      CHECK (override_level IS NULL OR (override_level >= 1 AND override_level <= 7));
+  END IF;
+END;
+$$;
 
 -- 3. Create glow_girl_ranks table
-CREATE TABLE glow_girl_ranks (
+CREATE TABLE IF NOT EXISTS glow_girl_ranks (
   glow_girl_id uuid PRIMARY KEY REFERENCES glow_girls(id) ON DELETE CASCADE,
   personal_recruits integer NOT NULL DEFAULT 0,
   group_volume_cents bigint NOT NULL DEFAULT 0,
@@ -21,10 +29,10 @@ CREATE TABLE glow_girl_ranks (
   computed_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_glow_girl_ranks_unlocked ON glow_girl_ranks(unlocked_levels);
+CREATE INDEX IF NOT EXISTS idx_glow_girl_ranks_unlocked ON glow_girl_ranks(unlocked_levels);
 
 -- 4. Create glow_girl_gv_snapshots table (monthly GV history)
-CREATE TABLE glow_girl_gv_snapshots (
+CREATE TABLE IF NOT EXISTS glow_girl_gv_snapshots (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   glow_girl_id uuid NOT NULL REFERENCES glow_girls(id) ON DELETE CASCADE,
   period text NOT NULL, -- 'YYYY-MM'
@@ -36,7 +44,7 @@ CREATE TABLE glow_girl_gv_snapshots (
   UNIQUE(glow_girl_id, period)
 );
 
-CREATE INDEX idx_gv_snapshots_period ON glow_girl_gv_snapshots(period);
+CREATE INDEX IF NOT EXISTS idx_gv_snapshots_period ON glow_girl_gv_snapshots(period);
 
 -- 5. Add 7 levelN_override_rate columns to commission_settings
 ALTER TABLE commission_settings
@@ -100,20 +108,26 @@ ALTER TABLE glow_girl_ranks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE glow_girl_gv_snapshots ENABLE ROW LEVEL SECURITY;
 
 -- glow_girl_ranks: Glow Girls can read their own, admins manage all
-CREATE POLICY "Glow Girls can read own rank" ON glow_girl_ranks FOR SELECT
-  USING (
-    EXISTS (SELECT 1 FROM glow_girls gg WHERE gg.id = glow_girl_ranks.glow_girl_id AND gg.user_id = auth.uid())
-  );
-CREATE POLICY "Admins manage ranks" ON glow_girl_ranks FOR ALL
-  USING (is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Glow Girls can read own rank' AND tablename = 'glow_girl_ranks') THEN
+    CREATE POLICY "Glow Girls can read own rank" ON glow_girl_ranks FOR SELECT
+      USING (EXISTS (SELECT 1 FROM glow_girls gg WHERE gg.id = glow_girl_ranks.glow_girl_id AND gg.user_id = auth.uid()));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins manage ranks' AND tablename = 'glow_girl_ranks') THEN
+    CREATE POLICY "Admins manage ranks" ON glow_girl_ranks FOR ALL USING (is_admin());
+  END IF;
+END $$;
 
 -- glow_girl_gv_snapshots: Glow Girls can read their own, admins manage all
-CREATE POLICY "Glow Girls can read own GV snapshots" ON glow_girl_gv_snapshots FOR SELECT
-  USING (
-    EXISTS (SELECT 1 FROM glow_girls gg WHERE gg.id = glow_girl_gv_snapshots.glow_girl_id AND gg.user_id = auth.uid())
-  );
-CREATE POLICY "Admins manage GV snapshots" ON glow_girl_gv_snapshots FOR ALL
-  USING (is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Glow Girls can read own GV snapshots' AND tablename = 'glow_girl_gv_snapshots') THEN
+    CREATE POLICY "Glow Girls can read own GV snapshots" ON glow_girl_gv_snapshots FOR SELECT
+      USING (EXISTS (SELECT 1 FROM glow_girls gg WHERE gg.id = glow_girl_gv_snapshots.glow_girl_id AND gg.user_id = auth.uid()));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins manage GV snapshots' AND tablename = 'glow_girl_gv_snapshots') THEN
+    CREATE POLICY "Admins manage GV snapshots" ON glow_girl_gv_snapshots FOR ALL USING (is_admin());
+  END IF;
+END $$;
 
 -- 10. Backfill: populate glow_girl_ranks for all existing Glow Girls
 -- Count personal recruits from existing referral records, GV starts at 0
@@ -144,4 +158,4 @@ LEFT JOIN (
 ON CONFLICT (glow_girl_id) DO NOTHING;
 
 -- Index for commission override queries
-CREATE INDEX idx_commissions_override_level ON commissions(override_level) WHERE override_level IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_commissions_override_level ON commissions(override_level) WHERE override_level IS NOT NULL;

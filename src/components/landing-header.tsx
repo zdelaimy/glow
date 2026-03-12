@@ -5,7 +5,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 
-export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/glow-girls" }: { variant?: "hero" | "light"; hideNav?: boolean; ctaHref?: string }) {
+export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/shop", ctaLabel = "Shop" }: { variant?: "hero" | "light"; hideNav?: boolean; ctaHref?: string; ctaLabel?: string }) {
   const [scrolled, setScrolled] = useState(false)
   const [userLink, setUserLink] = useState<{ href: string; label: string } | null>(null)
 
@@ -59,7 +59,7 @@ export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/g
                 : "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
             )}
           >
-            Glow Labs
+            Glow
           </span>
         </Link>
 
@@ -105,7 +105,7 @@ export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/g
                     : "text-white/90 border-white/60 hover:bg-white hover:text-[#6E6A62] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
                 )}
               >
-                Become a Glow Girl
+                {ctaLabel}
               </Link>
               <Link
                 href="/login"

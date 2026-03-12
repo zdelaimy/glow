@@ -53,7 +53,7 @@ export function LandingHero() {
             Find Your Serum
           </Button>
         </Link>
-        <Link href="/glow-girls">
+        <Link href="/">
           <Button size="lg" variant="outline" className="h-12 px-8 text-base">
             Start Your Brand
           </Button>
