@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { submitApplication, getMyApplication } from '@/lib/actions/glow-girl'
 import { createClient } from '@/lib/supabase/client'
 import SquareCardForm from '@/components/square-card-form'
-import { Check } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import Link from 'next/link'
 
 type Billing = 'monthly' | 'annual'
@@ -20,27 +20,17 @@ const SUBSCRIPTION_PLANS = {
     monthlyPrice: 20,
     description: 'Start selling and earning commissions.',
     planIds: {
-      monthly: process.env.NEXT_PUBLIC_PAYPAL_PLAN_PRO_MONTHLY!,
-      annual: process.env.NEXT_PUBLIC_PAYPAL_PLAN_PRO_ANNUAL!,
+      monthly: process.env.NEXT_PUBLIC_SQUARE_PLAN_PRO_MONTHLY!,
+      annual: process.env.NEXT_PUBLIC_SQUARE_PLAN_PRO_ANNUAL!,
     },
     features: [
       'Personal storefront & referral link',
       '25% commission on every sale',
-      '10% referral match bonus',
       'Basic sales training library',
     ],
-  },
-  elite: {
-    name: 'Glow Girl Elite',
-    monthlyPrice: 200,
-    description: 'Maximum earning potential & exclusive perks.',
-    planIds: {
-      monthly: process.env.NEXT_PUBLIC_PAYPAL_PLAN_ELITE_MONTHLY!,
-      annual: process.env.NEXT_PUBLIC_PAYPAL_PLAN_ELITE_ANNUAL!,
-    },
-    badge: 'Most Popular',
-    features: [
-      'Everything in Pro',
+    missingFeatures: [
+      '2 free products/month ($160 value)',
+      '10% referral match bonus',
       '5% pod override earnings',
       '1-on-1 mentorship',
       'Full training library access',
@@ -48,6 +38,28 @@ const SUBSCRIPTION_PLANS = {
       'Exclusive events & galas',
       'Social media growth coaching',
     ],
+  },
+  elite: {
+    name: 'Glow Girl Elite',
+    monthlyPrice: 200,
+    description: 'Maximum earning potential & exclusive perks.',
+    planIds: {
+      monthly: process.env.NEXT_PUBLIC_SQUARE_PLAN_ELITE_MONTHLY!,
+      annual: process.env.NEXT_PUBLIC_SQUARE_PLAN_ELITE_ANNUAL!,
+    },
+    badge: 'Most Popular',
+    features: [
+      'Everything in Pro',
+      '2 free products/month ($160 value)',
+      '10% referral match bonus',
+      '5% pod override earnings',
+      '1-on-1 mentorship',
+      'Full training library access',
+      'Monthly bonus eligibility',
+      'Exclusive events & galas',
+      'Social media growth coaching',
+    ],
+    missingFeatures: [],
   },
 } as const
 
@@ -139,7 +151,7 @@ function ApplyPage() {
   const [referralCode, setReferralCode] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [agreedToCompPlan] = useState(true)
-  const [billing, setBilling] = useState<Billing>('monthly')
+  const [billing, setBilling] = useState<Billing>('annual')
   const [selectedPlan, setSelectedPlan] = useState<PlanTier | null>(null)
   const [subscribing, setSubscribing] = useState(false)
   const [founderCode, setFounderCode] = useState('')
@@ -151,10 +163,16 @@ function ApplyPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        // Already logged in — check if they already applied
+        // Already logged in — check profile role
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        if (profile?.role === 'GLOW_GIRL') {
+          router.push('/glow-girl/dashboard')
+          return
+        }
+        // Check if they already applied but aren't activated yet
         const application = await getMyApplication()
         if (application) {
-          router.push('/apply/status')
+          router.push('/glow-girl/dashboard')
           return
         }
         // Skip account step — user likely came via OTP welcome flow
@@ -736,6 +754,16 @@ function ApplyPage() {
                 transition={{ duration: 0.3 }}
                 className="space-y-6"
               >
+                {/* Earnings headline */}
+                <div className="text-center">
+                  <p className="text-base font-medium text-[#6E6A62]">
+                    Average Glow Girl is expected to earn $2,150/month after the Glow 10-week ramp up
+                  </p>
+                  <p className="text-[11px] text-[#6E6A62]/40 mt-1">
+                    Individual results vary. This is not a guarantee of income.
+                  </p>
+                </div>
+
                 {/* Billing toggle */}
                 <div className="flex items-center justify-center gap-2">
                   <button
@@ -802,14 +830,27 @@ function ApplyPage() {
                                   {f}
                                 </li>
                               ))}
+                              {plan.missingFeatures.map((f) => (
+                                <li key={f} className="flex items-center gap-2 text-xs text-[#6E6A62]/30">
+                                  <X className="w-3 h-3 text-[#6E6A62]/25 flex-shrink-0" />
+                                  {f}
+                                </li>
+                              ))}
                             </ul>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <span className="text-2xl font-light text-[#6E6A62]">${Math.round(perMonth)}</span>
-                            <span className="text-xs text-[#6E6A62]/50">/mo</span>
+                            {billing === 'annual' && (
+                              <span className="text-sm font-light text-[#6E6A62]/40 line-through">
+                                ${plan.monthlyPrice}
+                              </span>
+                            )}
+                            <div>
+                              <span className="text-2xl font-light text-[#6E6A62]">${Math.round(perMonth)}</span>
+                              <span className="text-xs text-[#6E6A62]/50">/mo</span>
+                            </div>
                             {billing === 'annual' && (
                               <p className="text-[10px] text-emerald-600 mt-0.5">
-                                ${annualTotal.toFixed(0)}/yr
+                                ${annualTotal.toFixed(0)}/yr — save 15%
                               </p>
                             )}
                           </div>
@@ -843,7 +884,7 @@ function ApplyPage() {
                         setFounderCodeChecking(true)
                         setError(null)
                         try {
-                          const res = await fetch('/api/paypal/validate-founder-code', {
+                          const res = await fetch('/api/validate-founder-code', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ code: founderCode.trim() }),
@@ -920,13 +961,14 @@ function ApplyPage() {
                           agreed_to_terms: true,
                         })
 
-                        const res = await fetch('/api/paypal/activate-subscription', {
+                        const res = await fetch('/api/activate-founder', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
-                            subscriptionId: `FOUNDER_${founderCode.trim()}`,
+                            founderCode: founderCode.trim(),
                             plan: selectedPlan,
                             billing: 'founder',
+                            fullName,
                           }),
                         })
                         const result = await res.json()
@@ -957,78 +999,63 @@ function ApplyPage() {
                   </motion.button>
                 )}
 
-                {/* PayPal subscribe button (only when no valid founder code) */}
+                {/* Square card form (only when no valid founder code) */}
                 {selectedPlan && agreedToTerms && !founderCodeValid && (
-                  <div key={`paypal-${selectedPlan}-${billing}`}>
-                    <PayPalScriptProvider
-                      options={{
-                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
-                        vault: true,
-                        intent: 'subscription',
-                      }}
-                    >
-                      <PayPalButtons
-                        key={`btn-${selectedPlan}-${billing}`}
-                        style={{
-                          layout: 'vertical',
-                          color: 'black',
-                          shape: 'rect',
-                          label: 'subscribe',
-                        }}
-                        createSubscription={(data, actions) => {
-                          return actions.subscription.create({
-                            plan_id: SUBSCRIPTION_PLANS[selectedPlan].planIds[billing],
-                          })
-                        }}
-                        onApprove={async (data) => {
-                          setSubscribing(true)
-                          setError(null)
-                          try {
-                            await submitApplication({
-                              full_name: fullName,
-                              phone,
-                              date_of_birth: dob,
-                              city,
-                              state,
-                              social_platforms: socialPlatforms,
-                              primary_handle: primaryHandle || null,
-                              follower_range: followerRange,
-                              creates_content: createsContent,
-                              heard_from: heardFrom,
-                              interested_products: interestedProducts,
-                              why_glow: whyGlow,
-                              previous_direct_sales: previousDirectSales,
-                              previous_company: previousDirectSales ? previousCompany || null : null,
-                              referral_code: referralCode || null,
-                              agreed_to_terms: true,
-                            })
+                  <SquareCardForm
+                    key={`square-${selectedPlan}-${billing}`}
+                    disabled={subscribing}
+                    buttonLabel={`Subscribe — $${Math.round(
+                      billing === 'annual'
+                        ? (SUBSCRIPTION_PLANS[selectedPlan].monthlyPrice * 12 * 0.85) / 12
+                        : SUBSCRIPTION_PLANS[selectedPlan].monthlyPrice
+                    )}/mo`}
+                    onTokenize={async (token) => {
+                      setSubscribing(true)
+                      setError(null)
+                      try {
+                        await submitApplication({
+                          full_name: fullName,
+                          phone,
+                          date_of_birth: dob,
+                          city,
+                          state,
+                          social_platforms: socialPlatforms,
+                          primary_handle: primaryHandle || null,
+                          follower_range: followerRange,
+                          creates_content: createsContent,
+                          heard_from: heardFrom,
+                          interested_products: interestedProducts,
+                          why_glow: whyGlow,
+                          previous_direct_sales: previousDirectSales,
+                          previous_company: previousDirectSales ? previousCompany || null : null,
+                          referral_code: referralCode || null,
+                          agreed_to_terms: true,
+                        })
 
-                            const res = await fetch('/api/paypal/activate-subscription', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({
-                                subscriptionId: data.subscriptionID,
-                                plan: selectedPlan,
-                                billing,
-                              }),
-                            })
-                            const result = await res.json()
-                            if (result.success) {
-                              router.push('/glow-girl/dashboard')
-                            } else {
-                              setError(result.error || 'Failed to activate. Please contact support.')
-                            }
-                          } catch {
-                            setError('Something went wrong. Please contact support.')
-                          }
-                          setSubscribing(false)
-                        }}
-                        onError={() => {
-                          setError('Payment failed. Please try again.')
-                        }}
-                      />
-                    </PayPalScriptProvider>
-                  </div>
+                        const res = await fetch('/api/square/create-subscription', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            token,
+                            plan: selectedPlan,
+                            billing,
+                            fullName,
+                            email,
+                          }),
+                        })
+                        const result = await res.json()
+                        if (result.success) {
+                          router.push('/glow-girl/dashboard')
+                        } else {
+                          setError(result.error || 'Failed to activate. Please contact support.')
+                        }
+                      } catch (err) {
+                        console.error('Subscription error:', err)
+                        setError(err instanceof Error ? err.message : 'Something went wrong. Please contact support.')
+                      }
+                      setSubscribing(false)
+                    }}
+                  />
                 )}
 
                 {selectedPlan && !agreedToTerms && (
