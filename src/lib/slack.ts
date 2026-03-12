@@ -170,9 +170,37 @@ export async function notifyNewOrder({
 }
 
 /**
+ * Invite a user to the Slack workspace by email.
+ * Requires admin.users.invite scope (Business+ or Enterprise plan).
+ * Falls back silently if not available.
+ */
+async function inviteToWorkspace(email: string): Promise<boolean> {
+  const result = await slackApi('admin.users.invite', {
+    team_id: process.env.SLACK_TEAM_ID || '',
+    email,
+    channel_ids: process.env.SLACK_DEFAULT_CHANNEL_ID || '',
+  })
+
+  if (result?.ok) return true
+
+  // If admin API isn't available, fall back to no-op
+  if (result?.error === 'not_allowed' || result?.error === 'paid_teams_only' || result?.error === 'missing_scope') {
+    console.warn('[Slack] admin.users.invite not available on this plan, skipping workspace invite')
+    return false
+  }
+
+  // Already in workspace is fine
+  if (result?.error === 'already_invited' || result?.error === 'already_in_team') return true
+
+  console.warn(`[Slack] workspace invite failed for ${email}:`, result?.error)
+  return false
+}
+
+/**
  * Full onboarding flow when a Glow Girl is approved:
- * 1. Create her "Glow Babes" channel
- * 2. If she has a recruiter, invite her to the recruiter's channel
+ * 1. Invite her to the Slack workspace (if not already a member)
+ * 2. Create her "Glow Babes" channel
+ * 3. If she has a recruiter, invite her to the recruiter's channel
  */
 export async function onboardGlowGirlToSlack({
   brandName,
@@ -185,7 +213,10 @@ export async function onboardGlowGirlToSlack({
   email: string
   recruiterSlackChannelId?: string | null
 }): Promise<string | null> {
-  // 1. Create her own pod channel
+  // 1. Invite to workspace first (no-op if already a member)
+  await inviteToWorkspace(email)
+
+  // 2. Create her own pod channel
   const channelId = await createPodChannel(brandName, slug)
 
   if (channelId) {
@@ -193,7 +224,7 @@ export async function onboardGlowGirlToSlack({
     await inviteToChannel(channelId, email)
   }
 
-  // 2. Invite her to her recruiter's channel (her "Glow Mother" channel)
+  // 3. Invite her to her recruiter's channel (her "Glow Mother" channel)
   if (recruiterSlackChannelId) {
     await inviteToChannel(recruiterSlackChannelId, email)
   }

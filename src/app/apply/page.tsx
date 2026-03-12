@@ -150,7 +150,7 @@ function ApplyPage() {
   const [previousCompany, setPreviousCompany] = useState('')
   const [referralCode, setReferralCode] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
-  const [agreedToCompPlan] = useState(true)
+
   const [billing, setBilling] = useState<Billing>('annual')
   const [selectedPlan, setSelectedPlan] = useState<PlanTier | null>(null)
   const [subscribing, setSubscribing] = useState(false)
@@ -260,35 +260,6 @@ function ApplyPage() {
 
     setIsAuthenticated(true)
     setStep(1)
-    setLoading(false)
-  }
-
-  async function handleSubmit() {
-    setLoading(true)
-    setError(null)
-    try {
-      await submitApplication({
-        full_name: fullName,
-        phone,
-        date_of_birth: dob,
-        city,
-        state,
-        social_platforms: socialPlatforms,
-        primary_handle: primaryHandle || null,
-        follower_range: followerRange,
-        creates_content: createsContent,
-        heard_from: heardFrom,
-        interested_products: interestedProducts,
-        why_glow: whyGlow,
-        previous_direct_sales: previousDirectSales,
-        previous_company: previousDirectSales ? previousCompany || null : null,
-        referral_code: referralCode || null,
-        agreed_to_terms: true,
-      })
-      router.push('/apply/status')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    }
     setLoading(false)
   }
 
@@ -1145,11 +1116,3 @@ function FieldGroup({ label, children }: { label: string; children: React.ReactN
   )
 }
 
-function SummaryItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <span className="text-[#6E6A62]/50">{label}:</span>{' '}
-      <span className="text-[#6E6A62]">{value}</span>
-    </div>
-  )
-}
