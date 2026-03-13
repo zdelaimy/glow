@@ -9,9 +9,10 @@ import { Store, Share2, TrendingUp } from 'lucide-react'
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ ref?: string }>
+  searchParams: Promise<{ ref?: string; code?: string }>
 }) {
   const params = await searchParams
+
 
   // Store referral code in a separate cookie (not glow_ref, which is for sales attribution)
   if (params.ref) {

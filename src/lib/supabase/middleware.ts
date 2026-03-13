@@ -25,6 +25,50 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
+  // If there's an auth code in the URL, exchange it for a session
+  // This handles the case where Supabase redirects to the Site URL with ?code=
+  const code = request.nextUrl.searchParams.get('code')
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        const url = request.nextUrl.clone()
+        url.searchParams.delete('code')
+
+        if (profile?.role === 'ADMIN') {
+          url.pathname = '/admin'
+          return NextResponse.redirect(url, { headers: supabaseResponse.headers })
+        }
+        if (profile?.role === 'GLOW_GIRL') {
+          url.pathname = '/glow-girl/dashboard'
+          return NextResponse.redirect(url, { headers: supabaseResponse.headers })
+        }
+
+        // Check for existing application
+        const { data: application } = await supabase
+          .from('glow_girl_applications')
+          .select('status')
+          .eq('user_id', user.id)
+          .single()
+
+        if (application) {
+          url.pathname = application.status === 'APPROVED' ? '/glow-girl/dashboard' : '/apply/status'
+          return NextResponse.redirect(url, { headers: supabaseResponse.headers })
+        }
+
+        url.pathname = '/apply'
+        return NextResponse.redirect(url, { headers: supabaseResponse.headers })
+      }
+    }
+  }
+
   const { data: { user } } = await supabase.auth.getUser()
 
   // Protected routes
