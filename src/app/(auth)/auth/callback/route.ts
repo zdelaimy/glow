@@ -7,9 +7,12 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const redirect = searchParams.get('redirect') || '/'
 
+  console.log('[auth/callback] Hit callback. code:', !!code, 'redirect param:', redirect, 'origin:', origin)
+
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
+    console.log('[auth/callback] Code exchange result:', error ? `ERROR: ${error.message}` : 'SUCCESS')
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -51,11 +54,14 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}/apply/status`)
         }
 
+        console.log('[auth/callback] New user, redirecting to /apply')
         return NextResponse.redirect(`${origin}/apply`)
       }
+      console.log('[auth/callback] User exists but no user object, redirecting to:', redirect)
       return NextResponse.redirect(`${origin}${redirect}`)
     }
   }
 
+  console.log('[auth/callback] No code or exchange failed, redirecting to /login?error=auth')
   return NextResponse.redirect(`${origin}/login?error=auth`)
 }
