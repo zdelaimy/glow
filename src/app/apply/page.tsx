@@ -17,47 +17,43 @@ type PlanTier = 'pro' | 'elite'
 const SUBSCRIPTION_PLANS = {
   pro: {
     name: 'Glow Girl Pro',
-    monthlyPrice: 20,
+    monthlyPrice: 200,
     description: 'Start selling and earning commissions.',
     planIds: {
       monthly: process.env.NEXT_PUBLIC_SQUARE_PLAN_PRO_MONTHLY!,
       annual: process.env.NEXT_PUBLIC_SQUARE_PLAN_PRO_ANNUAL!,
     },
+    badge: 'Most Popular',
     features: [
       'Personal storefront & referral link',
       '25% commission on every sale',
-      'Basic sales training library',
-    ],
-    missingFeatures: [
       '2 free products/month ($160 value)',
       '10% referral match bonus',
       '5% pod override earnings',
-      '1-on-1 mentorship',
       'Full training library access',
       'Monthly bonus eligibility',
-      'Exclusive events & galas',
       'Social media growth coaching',
+    ],
+    missingFeatures: [
+      '1-on-1 mentorship',
+      'Exclusive events & galas',
+      'Private sales consulting (2x/month)',
     ],
   },
   elite: {
     name: 'Glow Girl Elite',
-    monthlyPrice: 200,
+    monthlyPrice: 450,
     description: 'Maximum earning potential & exclusive perks.',
     planIds: {
       monthly: process.env.NEXT_PUBLIC_SQUARE_PLAN_ELITE_MONTHLY!,
       annual: process.env.NEXT_PUBLIC_SQUARE_PLAN_ELITE_ANNUAL!,
     },
-    badge: 'Most Popular',
+    badge: null as string | null,
     features: [
       'Everything in Pro',
-      '2 free products/month ($160 value)',
-      '10% referral match bonus',
-      '5% pod override earnings',
       '1-on-1 mentorship',
-      'Full training library access',
-      'Monthly bonus eligibility',
       'Exclusive events & galas',
-      'Social media growth coaching',
+      'Private sales consulting (2x/month)',
     ],
     missingFeatures: [],
   },
@@ -784,9 +780,9 @@ function ApplyPage() {
                             : 'border-[#6E6A62]/10 hover:border-[#6E6A62]/30'
                         }`}
                       >
-                        {isElite && (
+                        {plan.badge && (
                           <span className="absolute -top-2.5 right-4 bg-[#6E6A62] text-white text-[10px] uppercase tracking-[0.12em] font-medium font-inter px-2.5 py-0.5 rounded-full">
-                            Most Popular
+                            {plan.badge}
                           </span>
                         )}
 
@@ -838,6 +834,11 @@ function ApplyPage() {
                   })}
                 </div>
 
+                {/* Cancel anytime note */}
+                <p className="text-center text-xs text-[#6E6A62]/50 -mt-1">
+                  Cancel anytime — no long-term commitment required.
+                </p>
+
                 {/* Founder code */}
                 <div className="pt-2">
                   <div className="flex items-center gap-2">
@@ -864,7 +865,7 @@ function ApplyPage() {
                           if (result.valid) {
                             setFounderCodeValid(true)
                           } else {
-                            setError('Invalid founder code.')
+                            setError(result.message || 'Invalid founder code.')
                             setFounderCodeValid(false)
                           }
                         } catch {
@@ -903,13 +904,17 @@ function ApplyPage() {
                 </div>
 
                 {/* Founder code: skip payment button */}
-                {selectedPlan && agreedToTerms && founderCodeValid && (
+                {selectedPlan && founderCodeValid && (
                   <motion.button
                     type="button"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     disabled={subscribing}
                     onClick={async () => {
+                      if (!agreedToTerms) {
+                        setError('Please agree to the Terms & Privacy Policy to continue.')
+                        return
+                      }
                       setSubscribing(true)
                       setError(null)
                       try {
@@ -971,7 +976,7 @@ function ApplyPage() {
                 )}
 
                 {/* Square card form (only when no valid founder code) */}
-                {selectedPlan && agreedToTerms && !founderCodeValid && (
+                {selectedPlan && !founderCodeValid && (
                   <SquareCardForm
                     key={`square-${selectedPlan}-${billing}`}
                     disabled={subscribing}
@@ -981,6 +986,10 @@ function ApplyPage() {
                         : SUBSCRIPTION_PLANS[selectedPlan].monthlyPrice
                     )}/mo`}
                     onTokenize={async (token) => {
+                      if (!agreedToTerms) {
+                        setError('Please agree to the Terms & Privacy Policy to continue.')
+                        return
+                      }
                       setSubscribing(true)
                       setError(null)
                       try {
@@ -1029,11 +1038,6 @@ function ApplyPage() {
                   />
                 )}
 
-                {selectedPlan && !agreedToTerms && (
-                  <p className="text-xs text-[#6E6A62]/40 text-center">
-                    Please agree to the terms above to continue.
-                  </p>
-                )}
               </motion.div>
             )}
           </AnimatePresence>

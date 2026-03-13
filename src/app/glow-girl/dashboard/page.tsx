@@ -237,6 +237,12 @@ export default async function GlowGirlDashboard() {
             >
               View Shop
             </Link>
+            <Link
+              href="/glow-girl/cancel"
+              className="rounded-full border border-[#6E6A62]/15 px-4 py-2 text-sm text-[#6E6A62]/40 hover:text-[#6E6A62]/60 hover:border-[#6E6A62]/25 transition-colors"
+            >
+              Manage Subscription
+            </Link>
             <SignOutButton />
           </div>
         </div>

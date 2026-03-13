@@ -139,7 +139,7 @@ export default function WelcomePage() {
             <h1 className="text-[#6E6A62] text-[2.75rem] leading-[1.1] font-light tracking-tight mb-6">
               $10,000 in sales.{' '}
               <span className="italic">
-                10 months. 10 hours a week.
+                10 weeks. 10 hours a week.
               </span>
             </h1>
 

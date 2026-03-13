@@ -12,38 +12,38 @@ type Billing = 'monthly' | 'annual'
 const PLANS = {
   pro: {
     name: 'Glow Girl Pro',
-    monthlyPrice: 20,
+    monthlyPrice: 200,
     description: 'Everything you need to start selling and earning commissions.',
     planIds: {
       monthly: process.env.NEXT_PUBLIC_PAYPAL_PLAN_PRO_MONTHLY!,
       annual: process.env.NEXT_PUBLIC_PAYPAL_PLAN_PRO_ANNUAL!,
     },
+    badge: 'Most Popular',
   },
   elite: {
     name: 'Glow Girl Elite',
-    monthlyPrice: 200,
+    monthlyPrice: 450,
     description: 'For serious builders who want maximum earning potential and exclusive perks.',
     planIds: {
       monthly: process.env.NEXT_PUBLIC_PAYPAL_PLAN_ELITE_MONTHLY!,
       annual: process.env.NEXT_PUBLIC_PAYPAL_PLAN_ELITE_ANNUAL!,
     },
-    badge: 'Most Popular',
+    badge: null as string | null,
   },
 } as const
 
 const FEATURES: { label: string; pro: boolean | string; elite: boolean | string }[] = [
   { label: 'Personal storefront & referral link', pro: true, elite: true },
   { label: 'Commission on every sale', pro: '25%', elite: '25%' },
+  { label: '2 free products/month ($160 value)', pro: true, elite: true },
   { label: 'Referral match bonus', pro: '10%', elite: '10%' },
-  { label: 'Pod override earnings', pro: false, elite: '5%' },
-  { label: 'Sales training library', pro: 'Basic', elite: 'Full access' },
+  { label: 'Pod override earnings', pro: '5%', elite: '5%' },
+  { label: 'Full training library access', pro: true, elite: true },
+  { label: 'Monthly bonus eligibility', pro: true, elite: true },
+  { label: 'Social media growth coaching', pro: true, elite: true },
   { label: '1-on-1 mentorship', pro: false, elite: true },
-  { label: 'Exclusive product samples', pro: false, elite: true },
-  { label: 'Priority support', pro: false, elite: true },
-  { label: 'Monthly bonus eligibility', pro: false, elite: true },
-  { label: 'Glow Girl dinners & galas', pro: false, elite: true },
-  { label: 'Social media growth coaching', pro: false, elite: true },
-  { label: 'Custom branded content', pro: false, elite: true },
+  { label: 'Exclusive events & galas', pro: false, elite: true },
+  { label: 'Private sales consulting (2x/month)', pro: false, elite: true },
 ]
 
 function getPrice(monthlyPrice: number, billing: Billing) {
@@ -120,14 +120,14 @@ export default function GlowGirlsPage() {
               <div
                 key={tier}
                 className={`relative bg-white rounded-2xl border overflow-hidden transition-all ${
-                  isElite
+                  plan.badge
                     ? 'border-[#6E6A62] shadow-lg'
                     : 'border-neutral-200/60'
                 }`}
               >
-                {isElite && (
+                {plan.badge && (
                   <div className="bg-[#6E6A62] text-white text-xs uppercase tracking-[0.15em] font-medium font-inter text-center py-2">
-                    Most Popular
+                    {plan.badge}
                   </div>
                 )}
 

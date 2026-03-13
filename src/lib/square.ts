@@ -7,7 +7,7 @@ export function getSquareClient(): SquareClient {
     _client = new SquareClient({
       token: process.env.SQUARE_ACCESS_TOKEN!,
       environment:
-        process.env.SQUARE_ENVIRONMENT === 'production'
+        (process.env.SQUARE_ENVIRONMENT || process.env.NEXT_PUBLIC_SQUARE_ENVIRONMENT) === 'production'
           ? SquareEnvironment.Production
           : SquareEnvironment.Sandbox,
     })

@@ -175,6 +175,7 @@ export async function notifyNewOrder({
  * Falls back silently if not available.
  */
 async function inviteToWorkspace(email: string): Promise<boolean> {
+  // Try the standard admin invite (Business+ plans)
   const result = await slackApi('admin.users.invite', {
     team_id: process.env.SLACK_TEAM_ID || '',
     email,
@@ -182,17 +183,24 @@ async function inviteToWorkspace(email: string): Promise<boolean> {
   })
 
   if (result?.ok) return true
-
-  // If admin API isn't available, fall back to no-op
-  if (result?.error === 'not_allowed' || result?.error === 'paid_teams_only' || result?.error === 'missing_scope') {
-    console.warn('[Slack] admin.users.invite not available on this plan, skipping workspace invite')
-    return false
-  }
-
-  // Already in workspace is fine
   if (result?.error === 'already_invited' || result?.error === 'already_in_team') return true
 
-  console.warn(`[Slack] workspace invite failed for ${email}:`, result?.error)
+  // Try legacy invite (works on free/pro plans)
+  const legacyResult = await slackApi('users.admin.invite', {
+    email,
+    set_active: true,
+  })
+
+  if (legacyResult?.ok) return true
+  if (legacyResult?.error === 'already_invited' || legacyResult?.error === 'already_in_team') return true
+
+  // Both failed — notify team in Slack so they can manually invite
+  console.warn(`[Slack] Auto-invite failed for ${email}, notifying team`)
+  await slackApi('chat.postMessage', {
+    channel: process.env.SLACK_ORDERS_CHANNEL || '#orders',
+    text: `New Glow Girl needs a Slack invite: *${email}*\nAuto-invite failed — please send manually.`,
+  })
+
   return false
 }
 
