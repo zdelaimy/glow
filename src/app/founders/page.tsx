@@ -23,10 +23,6 @@ const LEVELS = [
 ]
 
 /* ── helpers ──────────────────────────────────────────── */
-function formatMoney(n: number) {
-  if (n >= 1000) return `$${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K`
-  return `$${Math.round(n).toLocaleString()}`
-}
 
 function formatMoneyFull(n: number) {
   return `$${Math.round(n).toLocaleString()}`

@@ -3,6 +3,7 @@ import { requireGlowGirl } from '@/lib/auth'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SignOutButton } from '@/components/sign-out-button'
+import { Sparkles } from 'lucide-react'
 import { ReferralShare } from '@/components/referral-share'
 import { AffiliateLink } from '@/components/affiliate-link'
 import { TeamNetwork } from '@/components/team-network'
@@ -231,19 +232,19 @@ export default async function GlowGirlDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <Link
+              href="/glow-girl/ai-studio"
+              className="rounded-full bg-[#6E6A62] text-white px-4 py-2 text-sm hover:bg-[#5a574f] transition-colors flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" /> AI Studio
+            </Link>
+            <Link
               href="/shop"
               target="_blank"
               className="rounded-full border border-[#6E6A62]/30 px-4 py-2 text-sm text-[#6E6A62] hover:bg-[#f5f0eb] transition-colors"
             >
               View Shop
             </Link>
-            <Link
-              href="/glow-girl/cancel"
-              className="rounded-full border border-[#6E6A62]/15 px-4 py-2 text-sm text-[#6E6A62]/40 hover:text-[#6E6A62]/60 hover:border-[#6E6A62]/25 transition-colors"
-            >
-              Manage Subscription
-            </Link>
-            <SignOutButton />
+<SignOutButton />
           </div>
         </div>
       </header>

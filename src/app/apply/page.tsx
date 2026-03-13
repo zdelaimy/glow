@@ -764,7 +764,6 @@ function ApplyPage() {
                 <div className="grid gap-4">
                   {(['pro', 'elite'] as const).map((tier) => {
                     const plan = SUBSCRIPTION_PLANS[tier]
-                    const isElite = tier === 'elite'
                     const annualTotal = plan.monthlyPrice * 12 * 0.85
                     const perMonth = billing === 'annual' ? annualTotal / 12 : plan.monthlyPrice
                     const isSelected = selectedPlan === tier

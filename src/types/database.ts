@@ -411,6 +411,11 @@ export interface GlowGirlRank {
   computed_at: string
 }
 
+// AI Studio
+export type AIStudioProjectType = 'generate' | 'analyze'
+export type AIStudioProjectStatus = 'draft' | 'processing' | 'completed' | 'failed'
+export type AIStudioOutputType = 'post_package' | 'analysis'
+
 export interface GlowGirlGvSnapshot {
   id: string
   glow_girl_id: string
