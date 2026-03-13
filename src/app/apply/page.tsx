@@ -16,7 +16,7 @@ type PlanTier = 'pro' | 'elite'
 
 const SUBSCRIPTION_PLANS = {
   pro: {
-    name: 'Glow Girl Pro',
+    name: 'Glow Girl Starter',
     monthlyPrice: 200,
     description: 'Start selling and earning commissions.',
     planIds: {
@@ -27,7 +27,7 @@ const SUBSCRIPTION_PLANS = {
     features: [
       'Personal storefront & referral link',
       '25% commission on every sale',
-      '2 free products/month ($160 value)',
+      '2 free Glow products per month ($160 value)',
       '10% referral match bonus',
       '5% pod override earnings',
       'Full training library access',
@@ -41,7 +41,7 @@ const SUBSCRIPTION_PLANS = {
     ],
   },
   elite: {
-    name: 'Glow Girl Elite',
+    name: 'Glow Girl Pro',
     monthlyPrice: 450,
     description: 'Maximum earning potential & exclusive perks.',
     planIds: {
@@ -50,7 +50,7 @@ const SUBSCRIPTION_PLANS = {
     },
     badge: null as string | null,
     features: [
-      'Everything in Pro',
+      'Everything in Starter',
       '1-on-1 mentorship',
       'Exclusive events & galas',
       'Private sales consulting (2x/month)',

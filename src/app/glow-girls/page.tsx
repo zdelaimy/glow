@@ -11,7 +11,7 @@ type Billing = 'monthly' | 'annual'
 
 const PLANS = {
   pro: {
-    name: 'Glow Girl Pro',
+    name: 'Glow Girl Starter',
     monthlyPrice: 200,
     description: 'Everything you need to start selling and earning commissions.',
     planIds: {
@@ -21,7 +21,7 @@ const PLANS = {
     badge: 'Most Popular',
   },
   elite: {
-    name: 'Glow Girl Elite',
+    name: 'Glow Girl Pro',
     monthlyPrice: 450,
     description: 'For serious builders who want maximum earning potential and exclusive perks.',
     planIds: {
@@ -32,10 +32,10 @@ const PLANS = {
   },
 } as const
 
-const FEATURES: { label: string; pro: boolean | string; elite: boolean | string }[] = [
+const FEATURES: { label: string; pro: boolean | string; elite: boolean | string; highlight?: boolean }[] = [
+  { label: '2 free Glow products per month ($160 value)', pro: true, elite: true, highlight: true },
   { label: 'Personal storefront & referral link', pro: true, elite: true },
   { label: 'Commission on every sale', pro: '25%', elite: '25%' },
-  { label: '2 free products/month ($160 value)', pro: true, elite: true },
   { label: 'Referral match bonus', pro: '10%', elite: '10%' },
   { label: 'Pod override earnings', pro: '5%', elite: '5%' },
   { label: 'Full training library access', pro: true, elite: true },
@@ -160,9 +160,9 @@ export default function GlowGirlsPage() {
                       const value = tier === 'pro' ? f.pro : f.elite
                       if (value === false) return null
                       return (
-                        <li key={f.label} className="flex items-start gap-2.5 text-sm">
-                          <Check className="w-4 h-4 text-[#6E6A62] mt-0.5 flex-shrink-0" />
-                          <span className="text-[#6E6A62]/80">
+                        <li key={f.label} className={`flex items-start gap-2.5 text-sm ${f.highlight ? 'bg-[#6E6A62]/[0.07] -mx-3 px-3 py-2 rounded-lg' : ''}`}>
+                          <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 ${f.highlight ? 'text-[#6E6A62]' : 'text-[#6E6A62]'}`} />
+                          <span className={f.highlight ? 'text-[#6E6A62] font-semibold' : 'text-[#6E6A62]/80'}>
                             {f.label}
                             {typeof value === 'string' && (
                               <span className="text-[#6E6A62] font-medium"> &middot; {value}</span>
@@ -267,12 +267,12 @@ export default function GlowGirlsPage() {
               <div className="px-6 py-4" />
               <div className="px-4 py-4 text-center">
                 <span className="text-xs uppercase tracking-[0.12em] font-medium text-[#6E6A62]/70 font-inter">
-                  Pro
+                  Starter
                 </span>
               </div>
               <div className="px-4 py-4 text-center bg-[#f5f0eb]/40">
                 <span className="text-xs uppercase tracking-[0.12em] font-medium text-[#6E6A62] font-inter">
-                  Elite
+                  Pro
                 </span>
               </div>
             </div>
@@ -285,7 +285,7 @@ export default function GlowGirlsPage() {
                   i < FEATURES.length - 1 ? 'border-b border-neutral-100' : ''
                 }`}
               >
-                <div className="px-6 py-3.5 text-sm text-[#6E6A62]/80">
+                <div className={`px-6 py-3.5 text-sm ${feature.highlight ? 'text-[#6E6A62] font-semibold' : 'text-[#6E6A62]/80'}`}>
                   {feature.label}
                 </div>
                 <div className="px-4 py-3.5 flex items-center justify-center">
@@ -324,7 +324,7 @@ export default function GlowGirlsPage() {
             Not sure which plan?
           </h2>
           <p className="text-sm text-[#6E6A62]/60 mb-6">
-            Start with Pro and upgrade anytime. Your commissions and team carry over.
+            Start with Starter and upgrade anytime. Your commissions and team carry over.
           </p>
           <Link
             href="/shop"
