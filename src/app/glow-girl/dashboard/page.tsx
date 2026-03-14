@@ -1,14 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireGlowGirl } from '@/lib/auth'
-import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { SignOutButton } from '@/components/sign-out-button'
-import { Sparkles } from 'lucide-react'
 import { ReferralShare } from '@/components/referral-share'
 import { AffiliateLink } from '@/components/affiliate-link'
-import { TeamNetwork } from '@/components/team-network'
-import { MyPod } from '@/components/my-pod'
 import { EarningsCalculator } from '@/components/earnings-calculator'
+import { WalletCard } from '@/components/wallet'
+import { getWalletData } from '@/lib/actions/wallet'
 import { LEVEL_OVERRIDE_DEFINITIONS } from '@/lib/commissions/constants'
 import type { MonthlyBonusTier, CommissionSettings } from '@/types/database'
 
@@ -180,6 +177,9 @@ export default async function GlowGirlDashboard() {
 
   const overrideEarningsTotal = (overrideEarnings || []).reduce((s, c) => s + c.amount_cents, 0)
 
+  // Wallet data
+  const walletData = await getWalletData(glowGirl.id)
+
   const realTrendData = months.map(m => {
     const total = (trendCommissions || [])
       .filter(c => c.period === m)
@@ -218,38 +218,7 @@ export default async function GlowGirlDashboard() {
     : 100
 
   return (
-    <div className="min-h-screen bg-[#f5f0eb] font-inter">
-      <header className="bg-white/60 backdrop-blur-sm border-b border-[#6E6A62]/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-lg tracking-tight text-[#6E6A62] font-medium">
-              GLOW
-            </Link>
-            <div>
-              <h1 className="font-medium text-[#6E6A62]">{glowGirl.brand_name}</h1>
-              <p className="text-sm text-[#6E6A62]/50">Glow Girl Dashboard</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/glow-girl/ai-studio"
-              className="rounded-full bg-[#6E6A62] text-white px-4 py-2 text-sm hover:bg-[#5a574f] transition-colors flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4" /> AI Studio
-            </Link>
-            <Link
-              href="/shop"
-              target="_blank"
-              className="rounded-full border border-[#6E6A62]/30 px-4 py-2 text-sm text-[#6E6A62] hover:bg-[#f5f0eb] transition-colors"
-            >
-              View Shop
-            </Link>
-<SignOutButton />
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-6 py-8">
         {!glowGirl.approved && (
           <div className="bg-amber-50/80 border border-amber-200/60 rounded-2xl p-4 text-sm text-amber-800 mb-6">
             Your Glow Girl account is pending approval. Your storefront will be visible once approved.
@@ -262,8 +231,6 @@ export default async function GlowGirlDashboard() {
               { value: 'overview', label: 'Overview' },
               { value: 'earnings', label: 'Earnings' },
               { value: 'comp-plan', label: 'Comp Plan' },
-              { value: 'my-sales', label: 'My Sales' },
-              { value: 'my-pod', label: 'My Pod' },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -290,6 +257,15 @@ export default async function GlowGirlDashboard() {
                 </div>
               ))}
             </div>
+
+            <WalletCard
+              glowGirlId={glowGirl.id}
+              availableBalanceCents={walletData.availableBalanceCents}
+              pendingWithdrawalCents={walletData.pendingWithdrawalCents}
+              hasTaxId={walletData.hasTaxId}
+              taxIdLast4={walletData.taxIdLast4}
+              recentWithdrawals={walletData.recentWithdrawals}
+            />
 
             <AffiliateLink slug={glowGirl.slug} />
 
@@ -601,18 +577,7 @@ export default async function GlowGirlDashboard() {
             </div>
           </TabsContent>
 
-          {/* ─── My Sales Tab ─── */}
-          <TabsContent value="my-sales">
-            <TeamNetwork glowGirlId={glowGirl.id} glowGirlName={glowGirl.brand_name || 'You'} />
-          </TabsContent>
-
-          {/* ─── My Pod Tab ─── */}
-          <TabsContent value="my-pod">
-            <MyPod glowGirlId={glowGirl.id} glowGirlName={glowGirl.brand_name || 'You'} />
-          </TabsContent>
-
         </Tabs>
-      </main>
     </div>
   )
 }

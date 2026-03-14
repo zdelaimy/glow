@@ -1,7 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { getSlackChannelLink } from '@/lib/slack'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export interface TeamMember {
   id: string
@@ -21,64 +20,73 @@ export interface PodMember {
   id: string
   brandName: string
   joinedAt: string
+  email: string | null
+  phone: string | null
+  primaryHandle: string | null
+  socialPlatforms: string[]
 }
 
 export interface PodData {
   recruiter: PodMember | null
-  recruiterSlackLink: string | null
   directRecruits: PodMember[]
-  mySlackLink: string | null
 }
 
 export async function getPodData(glowGirlId: string): Promise<PodData> {
   const supabase = await createClient()
 
-  // Get my slack_channel_id
-  const { data: me } = await supabase
-    .from('glow_girls')
-    .select('slack_channel_id')
-    .eq('id', glowGirlId)
-    .single()
+  // Helper to enrich a glow_girl with contact info from their application & auth
+  async function enrichMember(gg: { id: string; brand_name: string | null; created_at: string; user_id: string }): Promise<PodMember> {
+    // Get application data (phone, social)
+    const { data: app } = await supabase
+      .from('glow_girl_applications')
+      .select('phone, social_platforms, primary_handle')
+      .eq('user_id', gg.user_id)
+      .single()
 
-  const mySlackLink = me?.slack_channel_id ? getSlackChannelLink(me.slack_channel_id) : null
+    // Get email from auth user (requires service role)
+    const serviceClient = await createServiceClient()
+    const { data: { user: authUser } } = await serviceClient.auth.admin.getUserById(gg.user_id)
+
+    return {
+      id: gg.id,
+      brandName: gg.brand_name || 'Unknown',
+      joinedAt: gg.created_at,
+      email: authUser?.email ?? null,
+      phone: app?.phone ?? null,
+      primaryHandle: app?.primary_handle ?? null,
+      socialPlatforms: app?.social_platforms ?? [],
+    }
+  }
 
   // Get recruiter (who referred me)
   let recruiter: PodMember | null = null
-  let recruiterSlackLink: string | null = null
 
   const { data: referral } = await supabase
     .from('glow_girl_referrals')
-    .select('referrer:glow_girls!glow_girl_referrals_referrer_id_fkey(id, brand_name, created_at, slack_channel_id)')
+    .select('referrer:glow_girls!glow_girl_referrals_referrer_id_fkey(id, brand_name, created_at, user_id)')
     .eq('referred_id', glowGirlId)
     .single()
 
   if (referral?.referrer) {
-    const ref = referral.referrer as unknown as { id: string; brand_name: string | null; created_at: string; slack_channel_id: string | null }
-    recruiter = {
-      id: ref.id,
-      brandName: ref.brand_name || 'Unknown',
-      joinedAt: ref.created_at,
-    }
-    recruiterSlackLink = ref.slack_channel_id ? getSlackChannelLink(ref.slack_channel_id) : null
+    const ref = referral.referrer as unknown as { id: string; brand_name: string | null; created_at: string; user_id: string }
+    recruiter = await enrichMember(ref)
   }
 
   // Get direct recruits (people I referred)
   const { data: myReferrals } = await supabase
     .from('glow_girl_referrals')
-    .select('referred:glow_girls!glow_girl_referrals_referred_id_fkey(id, brand_name, created_at)')
+    .select('referred:glow_girls!glow_girl_referrals_referred_id_fkey(id, brand_name, created_at, user_id)')
     .eq('referrer_id', glowGirlId)
     .order('created_at', { ascending: false })
 
-  const directRecruits: PodMember[] = (myReferrals || []).map((r) => {
-    const ref = r.referred as unknown as { id: string; brand_name: string | null; created_at: string }
-    return {
-      id: ref.id,
-      brandName: ref.brand_name || 'Unknown',
-      joinedAt: ref.created_at,
-    }
-  })
+  const directRecruits: PodMember[] = await Promise.all(
+    (myReferrals || []).map((r) => {
+      const ref = r.referred as unknown as { id: string; brand_name: string | null; created_at: string; user_id: string }
+      return enrichMember(ref)
+    })
+  )
 
-  return { recruiter, recruiterSlackLink, directRecruits, mySlackLink }
+  return { recruiter, directRecruits }
 }
 
 export async function getTeamNetwork(glowGirlId: string, period?: string): Promise<TeamData> {

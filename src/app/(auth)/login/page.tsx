@@ -80,7 +80,7 @@ export default function LoginPage() {
     } else {
       router.push('/')
     }
-    setLoading(false)
+    // Don't setLoading(false) — keep spinner until navigation completes
   }
 
   return (

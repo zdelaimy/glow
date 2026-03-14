@@ -26,6 +26,8 @@ export interface GlowGirl {
   referral_code: string | null
   referred_by_code: string | null
   selected_product_ids: string[]
+  tax_id_last4: string | null
+  tax_id_submitted_at: string | null
   created_at: string
   updated_at: string
 }
@@ -411,10 +413,118 @@ export interface GlowGirlRank {
   computed_at: string
 }
 
+export interface WithdrawalRequest {
+  id: string
+  glow_girl_id: string
+  amount_cents: number
+  status: 'PENDING' | 'APPROVED' | 'PAID' | 'DENIED'
+  admin_notes: string | null
+  requested_at: string
+  processed_at: string | null
+  created_at: string
+}
+
 // AI Studio
-export type AIStudioProjectType = 'generate' | 'analyze'
+export type AIStudioProjectType = 'generate' | 'analyze' | 'video'
 export type AIStudioProjectStatus = 'draft' | 'processing' | 'completed' | 'failed'
-export type AIStudioOutputType = 'post_package' | 'analysis'
+export type AIStudioOutputType = 'post_package' | 'analysis' | 'video_package'
+
+// Journey Platform
+export interface JourneyWeek {
+  id: string
+  week_number: number
+  title: string
+  subtitle: string
+  description: string | null
+  milestone: string | null
+  created_at: string
+  updated_at: string
+  // Joined
+  modules?: JourneyModule[]
+  lesson_count?: number
+  completed_count?: number
+}
+
+export interface JourneyModule {
+  id: string
+  week_id: string
+  title: string
+  description: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+  // Joined
+  lessons?: JourneyLesson[]
+}
+
+export interface JourneyLesson {
+  id: string
+  module_id: string
+  title: string
+  description: string | null
+  video_url: string | null
+  content: string | null
+  resources: { label: string; url: string; type: string }[]
+  duration_minutes: number
+  sort_order: number
+  created_at: string
+  updated_at: string
+  // Joined
+  completed?: boolean
+  module?: JourneyModule
+}
+
+export interface JourneyProgress {
+  id: string
+  glow_girl_id: string
+  lesson_id: string
+  completed_at: string
+}
+
+export interface ProductEducation {
+  id: string
+  product_id: string
+  talking_points: string[]
+  ingredients_detail: string | null
+  benefits: string[]
+  faqs: { q: string; a: string }[]
+  pitch_scripts: { scenario: string; script: string }[]
+  objection_handling: { objection: string; response: string }[]
+  compliance_notes: string | null
+  usage_directions: string | null
+  who_its_for: string | null
+  created_at: string
+  updated_at: string
+  // Joined
+  product?: Product
+}
+
+export interface Template {
+  id: string
+  title: string
+  category: string
+  subcategory: string | null
+  platform: string
+  funnel_stage: string
+  body: string
+  variables: string[]
+  product_tags: string[]
+  example_usage: string | null
+  compliance_notes: string | null
+  active: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+  // Joined
+  is_favorited?: boolean
+}
+
+export interface TemplateFavorite {
+  id: string
+  glow_girl_id: string
+  template_id: string
+  created_at: string
+}
 
 export interface GlowGirlGvSnapshot {
   id: string

@@ -4,15 +4,17 @@ import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CreateTab } from './create-tab'
 import { AnalyzeTab } from './analyze-tab'
+import { VideoTab } from './video-tab'
 import { HistoryTab } from './history-tab'
-import type { AIStudioProject } from '@/lib/ai-studio/types'
+import type { AIStudioProject, VideoTemplate } from '@/lib/ai-studio/types'
 
 interface AIStudioTabsProps {
   products: { id: string; name: string }[]
   initialProjects: AIStudioProject[]
+  templates: VideoTemplate[]
 }
 
-export function AIStudioTabs({ products, initialProjects }: AIStudioTabsProps) {
+export function AIStudioTabs({ products, initialProjects, templates }: AIStudioTabsProps) {
   const [projects, setProjects] = useState<AIStudioProject[]>(initialProjects)
 
   const handleProjectCreated = (project: AIStudioProject) => {
@@ -20,9 +22,10 @@ export function AIStudioTabs({ products, initialProjects }: AIStudioTabsProps) {
   }
 
   return (
-    <Tabs defaultValue="create" className="space-y-6">
-      <TabsList className="bg-[#f5f0eb] border border-[#6E6A62]/10 rounded-full p-1 h-auto">
+    <Tabs defaultValue="video" className="space-y-6">
+      <TabsList className="bg-[#f5f0eb] border border-[#6E6A62]/10 rounded-full p-1 h-auto w-full flex">
         {[
+          { value: 'video', label: 'Video', featured: true },
           { value: 'create', label: 'Create' },
           { value: 'analyze', label: 'Analyze' },
           { value: 'history', label: 'History' },
@@ -30,12 +33,24 @@ export function AIStudioTabs({ products, initialProjects }: AIStudioTabsProps) {
           <TabsTrigger
             key={tab.value}
             value={tab.value}
-            className="rounded-full text-xs uppercase tracking-[0.15em] px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-[#6E6A62] data-[state=active]:shadow-sm text-[#6E6A62]/50"
+            className={`flex-1 rounded-full text-xs uppercase tracking-[0.1em] px-2 py-2 data-[state=active]:shadow-sm text-[#6E6A62]/50 ${
+              tab.featured
+                ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6E6A62] data-[state=active]:to-[#8a8578] data-[state=active]:text-white'
+                : 'data-[state=active]:bg-white data-[state=active]:text-[#6E6A62]'
+            }`}
           >
             {tab.label}
           </TabsTrigger>
         ))}
       </TabsList>
+
+      <TabsContent value="video">
+        <VideoTab
+          templates={templates}
+          products={products}
+          onProjectCreated={handleProjectCreated}
+        />
+      </TabsContent>
 
       <TabsContent value="create">
         <CreateTab products={products} onProjectCreated={handleProjectCreated} />

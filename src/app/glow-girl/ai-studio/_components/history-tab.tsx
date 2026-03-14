@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Trash2, Eye, Sparkles, Search } from 'lucide-react'
+import { Trash2, Eye, Sparkles, Search, Video } from 'lucide-react'
 import { ProjectDetailDialog } from './project-detail-dialog'
 import type { AIStudioProject, PostPackageResult } from '@/lib/ai-studio/types'
 
@@ -64,17 +64,17 @@ export function HistoryTab({ projects, onProjectsChange }: HistoryTabProps) {
             >
               <div className="flex items-center gap-4 min-w-0">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                  project.type === 'generate' ? 'bg-violet-50 text-violet-600' : 'bg-blue-50 text-blue-600'
+                  project.type === 'video' ? 'bg-pink-50 text-pink-600' : project.type === 'generate' ? 'bg-violet-50 text-violet-600' : 'bg-blue-50 text-blue-600'
                 }`}>
-                  {project.type === 'generate' ? <Sparkles className="w-4 h-4" /> : <Search className="w-4 h-4" />}
+                  {project.type === 'video' ? <Video className="w-4 h-4" /> : project.type === 'generate' ? <Sparkles className="w-4 h-4" /> : <Search className="w-4 h-4" />}
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-[#6E6A62] truncate">{project.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className={`text-xs rounded-full px-2 py-0.5 ${
-                      project.type === 'generate' ? 'bg-violet-50 text-violet-600' : 'bg-blue-50 text-blue-600'
+                      project.type === 'video' ? 'bg-pink-50 text-pink-600' : project.type === 'generate' ? 'bg-violet-50 text-violet-600' : 'bg-blue-50 text-blue-600'
                     }`}>
-                      {project.type === 'generate' ? 'Generate' : 'Analyze'}
+                      {project.type === 'video' ? 'Video' : project.type === 'generate' ? 'Generate' : 'Analyze'}
                     </span>
                     {project.platform && (
                       <span className="text-xs text-[#6E6A62]/40">{project.platform}</span>

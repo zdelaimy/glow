@@ -154,6 +154,51 @@ function ApplyPage() {
   const [founderCodeValid, setFounderCodeValid] = useState(false)
   const [founderCodeChecking, setFounderCodeChecking] = useState(false)
 
+  const STORAGE_KEY = 'glow_apply_progress'
+
+  function saveProgress(overrideStep?: number) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        step: overrideStep ?? step,
+        fullName, phone, dob, city, state,
+        socialPlatforms, primaryHandle, followerRange, createsContent,
+        heardFrom, interestedProducts, whyGlow,
+        previousDirectSales, previousCompany, referralCode, agreedToTerms,
+      }))
+    } catch {}
+  }
+
+  function clearProgress() {
+    try { localStorage.removeItem(STORAGE_KEY) } catch {}
+  }
+
+  function restoreProgress() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (!raw) return false
+      const saved = JSON.parse(raw)
+      if (saved.fullName) setFullName(saved.fullName)
+      if (saved.phone) setPhone(saved.phone)
+      if (saved.dob) setDob(saved.dob)
+      if (saved.city) setCity(saved.city)
+      if (saved.state) setState(saved.state)
+      if (saved.socialPlatforms) setSocialPlatforms(saved.socialPlatforms)
+      if (saved.primaryHandle) setPrimaryHandle(saved.primaryHandle)
+      if (saved.followerRange) setFollowerRange(saved.followerRange)
+      if (saved.createsContent) setCreatesContent(saved.createsContent)
+      if (saved.heardFrom) setHeardFrom(saved.heardFrom)
+      if (saved.interestedProducts) setInterestedProducts(saved.interestedProducts)
+      if (saved.whyGlow) setWhyGlow(saved.whyGlow)
+      if (saved.previousDirectSales) setPreviousDirectSales(saved.previousDirectSales)
+      if (saved.previousCompany) setPreviousCompany(saved.previousCompany)
+      if (saved.referralCode) setReferralCode(saved.referralCode)
+      if (saved.agreedToTerms) setAgreedToTerms(saved.agreedToTerms)
+      return saved.step as number | undefined
+    } catch {
+      return false
+    }
+  }
+
   useEffect(() => {
     async function check() {
       const supabase = createClient()
@@ -162,23 +207,33 @@ function ApplyPage() {
         // Already logged in — check profile role
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
         if (profile?.role === 'GLOW_GIRL') {
+          clearProgress()
           router.push('/glow-girl/dashboard')
           return
         }
         // Check if they already applied but aren't activated yet
         const application = await getMyApplication()
         if (application) {
+          clearProgress()
           router.push('/glow-girl/dashboard')
           return
         }
-        // Skip account step — user likely came via OTP welcome flow
+        // Returning user — restore saved progress if any
         setIsAuthenticated(true)
-        setNeedsPassword(true)
-        setStep(1)
+        const savedStep = restoreProgress()
+        if (typeof savedStep === 'number' && savedStep > 1) {
+          // They already set a password last time, skip password prompt
+          setNeedsPassword(false)
+          setStep(savedStep)
+        } else {
+          setNeedsPassword(true)
+          setStep(1)
+        }
       }
       setChecking(false)
     }
     check()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
   // Pre-fill referral code from URL ?ref= param
@@ -274,11 +329,14 @@ function ApplyPage() {
         return
       }
       setNeedsPassword(false)
+      saveProgress(2)
       setStep(2)
       setLoading(false)
     } else if (step < STEPS.length - 1) {
       setError(null)
-      setStep(s => s + 1)
+      const nextStep = step + 1
+      saveProgress(nextStep)
+      setStep(nextStep)
     }
   }
 
@@ -948,7 +1006,10 @@ function ApplyPage() {
                         })
                         const result = await res.json()
                         if (result.success) {
+                          clearProgress()
                           router.push('/glow-girl/dashboard')
+                          // Keep subscribing=true — spinner stays until navigation completes
+                          return
                         } else {
                           setError(result.error || 'Failed to activate. Please contact support.')
                         }
@@ -1024,7 +1085,10 @@ function ApplyPage() {
                         })
                         const result = await res.json()
                         if (result.success) {
+                          clearProgress()
                           router.push('/glow-girl/dashboard')
+                          // Keep subscribing=true — spinner stays until navigation completes
+                          return
                         } else {
                           setError(result.error || 'Failed to activate. Please contact support.')
                         }

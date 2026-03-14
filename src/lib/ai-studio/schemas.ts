@@ -16,6 +16,14 @@ export const analyzeRequestSchema = z.object({
   title: z.string().min(1).max(200),
 })
 
+export const videoCreateRequestSchema = z.object({
+  templateId: z.string().uuid(),
+  platform: z.enum(['tiktok', 'instagram', 'both']),
+  tone: z.enum(['clean_girl', 'luxury', 'friendly', 'expert', 'aspirational', 'funny']).optional(),
+  productId: z.string().uuid().optional(),
+  title: z.string().min(1).max(200),
+})
+
 // JSON schema for OpenAI structured output — post package
 export const postPackageJsonSchema = {
   name: 'post_package',

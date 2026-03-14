@@ -2,7 +2,7 @@ export interface AIStudioProject {
   id: string
   glow_girl_id: string
   title: string
-  type: 'generate' | 'analyze'
+  type: 'generate' | 'analyze' | 'video'
   platform: 'tiktok' | 'instagram' | 'both' | null
   goal: string | null
   product_id: string | null
@@ -31,11 +31,38 @@ export interface AIStudioAsset {
 export interface AIStudioOutput {
   id: string
   project_id: string
-  output_type: 'post_package' | 'analysis'
-  content: PostPackageResult | AnalysisResult
+  output_type: 'post_package' | 'analysis' | 'video_package'
+  content: PostPackageResult | AnalysisResult | VideoPackageResult
   model: string
   tokens_used: number | null
   created_at: string
+}
+
+// Video inspo template
+export interface VideoTemplate {
+  id: string
+  name: string
+  description: string | null
+  category: TemplateCategory
+  filming_instructions: string | null
+  example_url: string | null
+  thumbnail_url: string | null
+  platform: 'tiktok' | 'instagram' | 'both'
+  duration_hint: string | null
+  suggested_sound: string | null
+  active: boolean
+  sort_order: number
+  created_at: string
+}
+
+// Video content brief output
+export interface VideoPackageResult {
+  hook_text: string
+  body_text: string
+  cta_text: string
+  caption: string
+  hashtags: string[]
+  posting_steps: string[]
 }
 
 // Generate output shape
@@ -87,6 +114,7 @@ export interface AnalysisResult {
 export type Platform = 'tiktok' | 'instagram' | 'both'
 export type Goal = 'sell_product' | 'lifestyle' | 'before_after' | 'testimonial' | 'recruitment'
 export type Tone = 'clean_girl' | 'luxury' | 'friendly' | 'expert' | 'aspirational' | 'funny'
+export type TemplateCategory = 'grwm' | 'before_after' | 'product_spotlight' | 'testimonial'
 
 export const PLATFORM_OPTIONS: { value: Platform; label: string }[] = [
   { value: 'tiktok', label: 'TikTok' },

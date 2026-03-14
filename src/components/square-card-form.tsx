@@ -21,6 +21,8 @@ declare global {
   }
 }
 
+type SquareCard = Awaited<ReturnType<Awaited<ReturnType<NonNullable<typeof window.Square>['payments']>>['card']>>
+
 interface SquareCardFormProps {
   onTokenize: (token: string) => Promise<void>
   disabled?: boolean
@@ -36,47 +38,76 @@ const SCRIPT_URL =
     ? 'https://web.squarecdn.com/v1/square.js'
     : 'https://sandbox.web.squarecdn.com/v1/square.js'
 
+function loadSquareScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.Square) {
+      resolve()
+      return
+    }
+    const existing = document.querySelector(`script[src="${SCRIPT_URL}"]`) as HTMLScriptElement | null
+    if (existing) {
+      // Script tag exists but may still be loading
+      if (window.Square) {
+        resolve()
+      } else {
+        existing.addEventListener('load', () => resolve(), { once: true })
+        existing.addEventListener('error', () => reject(new Error('Failed to load Square')), { once: true })
+      }
+      return
+    }
+    const script = document.createElement('script')
+    script.src = SCRIPT_URL
+    script.addEventListener('load', () => resolve(), { once: true })
+    script.addEventListener('error', () => reject(new Error('Failed to load Square')), { once: true })
+    document.head.appendChild(script)
+  })
+}
+
+// Counter to generate unique IDs without useId (avoids hydration issues)
+let instanceCounter = 0
+
 export default function SquareCardForm({ onTokenize, disabled, buttonLabel = 'Subscribe' }: SquareCardFormProps) {
-  const cardRef = useRef<Awaited<ReturnType<Awaited<ReturnType<NonNullable<typeof window.Square>['payments']>>['card']>> | null>(null)
+  const cardRef = useRef<SquareCard | null>(null)
   const [ready, setReady] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const initRef = useRef(false)
+  const containerIdRef = useRef(`sq-card-${++instanceCounter}`)
 
   useEffect(() => {
-    if (initRef.current) return
-    initRef.current = true
+    let destroyed = false
 
-    const existing = document.querySelector(`script[src="${SCRIPT_URL}"]`)
-    if (existing) {
-      initCard()
-      return
-    }
-
-    const script = document.createElement('script')
-    script.src = SCRIPT_URL
-    script.onload = () => initCard()
-    script.onerror = () => setError('Failed to load payment form.')
-    document.head.appendChild(script)
-
-    async function initCard() {
+    async function init() {
       try {
+        await loadSquareScript()
+        if (destroyed) return
         if (!window.Square) {
           setError('Payment form unavailable.')
           return
         }
         const payments = await window.Square.payments(SQUARE_APP_ID, SQUARE_LOCATION_ID)
         const card = await payments.card()
-        await card.attach('#square-card-container')
+        if (destroyed) {
+          card.destroy().catch(() => {})
+          return
+        }
+        await card.attach(`#${containerIdRef.current}`)
+        if (destroyed) {
+          card.destroy().catch(() => {})
+          return
+        }
         cardRef.current = card
         setReady(true)
       } catch {
-        setError('Failed to initialize payment form.')
+        if (!destroyed) setError('Failed to initialize payment form.')
       }
     }
 
+    init()
+
     return () => {
+      destroyed = true
       cardRef.current?.destroy().catch(() => {})
+      cardRef.current = null
     }
   }, [])
 
@@ -101,7 +132,7 @@ export default function SquareCardForm({ onTokenize, disabled, buttonLabel = 'Su
   return (
     <div className="space-y-4">
       <div
-        id="square-card-container"
+        id={containerIdRef.current}
         className="min-h-[44px] rounded-xl overflow-hidden"
       />
 
