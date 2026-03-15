@@ -11,6 +11,7 @@ import {
   FileText,
   Sparkles,
   Users,
+  DollarSign,
   Menu,
   X,
 } from 'lucide-react'
@@ -27,6 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/glow-girl/products', label: 'Products', icon: <Package className="w-4 h-4" /> },
   { href: '/glow-girl/templates', label: 'Templates', icon: <FileText className="w-4 h-4" /> },
   { href: '/glow-girl/ai-studio', label: 'AI Studio', icon: <Sparkles className="w-4 h-4" /> },
+  { href: '/glow-girl/compensation', label: 'Compensation', icon: <DollarSign className="w-4 h-4" /> },
   { href: '/glow-girl/team', label: 'My Team', icon: <Users className="w-4 h-4" /> },
 ]
 

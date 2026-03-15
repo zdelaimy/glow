@@ -2,8 +2,6 @@
 
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CreateTab } from './create-tab'
-import { AnalyzeTab } from './analyze-tab'
 import { VideoTab } from './video-tab'
 import { HistoryTab } from './history-tab'
 import type { AIStudioProject, VideoTemplate } from '@/lib/ai-studio/types'
@@ -26,8 +24,6 @@ export function AIStudioTabs({ products, initialProjects, templates }: AIStudioT
       <TabsList className="bg-[#f5f0eb] border border-[#6E6A62]/10 rounded-full p-1 h-auto w-full flex">
         {[
           { value: 'video', label: 'Video', featured: true },
-          { value: 'create', label: 'Create' },
-          { value: 'analyze', label: 'Analyze' },
           { value: 'history', label: 'History' },
         ].map((tab) => (
           <TabsTrigger
@@ -50,14 +46,6 @@ export function AIStudioTabs({ products, initialProjects, templates }: AIStudioT
           products={products}
           onProjectCreated={handleProjectCreated}
         />
-      </TabsContent>
-
-      <TabsContent value="create">
-        <CreateTab products={products} onProjectCreated={handleProjectCreated} />
-      </TabsContent>
-
-      <TabsContent value="analyze">
-        <AnalyzeTab onProjectCreated={handleProjectCreated} />
       </TabsContent>
 
       <TabsContent value="history">
