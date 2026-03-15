@@ -6,9 +6,8 @@ import { useState } from 'react'
 import { SignOutButton } from '@/components/sign-out-button'
 import {
   LayoutDashboard,
-  Rocket,
+  ClipboardCheck,
   Package,
-  FileText,
   Megaphone,
   Users,
   DollarSign,
@@ -24,9 +23,8 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { href: '/glow-girl/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-  { href: '/glow-girl/journey', label: 'My Journey', icon: <Rocket className="w-4 h-4" /> },
+  { href: '/glow-girl/checklist', label: '10-Week Checklist', icon: <ClipboardCheck className="w-4 h-4" /> },
   { href: '/glow-girl/products', label: 'Products', icon: <Package className="w-4 h-4" /> },
-  { href: '/glow-girl/templates', label: 'Templates', icon: <FileText className="w-4 h-4" /> },
   { href: '/glow-girl/ai-studio', label: 'Marketing', icon: <Megaphone className="w-4 h-4" /> },
   { href: '/glow-girl/compensation', label: 'Compensation', icon: <DollarSign className="w-4 h-4" /> },
   { href: '/glow-girl/team', label: 'My Team', icon: <Users className="w-4 h-4" /> },
@@ -34,16 +32,11 @@ const NAV_ITEMS: NavItem[] = [
 
 interface GlowGirlSidebarProps {
   brandName: string
-  journeyProgress: { completed: number; total: number }
 }
 
-export function GlowGirlSidebar({ brandName, journeyProgress }: GlowGirlSidebarProps) {
+export function GlowGirlSidebar({ brandName }: GlowGirlSidebarProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
-
-  const progressPct = journeyProgress.total > 0
-    ? Math.round((journeyProgress.completed / journeyProgress.total) * 100)
-    : 0
 
   function isActive(href: string) {
     if (href === '/glow-girl/dashboard') return pathname === href
@@ -81,30 +74,6 @@ export function GlowGirlSidebar({ brandName, journeyProgress }: GlowGirlSidebarP
           )
         })}
       </nav>
-
-      {/* Journey Progress */}
-      <div className="px-4 pb-4">
-        <Link
-          href="/glow-girl/journey"
-          className="block rounded-xl bg-[#f5f0eb] p-4 hover:bg-[#ebe5dd] transition-colors"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-[#6E6A62]/70 uppercase tracking-wider">
-              10-Week Journey
-            </span>
-            <span className="text-xs font-medium text-[#6E6A62]">{progressPct}%</span>
-          </div>
-          <div className="h-1.5 bg-[#6E6A62]/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#6E6A62] rounded-full transition-all duration-500"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-          <p className="text-xs text-[#6E6A62]/50 mt-2">
-            {journeyProgress.completed} / {journeyProgress.total} lessons complete
-          </p>
-        </Link>
-      </div>
 
       {/* Sign out */}
       <div className="px-4 pb-6 border-t border-[#6E6A62]/10 pt-4">
