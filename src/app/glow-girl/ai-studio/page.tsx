@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireGlowGirl } from '@/lib/auth'
-import { AIStudioTabs } from './_components/ai-studio-tabs'
+import { MarketingTabs } from './_components/ai-studio-tabs'
 import type { AIStudioProject, VideoTemplate } from '@/lib/ai-studio/types'
 
-export default async function AIStudioPage() {
+export default async function MarketingPage() {
   const { glowGirl } = await requireGlowGirl()
   const supabase = await createClient()
 
@@ -31,7 +31,7 @@ export default async function AIStudioPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-      <AIStudioTabs
+      <MarketingTabs
         products={(products || []).map(p => ({ id: p.id, name: p.name }))}
         initialProjects={(projects || []) as AIStudioProject[]}
         templates={(templates || []) as VideoTemplate[]}

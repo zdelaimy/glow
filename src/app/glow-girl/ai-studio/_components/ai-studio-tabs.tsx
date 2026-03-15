@@ -4,15 +4,16 @@ import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { VideoTab } from './video-tab'
 import { HistoryTab } from './history-tab'
+import { WeeklyPlaybook } from './weekly-playbook'
 import type { AIStudioProject, VideoTemplate } from '@/lib/ai-studio/types'
 
-interface AIStudioTabsProps {
+interface MarketingTabsProps {
   products: { id: string; name: string }[]
   initialProjects: AIStudioProject[]
   templates: VideoTemplate[]
 }
 
-export function AIStudioTabs({ products, initialProjects, templates }: AIStudioTabsProps) {
+export function MarketingTabs({ products, initialProjects, templates }: MarketingTabsProps) {
   const [projects, setProjects] = useState<AIStudioProject[]>(initialProjects)
 
   const handleProjectCreated = (project: AIStudioProject) => {
@@ -20,10 +21,11 @@ export function AIStudioTabs({ products, initialProjects, templates }: AIStudioT
   }
 
   return (
-    <Tabs defaultValue="video" className="space-y-6">
+    <Tabs defaultValue="playbook" className="space-y-6">
       <TabsList className="bg-[#f5f0eb] border border-[#6E6A62]/10 rounded-full p-1 h-auto w-full flex">
         {[
-          { value: 'video', label: 'Video', featured: true },
+          { value: 'playbook', label: 'Weekly Playbook', featured: true },
+          { value: 'video', label: 'Video Scripts' },
           { value: 'history', label: 'History' },
         ].map((tab) => (
           <TabsTrigger
@@ -39,6 +41,10 @@ export function AIStudioTabs({ products, initialProjects, templates }: AIStudioT
           </TabsTrigger>
         ))}
       </TabsList>
+
+      <TabsContent value="playbook">
+        <WeeklyPlaybook />
+      </TabsContent>
 
       <TabsContent value="video">
         <VideoTab

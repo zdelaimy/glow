@@ -9,7 +9,7 @@ import {
   Rocket,
   Package,
   FileText,
-  Sparkles,
+  Megaphone,
   Users,
   DollarSign,
   Menu,
@@ -27,7 +27,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/glow-girl/journey', label: 'My Journey', icon: <Rocket className="w-4 h-4" /> },
   { href: '/glow-girl/products', label: 'Products', icon: <Package className="w-4 h-4" /> },
   { href: '/glow-girl/templates', label: 'Templates', icon: <FileText className="w-4 h-4" /> },
-  { href: '/glow-girl/ai-studio', label: 'AI Studio', icon: <Sparkles className="w-4 h-4" /> },
+  { href: '/glow-girl/ai-studio', label: 'Marketing', icon: <Megaphone className="w-4 h-4" /> },
   { href: '/glow-girl/compensation', label: 'Compensation', icon: <DollarSign className="w-4 h-4" /> },
   { href: '/glow-girl/team', label: 'My Team', icon: <Users className="w-4 h-4" /> },
 ]
