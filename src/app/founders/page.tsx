@@ -4,15 +4,13 @@ import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { LandingHeader } from '@/components/landing-header'
 import { Footer } from '@/components/footer'
-import { Crown, Users, TrendingUp, ArrowRight, Sparkles, ChevronDown } from 'lucide-react'
+import { Crown, Users, TrendingUp, ArrowRight, Sparkles, ChevronDown, ChevronUp, UserPlus } from 'lucide-react'
 import Link from 'next/link'
 
 /* ── comp plan constants ─────────────────────────────── */
 const SERUM_PRICE = 80 // Glow Serum — $80/unit
 const COMMISSION_RATE = 0.25
-const BRANCH_FACTOR = 2 // each person recruits 2 others
-
-const LEVELS = [
+const ALL_LEVELS = [
   { level: 1, rate: 0.10, label: '10%' },
   { level: 2, rate: 0.05, label: '5%' },
   { level: 3, rate: 0.04, label: '4%' },
@@ -107,9 +105,9 @@ function AnimatedNumber({ value, prefix = '$' }: { value: number; prefix?: strin
 }
 
 /* ── downline tree visualization ──────────────────────── */
-function DownlineTree({ recruits }: { recruits: number }) {
-  const levels = LEVELS.map((l, i) => {
-    const people = Math.round(recruits * Math.pow(BRANCH_FACTOR, i))
+function DownlineTree({ recruits, branchFactor, activeLevels }: { recruits: number; branchFactor: number; activeLevels: number }) {
+  const levels = ALL_LEVELS.slice(0, activeLevels).map((l, i) => {
+    const people = Math.round(recruits * Math.pow(branchFactor, i))
     return { ...l, people }
   })
 
@@ -259,13 +257,14 @@ export default function FoundersPage() {
   const [personalSales, setPersonalSales] = useState(20)
   const [directRecruits, setDirectRecruits] = useState(5)
   const [recruitSales, setRecruitSales] = useState(15)
-  const [totalGlowGirls, setTotalGlowGirls] = useState(500)
+  const [activeLevels, setActiveLevels] = useState(7)
+  const [branchFactor, setBranchFactor] = useState(2)
 
   const earnings = useMemo(() => {
     const personal = personalSales * SERUM_PRICE * COMMISSION_RATE
 
-    const levelEarnings = LEVELS.map((level, i) => {
-      const peopleAtLevel = Math.round(directRecruits * Math.pow(BRANCH_FACTOR, i))
+    const levelEarnings = ALL_LEVELS.slice(0, activeLevels).map((level, i) => {
+      const peopleAtLevel = Math.round(directRecruits * Math.pow(branchFactor, i))
       const levelSalesVolume = peopleAtLevel * recruitSales * SERUM_PRICE
       const override = levelSalesVolume * level.rate
       return {
@@ -278,14 +277,10 @@ export default function FoundersPage() {
 
     const totalOverrides = levelEarnings.reduce((sum, l) => sum + l.override, 0)
 
-    // Founder Revenue Pool: 2% of all company sales ÷ 10 founders
-    const companySales = totalGlowGirls * recruitSales * SERUM_PRICE
-    const founderPool = companySales * 0.02 / 10
+    const total = personal + totalOverrides
 
-    const total = personal + totalOverrides + founderPool
-
-    return { personal, levelEarnings, totalOverrides, founderPool, companySales, total }
-  }, [personalSales, directRecruits, recruitSales, totalGlowGirls])
+    return { personal, levelEarnings, totalOverrides, total }
+  }, [personalSales, directRecruits, recruitSales, activeLevels, branchFactor])
 
   return (
     <div className="min-h-screen bg-[#f5f0eb]">
@@ -364,13 +359,48 @@ export default function FoundersPage() {
                   <div className="flex items-center gap-2 bg-[#6E6A62]/[0.04] rounded-lg px-4 py-2.5 -mt-1 mb-2">
                     <Sparkles className="w-3.5 h-3.5 text-[#6E6A62]/50 flex-shrink-0" />
                     <p className="text-xs text-[#6E6A62]/60 font-inter">
-                      Each unit is the <span className="font-medium text-[#6E6A62]/80">Glow Serum — $80</span>. We assume <span className="font-medium text-[#6E6A62]/80">each person recruits 2 others</span>.
+                      Each unit is the <span className="font-medium text-[#6E6A62]/80">Glow Serum — $80</span>. Adjust levels and branching below.
                     </p>
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { label: 'Active levels', value: activeLevels, min: 4, max: 7, onChange: setActiveLevels, suffix: activeLevels === 1 ? 'level' : 'levels' },
+                      { label: 'Each person recruits', value: branchFactor, min: 2, max: 5, onChange: setBranchFactor, suffix: 'others' },
+                    ].map((item) => (
+                      <div key={item.label} className="space-y-2">
+                        <span className="text-xs uppercase tracking-[0.15em] text-[#6E6A62]/60 font-inter font-medium">
+                          {item.label}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col gap-0.5">
+                            <button
+                              onClick={() => item.value < item.max && item.onChange(item.value + 1)}
+                              disabled={item.value >= item.max}
+                              className="w-7 h-7 rounded-md bg-[#6E6A62]/[0.06] hover:bg-[#6E6A62]/[0.12] disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                            >
+                              <ChevronUp className="w-3.5 h-3.5 text-[#6E6A62]" />
+                            </button>
+                            <button
+                              onClick={() => item.value > item.min && item.onChange(item.value - 1)}
+                              disabled={item.value <= item.min}
+                              className="w-7 h-7 rounded-md bg-[#6E6A62]/[0.06] hover:bg-[#6E6A62]/[0.12] disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                            >
+                              <ChevronDown className="w-3.5 h-3.5 text-[#6E6A62]" />
+                            </button>
+                          </div>
+                          <div className="flex-1 text-center">
+                            <span className="text-2xl font-light text-[#6E6A62] tabular-nums">{item.value}</span>
+                            <span className="text-sm text-[#6E6A62]/40 ml-1">{item.suffix}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-[#6E6A62]/[0.06] pt-6" />
                   <PremiumSlider
                     label="Your personal sales"
                     value={personalSales}
-                    min={0}
+                    min={1}
                     max={100}
                     step={1}
                     suffix="units/mo"
@@ -379,7 +409,7 @@ export default function FoundersPage() {
                   <PremiumSlider
                     label="Direct recruits"
                     value={directRecruits}
-                    min={0}
+                    min={2}
                     max={20}
                     step={1}
                     suffix="people"
@@ -388,30 +418,13 @@ export default function FoundersPage() {
                   <PremiumSlider
                     label="Avg recruit sales"
                     value={recruitSales}
-                    min={0}
+                    min={1}
                     max={50}
                     step={1}
                     suffix="units/mo"
                     onChange={setRecruitSales}
                   />
 
-                  <div className="border-t border-[#6E6A62]/[0.06] pt-6">
-                    <div className="flex items-center gap-2 bg-[#6E6A62]/[0.04] rounded-lg px-4 py-2.5 mb-6">
-                      <Crown className="w-3.5 h-3.5 text-[#6E6A62]/50 flex-shrink-0" />
-                      <p className="text-xs text-[#6E6A62]/60 font-inter">
-                        <span className="font-medium text-[#6E6A62]/80">Founder Revenue Pool</span> — you earn 0.2% of all company-wide sales (2% ÷ 10 founders).
-                      </p>
-                    </div>
-                    <PremiumSlider
-                      label="Total Glow Girls company-wide"
-                      value={totalGlowGirls}
-                      min={10}
-                      max={20000}
-                      step={10}
-                      suffix="sellers"
-                      onChange={setTotalGlowGirls}
-                    />
-                  </div>
                 </div>
 
                 {/* Breakdown */}
@@ -458,26 +471,6 @@ export default function FoundersPage() {
                     </div>
                   ))}
 
-                  {/* Founder Revenue Pool */}
-                  <div className="py-3 mt-2 bg-[#6E6A62]/[0.04] rounded-lg px-4 -mx-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-[#6E6A62]/10 flex items-center justify-center">
-                          <Crown className="w-2.5 h-2.5 text-[#6E6A62]/70" />
-                        </span>
-                        <span className="text-sm text-[#6E6A62] font-medium">
-                          Founder revenue pool
-                        </span>
-                      </div>
-                      <span className="text-sm text-[#6E6A62] font-medium tabular-nums">
-                        {formatMoneyFull(earnings.founderPool)}/mo
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#6E6A62]/40 font-inter mt-1 pl-7">
-                      0.2% × {totalGlowGirls.toLocaleString()} sellers × {recruitSales} units × $80/unit = 0.2% of {formatMoneyFull(earnings.companySales)}/mo
-                    </p>
-                  </div>
-
                   {/* Total */}
                   <div className="mt-4 pt-4 border-t border-[#6E6A62]/15 flex items-center justify-between">
                     <span className="text-sm font-medium text-[#6E6A62]">Total</span>
@@ -490,12 +483,118 @@ export default function FoundersPage() {
 
               {/* Right — Downline Tree */}
               <div className="bg-white rounded-2xl border border-[#6E6A62]/[0.06] p-6 md:p-8 lg:sticky lg:top-24">
+                {/* Organic placement callout */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="rounded-xl bg-[#6E6A62]/[0.04] border border-dashed border-[#6E6A62]/15 p-5 mb-6"
+                >
+                  <div className="flex items-start gap-3">
+                    <motion.div
+                      animate={{ scale: [1, 1.15, 1] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                      className="w-8 h-8 rounded-full bg-[#6E6A62]/10 flex items-center justify-center flex-shrink-0 mt-0.5"
+                    >
+                      <UserPlus className="w-3.5 h-3.5 text-[#6E6A62]/60" />
+                    </motion.div>
+                    <div>
+                      <p className="text-sm font-medium text-[#6E6A62] leading-snug">
+                        Your network fills automatically
+                      </p>
+                      <p className="text-xs text-[#6E6A62]/50 leading-relaxed mt-1.5">
+                        When a new creator joins Glow without a referrer, they&apos;re placed under the founding layer.
+                        Every organic sign-up grows <span className="font-medium text-[#6E6A62]/70">your</span> downline — no recruiting needed.
+                      </p>
+                      <p className="text-sm uppercase tracking-[0.15em] text-[#6E6A62] font-inter font-bold mt-3">
+                        The earlier you join, the more you capture
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+
                 <h3 className="text-xs uppercase tracking-[0.2em] text-[#6E6A62]/50 font-inter font-medium mb-6 text-center">
                   Your Downline Network
                 </h3>
-                <DownlineTree recruits={directRecruits} />
+                <DownlineTree recruits={directRecruits} branchFactor={branchFactor} activeLevels={activeLevels} />
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ── Commission Table ── */}
+        <section className="pb-24 md:pb-32">
+          <div className="max-w-3xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <p className="text-xs uppercase tracking-[0.25em] text-[#6E6A62]/50 mb-3 font-inter">
+                How You Get Paid
+              </p>
+              <h2 className="text-3xl md:text-4xl text-[#6E6A62] font-light">
+                Your commission at <span className="italic">every</span> level
+              </h2>
+              <p className="text-sm text-[#6E6A62]/50 mt-3 max-w-lg mx-auto">
+                You earn a percentage every time someone in your network makes a sale.
+                The deeper your network, the more you earn.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#6E6A62]/[0.06] overflow-hidden">
+              {/* Header */}
+              <div className="grid grid-cols-3 bg-[#6E6A62] text-white px-6 py-4">
+                <span className="text-sm font-inter font-semibold">Level</span>
+                <span className="text-sm font-inter font-semibold text-center">You Earn</span>
+                <span className="text-sm font-inter font-semibold text-right">What This Means</span>
+              </div>
+
+              {/* Personal row */}
+              <div className="grid grid-cols-3 items-center px-6 py-4 bg-[#6E6A62]/[0.04] border-b border-[#6E6A62]/[0.06]">
+                <div>
+                  <span className="text-base font-semibold text-[#6E6A62]">You</span>
+                </div>
+                <div className="text-center">
+                  <span className="text-2xl font-bold text-[#6E6A62]">25%</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm text-[#6E6A62]/60">Your own sales</span>
+                </div>
+              </div>
+
+              {/* Level rows */}
+              {ALL_LEVELS.map((level, i) => (
+                <div
+                  key={level.level}
+                  className={`grid grid-cols-3 items-center px-6 py-4 border-b border-[#6E6A62]/[0.06] last:border-0 ${
+                    i % 2 === 0 ? '' : 'bg-[#6E6A62]/[0.02]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-full bg-[#6E6A62]/[0.08] flex items-center justify-center text-sm font-bold text-[#6E6A62] font-inter">
+                      {level.level}
+                    </span>
+                    <span className="text-sm font-medium text-[#6E6A62]">
+                      Level {level.level}
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-2xl font-bold text-[#6E6A62]">{level.label}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm text-[#6E6A62]/60">
+                      {level.level === 1
+                        ? 'People you recruit'
+                        : level.level === 2
+                        ? 'Their recruits'
+                        : `${level.level} layers below you`}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-center text-sm text-[#6E6A62]/50 mt-6 max-w-md mx-auto leading-relaxed">
+              <span className="font-semibold text-[#6E6A62]/70">Example:</span> Someone 3 levels below you sells a $80 serum.
+              You automatically earn <span className="font-semibold text-[#6E6A62]/70">$3.20</span> (4%) — without doing anything.
+            </p>
           </div>
         </section>
 
@@ -527,9 +626,9 @@ export default function FoundersPage() {
                 },
                 {
                   icon: TrendingUp,
-                  title: '0.2% of everything',
+                  title: 'Automatic growth',
                   description:
-                    'Founders split 2% of all company-wide sales — every serum sold by every Glow Girl. As the network grows, this becomes your biggest income stream. And it\'s only available to the first 10.',
+                    'When new creators join Glow without a referrer, they\'re placed under the founding layer. Your network grows organically — even when you\'re not actively recruiting.',
                 },
               ].map((item, i) => (
                 <motion.div
@@ -559,9 +658,9 @@ export default function FoundersPage() {
               <h3 className="text-xl md:text-2xl font-light mb-6 text-center">
                 The math speaks for itself
               </h3>
-              <div className="grid grid-cols-4 md:grid-cols-8 gap-3 mb-8">
-                {['You', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'].map((label, i) => {
-                  const people = i === 0 ? 1 : Math.round(3 * Math.pow(2, i - 1))
+              <div className={`grid grid-cols-4 ${activeLevels <= 4 ? 'md:grid-cols-' + (activeLevels + 1) : 'md:grid-cols-8'} gap-3 mb-8`}>
+                {['You', ...Array.from({ length: activeLevels }, (_, i) => `L${i + 1}`)].map((label, i) => {
+                  const people = i === 0 ? 1 : Math.round(directRecruits * Math.pow(branchFactor, i - 1))
                   return (
                     <div key={label} className="text-center">
                       <div className={`text-lg md:text-2xl font-light mb-1 ${i === 0 ? 'text-white' : 'text-white/80'}`}>
@@ -576,10 +675,10 @@ export default function FoundersPage() {
               </div>
               <div className="text-center border-t border-white/10 pt-6">
                 <p className="text-white/50 text-sm font-inter mb-2">
-                  With just 3 personal recruits — each person recruits 2 more:
+                  With {directRecruits} personal recruit{directRecruits !== 1 ? 's' : ''} — each person recruits {branchFactor} more:
                 </p>
                 <p className="text-3xl md:text-4xl font-light">
-                  381 people <span className="text-white/40 text-lg">in your downline</span>
+                  {Array.from({ length: activeLevels }, (_, i) => Math.round(directRecruits * Math.pow(branchFactor, i))).reduce((a, b) => a + b, 0).toLocaleString()} people <span className="text-white/40 text-lg">in your downline</span>
                 </p>
               </div>
             </motion.div>

@@ -29,7 +29,7 @@ export const glowGirlSlides = [
   {
     src: "/hero/videos/first.mp4",
     alt: "Woman applying skincare",
-    headline: "Your glow. Your empire.",
+    headline: "Start making money by believing in yourself.",
     subtitle: "Turn the products you already love into a business that pays you back.",
   },
   {
