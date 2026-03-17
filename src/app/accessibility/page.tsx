@@ -31,7 +31,7 @@ export default function AccessibilityPage() {
           <p>While we strive for full accessibility, some content may not yet be fully accessible. We are actively working to identify and resolve any issues. User-generated content, such as Glow Girl storefronts, may not always meet all accessibility standards.</p>
 
           <h2 className="text-lg font-semibold text-[#6E6A62] pt-4">Feedback</h2>
-          <p>We welcome your feedback on the accessibility of our website. If you encounter any barriers or have suggestions for improvement, please contact us at <a href="mailto:team@glowlabs.nyc" className="underline hover:text-[#6E6A62]">team@glowlabs.nyc</a>. We will make reasonable efforts to address your concerns promptly.</p>
+          <p>We welcome your feedback on the accessibility of our website. If you encounter any barriers or have suggestions for improvement, please contact us at <a href="mailto:team@joinglowlabs.com" className="underline hover:text-[#6E6A62]">team@joinglowlabs.com</a>. We will make reasonable efforts to address your concerns promptly.</p>
         </div>
       </div>
       <Footer />

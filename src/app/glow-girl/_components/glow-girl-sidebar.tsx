@@ -47,8 +47,8 @@ export function GlowGirlSidebar({ brandName }: GlowGirlSidebarProps) {
     <div className="flex flex-col h-full">
       {/* Logo & Brand */}
       <div className="px-5 py-6 border-b border-[#6E6A62]/10">
-        <Link href="/" className="text-lg tracking-[0.2em] text-[#6E6A62] font-medium">
-          GLOW
+        <Link href="/" className="text-2xl tracking-tight text-[#6E6A62] font-serif">
+          Glow
         </Link>
         <p className="text-sm text-[#6E6A62]/60 mt-1 truncate">{brandName}</p>
       </div>
@@ -91,8 +91,8 @@ export function GlowGirlSidebar({ brandName }: GlowGirlSidebarProps) {
 
       {/* Mobile header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-[#6E6A62]/10 z-40 px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="text-lg tracking-[0.2em] text-[#6E6A62] font-medium">
-          GLOW
+        <Link href="/" className="text-2xl tracking-tight text-[#6E6A62] font-serif">
+          Glow
         </Link>
         <button
           type="button"

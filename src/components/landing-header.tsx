@@ -37,8 +37,8 @@ export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/s
   }, [])
 
   // hero: transparent at top, solid on scroll (for pages with dark hero images)
-  // light: solid at top, transparent on scroll (for pages with white backgrounds)
-  const showSolid = variant === "hero" ? scrolled : !scrolled
+  // light: always solid (for pages with white backgrounds)
+  const showSolid = variant === "hero" ? scrolled : true
 
   return (
     <header
@@ -54,7 +54,7 @@ export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/s
         <Link href="/" className="flex items-center">
           <span
             className={cn(
-              "font-inter text-[2rem] tracking-tight transition-colors duration-300 leading-none font-medium",
+              "font-serif text-[2rem] tracking-tight transition-colors duration-300 leading-none",
               showSolid
                 ? "text-[#6E6A62]"
                 : "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"

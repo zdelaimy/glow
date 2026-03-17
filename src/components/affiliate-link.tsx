@@ -6,7 +6,7 @@ import { Copy, Check } from 'lucide-react'
 export function AffiliateLink({ slug }: { slug: string }) {
   const [copied, setCopied] = useState(false)
 
-  const affiliateUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://glowlabs.nyc'}/shop?ref=${slug}`
+  const affiliateUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://joinglowlabs.com'}/shop?ref=${slug}`
 
   function handleCopy() {
     navigator.clipboard.writeText(affiliateUrl)

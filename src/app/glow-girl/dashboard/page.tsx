@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { requireGlowGirl } from '@/lib/auth'
 import { ReferralShare } from '@/components/referral-share'
 import { AffiliateLink } from '@/components/affiliate-link'
+import { ConnectLink } from '@/components/connect-link'
+import { CalendlySetting } from '@/components/calendly-setting'
+import { ConnectBioEditor } from '@/components/connect-bio-editor'
 
 export default async function GlowGirlDashboard() {
   const { glowGirl } = await requireGlowGirl()
@@ -66,15 +69,21 @@ export default async function GlowGirlDashboard() {
             ))}
           </div>
 
+          <ReferralShare referralCode={glowGirl.referral_code} />
           <AffiliateLink slug={glowGirl.slug} />
+          <ConnectLink slug={glowGirl.slug} />
+          <ConnectBioEditor
+            glowGirlId={glowGirl.id}
+            initialHeadline={glowGirl.connect_headline}
+            initialBio={glowGirl.connect_bio}
+            initialPhotoUrl={glowGirl.connect_photo_url}
+          />
+          <CalendlySetting glowGirlId={glowGirl.id} initialUrl={glowGirl.calendly_url} />
 
           <div>
             <h2 className="text-xl font-light text-[#6E6A62] mb-4">Recent Orders</h2>
             <OrdersList glowGirlId={glowGirl.id} />
           </div>
-
-          {/* Referrals */}
-          <ReferralShare referralCode={glowGirl.referral_code} />
 
           <div className="bg-white rounded-2xl border border-neutral-200/60">
             <div className="px-6 py-4 border-b border-neutral-200/60">

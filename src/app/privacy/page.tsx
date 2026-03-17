@@ -36,7 +36,7 @@ const sections = [
   {
     title: "6. Your Rights",
     content: [
-      "Depending on your jurisdiction, you may have rights to access, correct, delete, or port your personal data. To exercise any of these rights, please contact us at team@glowlabs.nyc.",
+      "Depending on your jurisdiction, you may have rights to access, correct, delete, or port your personal data. To exercise any of these rights, please contact us at team@joinglowlabs.com.",
     ],
   },
   {
@@ -54,7 +54,7 @@ const sections = [
   {
     title: "9. Contact Us",
     content: [
-      "If you have questions about this Privacy Policy, please contact us at team@glowlabs.nyc.",
+      "If you have questions about this Privacy Policy, please contact us at team@joinglowlabs.com.",
     ],
   },
 ]
@@ -114,8 +114,8 @@ export default function PrivacyPage() {
         <div className="mt-10 text-center">
           <p className="text-xs text-[#6E6A62]/40 font-inter">
             Questions? Reach us at{" "}
-            <a href="mailto:team@glowlabs.nyc" className="text-[#6E6A62] underline underline-offset-2 hover:text-[#5E5A52] transition-colors">
-              team@glowlabs.nyc
+            <a href="mailto:team@joinglowlabs.com" className="text-[#6E6A62] underline underline-offset-2 hover:text-[#5E5A52] transition-colors">
+              team@joinglowlabs.com
             </a>
           </p>
         </div>

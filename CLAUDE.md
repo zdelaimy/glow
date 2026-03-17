@@ -6,6 +6,12 @@ Glow Beauty is a B2B2C e-commerce platform for curated premium makeup & skincare
 
 **Do NOT call this an MLM.** Use "ambassador program" or "creator partnership." Lead with product, not recruitment.
 
+## Domain
+
+- **Production URL:** `https://joinglowlabs.com`
+- **Email:** `team@joinglowlabs.com`
+- **Old domain:** `glowlabs.nyc` — **deprecated**, do NOT use in new code
+
 ## Tech Stack
 
 - **Framework:** Next.js 14 (App Router, Server Components, Server Actions)

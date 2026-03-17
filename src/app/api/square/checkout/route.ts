@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://glowlabs.nyc'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://joinglowlabs.com'
     const square = getSquareClient()
 
     const response = await square.checkout.paymentLinks.create({

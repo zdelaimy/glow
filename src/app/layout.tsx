@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import localFont from "next/font/local"
-import { Inter } from "next/font/google"
+import { Inter, Instrument_Serif } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { CartProvider } from "@/contexts/cart-context"
@@ -20,10 +20,15 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 })
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-instrument-serif",
+})
 
 export const metadata: Metadata = {
-  title: "Glow — Custom Serums by Glow Girls",
-  description: "Discover your perfect custom serum, designed by your favorite Glow Girls.",
+  title: "Glow — Premium Beauty by Glow Girls",
+  description: "Curated premium skincare and beauty essentials. Shop the collection or become a Glow Girl.",
 }
 
 export default function RootLayout({
@@ -33,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} font-sans antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${instrumentSerif.variable} font-sans antialiased`}>
         <CartProvider>
           {children}
           <CartDrawer />

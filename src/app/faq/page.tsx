@@ -41,7 +41,7 @@ export default function FAQPage() {
             },
             {
               q: "How do I contact support?",
-              a: "You can reach our team at team@glowlabs.nyc or use the support form in the footer of our website. We're available Monday through Friday, 9am to 5pm PST.",
+              a: "You can reach our team at team@joinglowlabs.com or use the support form in the footer of our website. We're available Monday through Friday, 9am to 5pm PST.",
             },
           ].map((item, i) => (
             <div key={i}>

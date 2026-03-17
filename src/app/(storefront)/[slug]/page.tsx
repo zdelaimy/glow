@@ -59,6 +59,16 @@ export default async function GlowGirlStorefront({ params }: Props) {
             </p>
           </div>
 
+          {/* Connect CTA */}
+          <div className="text-center mb-14">
+            <Link
+              href={`/${slug}/connect`}
+              className="inline-flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-[0.12em] font-medium text-[#6E6A62] border border-[#6E6A62]/20 rounded-full hover:bg-[#6E6A62] hover:text-white transition-colors"
+            >
+              Connect with {g.brand_name || 'me'}
+            </Link>
+          </div>
+
           {/* Product grid */}
           {products && products.length > 0 ? (
             <div className="grid sm:grid-cols-3 gap-6 md:gap-8">

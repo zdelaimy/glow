@@ -46,6 +46,12 @@ html {
   overflow-y: scroll;
 }
 
+@layer base {
+  h1, h2, h3 {
+    font-family: var(--font-instrument-serif), Georgia, serif;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

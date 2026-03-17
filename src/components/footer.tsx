@@ -35,7 +35,7 @@ export function Footer() {
         {/* GLOW LABS logo — aligned with content columns */}
         <div className="pt-12 pb-4">
           <h2
-            className="text-[17vw] sm:text-[20vw] md:text-[23.2vw] lg:text-[19.3vw] xl:text-[17.3rem] leading-[0.85] tracking-tight text-[#6E6A62] text-center select-none whitespace-nowrap w-full"
+            className="font-serif text-[17vw] sm:text-[20vw] md:text-[23.2vw] lg:text-[19.3vw] xl:text-[17.3rem] leading-[0.85] tracking-tight text-[#6E6A62] text-center select-none whitespace-nowrap w-full"
             aria-hidden="true"
           >
             Glow Labs
@@ -60,7 +60,8 @@ export function Footer() {
               </h4>
               <ul className="space-y-2.5">
                 {[
-                  { label: "Shop", href: "/shop" },
+                  { label: "Shop", href: "/" },
+                  { label: "Become a Glow Girl", href: "/become-a-glow-girl" },
                   { label: "Our Story", href: "/about" },
                 ].map((link) => (
                   <li key={link.href}>

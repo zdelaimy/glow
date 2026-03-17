@@ -28,8 +28,33 @@ export interface GlowGirl {
   selected_product_ids: string[]
   tax_id_last4: string | null
   tax_id_submitted_at: string | null
+  calendly_url: string | null
+  connect_bio: string | null
+  connect_headline: string | null
+  connect_photo_url: string | null
   created_at: string
   updated_at: string
+}
+
+export type LeadInterest = 'become_glow_girl' | 'products' | 'general'
+export type LeadStatus = 'NEW' | 'CONTACTED' | 'CONVERTED'
+
+export interface Lead {
+  id: string
+  glow_girl_id: string
+  full_name: string
+  email: string
+  phone: string | null
+  instagram_handle: string | null
+  location: string | null
+  income_goal: string | null
+  message: string | null
+  interest: LeadInterest
+  status: LeadStatus
+  created_at: string
+  updated_at: string
+  // Joined
+  glow_girl?: GlowGirl
 }
 
 export interface BaseFormula {

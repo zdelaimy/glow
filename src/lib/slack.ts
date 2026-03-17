@@ -205,6 +205,87 @@ async function inviteToWorkspace(email: string): Promise<boolean> {
 }
 
 /**
+ * Send a Slack notification when a new lead is submitted.
+ * Posts to the Glow Girl's pod channel if available, otherwise to orders channel.
+ */
+export async function notifyNewLead({
+  glowGirlName,
+  slackChannelId,
+  leadName,
+  leadEmail,
+  leadPhone,
+  leadInstagram,
+  leadLocation,
+  leadIncomeGoal,
+  interest,
+  message,
+}: {
+  glowGirlName: string
+  slackChannelId: string | null
+  leadName: string
+  leadEmail: string
+  leadPhone: string | null
+  leadInstagram: string | null
+  leadLocation: string | null
+  leadIncomeGoal: string | null
+  interest: string
+  message: string | null
+}) {
+  const channel = slackChannelId || process.env.SLACK_ORDERS_CHANNEL || '#orders'
+
+  const interestLabel =
+    interest === 'become_glow_girl' ? 'Become a Glow Girl' :
+    interest === 'products' ? 'Shop Products' : 'General Interest'
+
+  const fields = [
+    { type: 'mrkdwn' as const, text: `*Name:*\n${leadName}` },
+    { type: 'mrkdwn' as const, text: `*Email:*\n${leadEmail}` },
+    { type: 'mrkdwn' as const, text: `*Interest:*\n${interestLabel}` },
+  ]
+
+  if (leadPhone) {
+    fields.push({ type: 'mrkdwn', text: `*Phone:*\n${leadPhone}` })
+  }
+
+  if (leadInstagram) {
+    fields.push({ type: 'mrkdwn', text: `*Instagram:*\n${leadInstagram}` })
+  }
+
+  if (leadLocation) {
+    fields.push({ type: 'mrkdwn', text: `*Location:*\n${leadLocation}` })
+  }
+
+  if (leadIncomeGoal) {
+    fields.push({ type: 'mrkdwn', text: `*Income Goal:*\n${leadIncomeGoal}` })
+  }
+
+  if (message) {
+    fields.push({ type: 'mrkdwn', text: `*Message:*\n${message}` })
+  }
+
+  await slackApi('chat.postMessage', {
+    channel,
+    text: `New lead for ${glowGirlName}: ${leadName} (${interestLabel})`,
+    blocks: [
+      {
+        type: 'header',
+        text: { type: 'plain_text', text: 'New Lead', emoji: true },
+      },
+      {
+        type: 'section',
+        fields,
+      },
+      {
+        type: 'context',
+        elements: [
+          { type: 'mrkdwn', text: `Submitted to *${glowGirlName}*'s connect form` },
+        ],
+      },
+    ],
+  })
+}
+
+/**
  * Full onboarding flow when a Glow Girl is approved:
  * 1. Invite her to the Slack workspace (if not already a member)
  * 2. Create her "Glow Babes" channel
