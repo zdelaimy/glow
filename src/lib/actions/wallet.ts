@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import type { PayoutMethod } from '@/types/database'
 
 export async function submitTaxId(glowGirlId: string, ssn: string) {
   if (!/^\d{9}$/.test(ssn)) {
@@ -26,99 +27,66 @@ export async function submitTaxId(glowGirlId: string, ssn: string) {
   return { success: true, last4 }
 }
 
-export async function requestWithdrawal(glowGirlId: string, amountCents: number) {
-  if (amountCents <= 0) {
-    return { error: 'Invalid withdrawal amount.' }
+export async function submitPayoutMethod(
+  glowGirlId: string,
+  data:
+    | { method: 'paypal'; handle: string }
+    | { method: 'venmo'; handle: string }
+    | { method: 'zelle'; handle: string }
+    | { method: 'direct_deposit'; accountHolderName: string; routingNumber: string; accountNumber: string; accountType: 'checking' | 'savings' }
+) {
+  if (data.method === 'direct_deposit') {
+    if (!/^\d{9}$/.test(data.routingNumber)) {
+      return { error: 'Please enter a valid 9-digit routing number.' }
+    }
+    if (data.accountNumber.length < 4 || data.accountNumber.length > 17) {
+      return { error: 'Please enter a valid account number.' }
+    }
+    if (!data.accountHolderName.trim()) {
+      return { error: 'Please enter the account holder name.' }
+    }
+  } else {
+    if (!data.handle.trim()) {
+      return { error: `Please enter your ${data.method === 'paypal' ? 'PayPal email' : data.method === 'venmo' ? 'Venmo username' : 'Zelle email or phone'}.` }
+    }
   }
 
   const supabase = await createClient()
 
-  // Verify the glow girl has submitted their SSN
-  const { data: gg } = await supabase
-    .from('glow_girls')
-    .select('tax_id_last4, tax_id_submitted_at')
-    .eq('id', glowGirlId)
-    .single()
-
-  if (!gg?.tax_id_last4) {
-    return { error: 'You must submit your Social Security Number before withdrawing.' }
+  const row: Record<string, unknown> = {
+    glow_girl_id: glowGirlId,
+    method: data.method,
+    handle: null,
+    account_holder_name: null,
+    routing_number: null,
+    account_number_last4: null,
+    account_type: null,
+    updated_at: new Date().toISOString(),
   }
 
-  // Calculate available balance (approved commissions + bonuses - already paid/pending withdrawals)
-  const { data: approvedCommissions } = await supabase
-    .from('commissions')
-    .select('amount_cents')
-    .eq('glow_girl_id', glowGirlId)
-    .eq('status', 'APPROVED')
-
-  const { data: approvedBonuses } = await supabase
-    .from('bonuses')
-    .select('amount_cents')
-    .eq('glow_girl_id', glowGirlId)
-
-  const totalEarned = (approvedCommissions || []).reduce((s, c) => s + c.amount_cents, 0) +
-    (approvedBonuses || []).reduce((s, b) => s + b.amount_cents, 0)
-
-  // Subtract already withdrawn/pending withdrawals
-  const { data: existingWithdrawals } = await supabase
-    .from('withdrawal_requests')
-    .select('amount_cents')
-    .eq('glow_girl_id', glowGirlId)
-    .in('status', ['PENDING', 'APPROVED', 'PAID'])
-
-  const totalWithdrawn = (existingWithdrawals || []).reduce((s, w) => s + w.amount_cents, 0)
-  const availableBalance = totalEarned - totalWithdrawn
-
-  if (amountCents > availableBalance) {
-    return { error: `Insufficient balance. Available: $${(availableBalance / 100).toFixed(2)}` }
+  if (data.method === 'direct_deposit') {
+    row.account_holder_name = data.accountHolderName.trim()
+    row.routing_number = data.routingNumber
+    row.account_number_last4 = data.accountNumber.slice(-4)
+    row.account_type = data.accountType
+  } else {
+    row.handle = data.handle.trim()
   }
 
   const { error } = await supabase
-    .from('withdrawal_requests')
-    .insert({
-      glow_girl_id: glowGirlId,
-      amount_cents: amountCents,
-    })
+    .from('glow_girl_payout_methods')
+    .upsert(row, { onConflict: 'glow_girl_id' })
 
   if (error) {
-    console.error('Failed to create withdrawal request:', error)
-    return { error: 'Failed to submit withdrawal request.' }
+    console.error('Failed to save payout method:', error)
+    return { error: 'Failed to save. Please try again.' }
   }
 
   return { success: true }
 }
 
-export async function getWalletData(glowGirlId: string) {
+export async function getPayoutData(glowGirlId: string) {
   const supabase = await createClient()
-
-  // Approved commissions (available to withdraw)
-  const { data: approvedCommissions } = await supabase
-    .from('commissions')
-    .select('amount_cents')
-    .eq('glow_girl_id', glowGirlId)
-    .eq('status', 'APPROVED')
-
-  const { data: approvedBonuses } = await supabase
-    .from('bonuses')
-    .select('amount_cents')
-    .eq('glow_girl_id', glowGirlId)
-
-  const totalEarned = (approvedCommissions || []).reduce((s, c) => s + c.amount_cents, 0) +
-    (approvedBonuses || []).reduce((s, b) => s + b.amount_cents, 0)
-
-  // Subtract withdrawals
-  const { data: withdrawals } = await supabase
-    .from('withdrawal_requests')
-    .select('amount_cents, status')
-    .eq('glow_girl_id', glowGirlId)
-    .in('status', ['PENDING', 'APPROVED', 'PAID'])
-
-  const totalWithdrawn = (withdrawals || []).reduce((s, w) => s + w.amount_cents, 0)
-  const pendingWithdrawals = (withdrawals || [])
-    .filter(w => w.status === 'PENDING')
-    .reduce((s, w) => s + w.amount_cents, 0)
-
-  const availableBalance = totalEarned - totalWithdrawn
 
   // Check if SSN is on file
   const { data: gg } = await supabase
@@ -127,20 +95,56 @@ export async function getWalletData(glowGirlId: string) {
     .eq('id', glowGirlId)
     .single()
 
-  // Recent withdrawal requests
-  const { data: recentWithdrawals } = await supabase
-    .from('withdrawal_requests')
+  // Check payout method
+  const { data: payoutMethod } = await supabase
+    .from('glow_girl_payout_methods')
     .select('*')
     .eq('glow_girl_id', glowGirlId)
-    .order('created_at', { ascending: false })
-    .limit(5)
+    .single()
+
+  // Current month's accrued commissions
+  const currentPeriod = new Date().toISOString().slice(0, 7)
+  const { data: monthCommissions } = await supabase
+    .from('commissions')
+    .select('amount_cents, status')
+    .eq('glow_girl_id', glowGirlId)
+    .eq('period', currentPeriod)
+    .neq('status', 'CANCELLED')
+
+  const approvedThisMonth = (monthCommissions || [])
+    .filter(c => c.status === 'APPROVED')
+    .reduce((s, c) => s + c.amount_cents, 0)
+
+  const pendingThisMonth = (monthCommissions || [])
+    .filter(c => c.status === 'PENDING')
+    .reduce((s, c) => s + c.amount_cents, 0)
+
+  // Past payouts
+  const { data: payoutHistory } = await supabase
+    .from('payouts')
+    .select('*')
+    .eq('glow_girl_id', glowGirlId)
+    .order('period', { ascending: false })
+    .limit(12)
+
+  // Next payout date: 1st of next month
+  const now = new Date()
+  const nextPayoutDate = new Date(now.getFullYear(), now.getMonth() + 1, 1)
 
   return {
-    availableBalanceCents: availableBalance,
-    pendingWithdrawalCents: pendingWithdrawals,
-    totalEarnedCents: totalEarned,
     hasTaxId: !!gg?.tax_id_last4,
     taxIdLast4: gg?.tax_id_last4 || null,
-    recentWithdrawals: recentWithdrawals || [],
+    payoutMethod: payoutMethod as {
+      method: PayoutMethod
+      handle: string | null
+      account_holder_name: string | null
+      account_number_last4: string | null
+      account_type: string | null
+    } | null,
+    estimatedPayoutCents: approvedThisMonth + pendingThisMonth,
+    approvedCents: approvedThisMonth,
+    pendingCents: pendingThisMonth,
+    nextPayoutDate: nextPayoutDate.toISOString(),
+    payoutHistory: payoutHistory || [],
   }
 }

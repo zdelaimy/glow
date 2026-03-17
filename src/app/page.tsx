@@ -179,8 +179,8 @@ export default function HomePage() {
       <LandingHeader variant="light" ctaHref="/become-a-glow-girl" ctaLabel="Become a Glow Girl" />
 
       {/* ── Trust Marquee (fixed below header) ───────── */}
-      <div className="fixed top-[72px] left-0 right-0 z-40 bg-[#faf8f5] border-b border-neutral-100 h-8 flex items-center overflow-hidden whitespace-nowrap">
-        <div className="inline-flex items-center animate-[marquee_30s_linear_infinite]">
+      <div className="fixed top-[72px] left-0 right-0 z-40 bg-[#faf8f5] border-b border-neutral-100 py-[9px] overflow-hidden whitespace-nowrap">
+        <div className="inline-flex animate-[marquee_30s_linear_infinite]">
           {[...Array(3)].map((_, i) => (
             <span key={i} className="text-[10px] uppercase tracking-[0.18em] text-[#6E6A62]/70 font-medium font-inter leading-none">
               Dermatologist Tested&ensp;&bull;&ensp;Clinically Proven&ensp;&bull;&ensp;Paraben-Free&ensp;&bull;&ensp;Sulfate-Free&ensp;&bull;&ensp;Cruelty-Free&ensp;&bull;&ensp;Vegan&ensp;&bull;&ensp;Award Winning&ensp;&bull;&ensp;Backed by Science&ensp;&bull;&ensp;
@@ -190,7 +190,7 @@ export default function HomePage() {
       </div>
 
       {/* ── Hero PDP Section ─────────────────────────── */}
-      <section className="pt-[108px] md:pt-[112px] pb-16 md:pb-24">
+      <section className="pt-[130px] md:pt-[140px] pb-16 md:pb-24">
         <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start">
           {/* Left — Stacked scrollable images */}
           <div>
@@ -198,7 +198,7 @@ export default function HomePage() {
           </div>
 
           {/* Right — Product info (sticky) */}
-          <div className="md:sticky md:top-[112px] md:self-start space-y-6 px-6 md:pr-10 md:pl-2 pt-6 md:pt-0">
+          <div className="md:sticky md:top-[112px] md:self-start space-y-6 px-6 md:pr-10 md:pl-2 pt-6 md:pt-6">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-400 mb-2 font-inter">
                   Bestseller

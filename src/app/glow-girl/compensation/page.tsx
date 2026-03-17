@@ -2,8 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { requireGlowGirl } from '@/lib/auth'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TeamNetwork } from '@/components/team-network'
-import { WalletCard } from '@/components/wallet'
-import { getWalletData } from '@/lib/actions/wallet'
+import { PayoutCard } from '@/components/wallet'
+import { getPayoutData } from '@/lib/actions/wallet'
 import { CompPlanCalculator } from './_components/comp-plan-calculator'
 import { LEVEL_OVERRIDE_DEFINITIONS } from '@/lib/commissions/constants'
 import type { MonthlyBonusTier } from '@/types/database'
@@ -119,8 +119,8 @@ export default async function CompensationPage() {
 
   const overrideEarningsTotal = (overrideEarnings || []).reduce((s, c) => s + c.amount_cents, 0)
 
-  // Wallet data
-  const walletData = await getWalletData(glowGirl.id)
+  // Payout data
+  const payoutData = await getPayoutData(glowGirl.id)
 
   // Monthly trend
   const months: string[] = []
@@ -207,13 +207,16 @@ export default async function CompensationPage() {
             </div>
           )}
 
-          <WalletCard
+          <PayoutCard
             glowGirlId={glowGirl.id}
-            availableBalanceCents={walletData.availableBalanceCents}
-            pendingWithdrawalCents={walletData.pendingWithdrawalCents}
-            hasTaxId={walletData.hasTaxId}
-            taxIdLast4={walletData.taxIdLast4}
-            recentWithdrawals={walletData.recentWithdrawals}
+            hasTaxId={payoutData.hasTaxId}
+            taxIdLast4={payoutData.taxIdLast4}
+            payoutMethod={payoutData.payoutMethod}
+            estimatedPayoutCents={payoutData.estimatedPayoutCents}
+            approvedCents={payoutData.approvedCents}
+            pendingCents={payoutData.pendingCents}
+            nextPayoutDate={payoutData.nextPayoutDate}
+            payoutHistory={payoutData.payoutHistory}
           />
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -221,7 +224,7 @@ export default async function CompensationPage() {
               { label: "This Month's Commissions", value: `$${(displayMonthTotal / 100).toFixed(2)}` },
               { label: 'Monthly Bonus', value: `$${(displayBonusTotal / 100).toFixed(2)}` },
               { label: 'Lifetime Earnings', value: `$${(displayLifetime / 100).toFixed(2)}` },
-              { label: 'Pending Payout', value: `$${(displayPending / 100).toFixed(2)}` },
+              { label: 'Next Payout', value: `$${(displayPending / 100).toFixed(2)}` },
             ].map((stat) => (
               <div key={stat.label} className="bg-white rounded-2xl border border-neutral-200/60 p-6">
                 <div className="text-xs uppercase tracking-[0.15em] text-[#6E6A62]/50">{stat.label}</div>

@@ -449,6 +449,21 @@ export interface WithdrawalRequest {
   created_at: string
 }
 
+export type PayoutMethod = 'paypal' | 'venmo' | 'zelle' | 'direct_deposit'
+
+export interface GlowGirlPayoutMethod {
+  id: string
+  glow_girl_id: string
+  method: PayoutMethod
+  handle: string | null
+  account_holder_name: string | null
+  routing_number: string | null
+  account_number_last4: string | null
+  account_type: 'checking' | 'savings' | null
+  created_at: string
+  updated_at: string
+}
+
 // AI Studio
 export type AIStudioProjectType = 'generate' | 'analyze' | 'video'
 export type AIStudioProjectStatus = 'draft' | 'processing' | 'completed' | 'failed'
