@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { StorefrontTracker } from '@/components/storefront-tracker'
+import { StorefrontAddToCart } from '@/components/storefront-add-to-cart'
 import { LandingHeader } from '@/components/landing-header'
 import { Footer } from "@/components/footer"
 import type { GlowGirl, Product } from '@/types/database'
@@ -62,43 +63,45 @@ export default async function GlowGirlStorefront({ params }: Props) {
           {products && products.length > 0 ? (
             <div className="grid sm:grid-cols-3 gap-6 md:gap-8">
               {products.map((product: Product) => (
-                <Link
-                  key={product.id}
-                  href={`/${slug}/product/${product.slug}`}
-                  className="group flex flex-col"
-                >
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-[#f5f0eb]">
-                    {product.image_url && (
-                      <Image
-                        src={product.image_url}
-                        alt={product.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                      />
-                    )}
-                    <div className="absolute bottom-0 left-0 right-0 bg-neutral-950/90 backdrop-blur-sm px-5 py-4 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-400 ease-out">
-                      <span className="block text-center text-white text-sm tracking-[0.15em] uppercase font-medium">
-                        View Product — ${(product.price_cents / 100).toFixed(0)}.00
-                      </span>
+                <div key={product.id} className="group flex flex-col">
+                  <Link
+                    href={`/${slug}/product/${product.slug}`}
+                    className="block"
+                  >
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-[#f5f0eb]">
+                      {product.image_url && (
+                        <Image
+                          src={product.image_url}
+                          alt={product.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                        />
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-neutral-950/90 backdrop-blur-sm px-5 py-4 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-400 ease-out">
+                        <span className="block text-center text-white text-sm tracking-[0.15em] uppercase font-medium">
+                          View Product — ${(product.price_cents / 100).toFixed(0)}.00
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="pt-5 space-y-1.5">
-                    <div className="flex items-baseline justify-between gap-4">
-                      <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-[0.12em]">
-                        {product.name}
-                      </h3>
-                      <span className="text-sm text-neutral-900 shrink-0">
-                        ${(product.price_cents / 100).toFixed(0)}.00
-                      </span>
+                    <div className="pt-5 space-y-1.5">
+                      <div className="flex items-baseline justify-between gap-4">
+                        <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-[0.12em]">
+                          {product.name}
+                        </h3>
+                        <span className="text-sm text-neutral-900 shrink-0">
+                          ${(product.price_cents / 100).toFixed(0)}.00
+                        </span>
+                      </div>
+                      {product.tagline && (
+                        <p className="text-[13px] text-neutral-400 leading-relaxed">
+                          {product.tagline}
+                        </p>
+                      )}
                     </div>
-                    {product.tagline && (
-                      <p className="text-[13px] text-neutral-400 leading-relaxed">
-                        {product.tagline}
-                      </p>
-                    )}
-                  </div>
-                </Link>
+                  </Link>
+                  <StorefrontAddToCart product={product} glowGirlId={g.id} slug={slug} />
+                </div>
               ))}
             </div>
           ) : (

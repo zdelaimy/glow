@@ -147,7 +147,7 @@ function ApplyPage() {
   const [referralCode, setReferralCode] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  const [billing, setBilling] = useState<Billing>('annual')
+  const [billing, setBilling] = useState<Billing>('monthly')
   const [selectedPlan, setSelectedPlan] = useState<PlanTier | null>(null)
   const [subscribing, setSubscribing] = useState(false)
   const [founderCode, setFounderCode] = useState('')
@@ -862,21 +862,17 @@ function ApplyPage() {
                               ))}
                             </ul>
                           </div>
-                          <div className="text-right flex-shrink-0">
-                            {billing === 'annual' && (
-                              <span className="text-sm font-light text-[#6E6A62]/40 line-through">
-                                ${plan.monthlyPrice}
-                              </span>
-                            )}
+                          <div className="text-right flex-shrink-0 w-[100px]">
+                            <span className={`text-sm font-light line-through transition-colors duration-200 ${billing === 'annual' ? 'text-[#6E6A62]/40' : 'text-transparent select-none'}`} aria-hidden={billing !== 'annual'}>
+                              ${plan.monthlyPrice}
+                            </span>
                             <div>
                               <span className="text-2xl font-light text-[#6E6A62]">${Math.round(perMonth)}</span>
                               <span className="text-xs text-[#6E6A62]/50">/mo</span>
                             </div>
-                            {billing === 'annual' && (
-                              <p className="text-[10px] text-emerald-600 mt-0.5">
-                                ${annualTotal.toFixed(0)}/yr — save 15%
-                              </p>
-                            )}
+                            <p className={`text-[10px] mt-0.5 transition-colors duration-200 ${billing === 'annual' ? 'text-emerald-600' : 'text-transparent select-none'}`} aria-hidden={billing !== 'annual'}>
+                              ${annualTotal.toFixed(0)}/yr — save 15%
+                            </p>
                           </div>
                         </div>
 
@@ -1035,17 +1031,19 @@ function ApplyPage() {
                   </motion.button>
                 )}
 
-                {/* Square card form (only when no valid founder code) */}
-                {selectedPlan && !founderCodeValid && (
+                {/* Square card form — always mounted to prevent iframe reload jumps */}
+                <div className={founderCodeValid ? 'hidden' : ''}>
                   <SquareCardForm
-                    key={`square-${selectedPlan}-${billing}`}
-                    disabled={subscribing}
-                    buttonLabel={`Subscribe — $${Math.round(
-                      billing === 'annual'
-                        ? (SUBSCRIPTION_PLANS[selectedPlan].monthlyPrice * 12 * 0.85) / 12
-                        : SUBSCRIPTION_PLANS[selectedPlan].monthlyPrice
-                    )}/mo`}
+                    disabled={subscribing || !selectedPlan}
+                    buttonLabel={
+                      !selectedPlan
+                        ? 'Select a plan above'
+                        : billing === 'annual'
+                          ? `Subscribe — $${Math.round(SUBSCRIPTION_PLANS[selectedPlan].monthlyPrice * 12 * 0.85)}/year`
+                          : `Subscribe — $${SUBSCRIPTION_PLANS[selectedPlan].monthlyPrice}/mo`
+                    }
                     onTokenize={async (token) => {
+                      if (!selectedPlan) return
                       if (!agreedToTerms) {
                         setError('Please agree to the Terms & Privacy Policy to continue.')
                         return
@@ -1087,7 +1085,6 @@ function ApplyPage() {
                         if (result.success) {
                           clearProgress()
                           router.push('/glow-girl/dashboard')
-                          // Keep subscribing=true — spinner stays until navigation completes
                           return
                         } else {
                           setError(result.error || 'Failed to activate. Please contact support.')
@@ -1099,7 +1096,7 @@ function ApplyPage() {
                       setSubscribing(false)
                     }}
                   />
-                )}
+                </div>
 
               </motion.div>
             )}

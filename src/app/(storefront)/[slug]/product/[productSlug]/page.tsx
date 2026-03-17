@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ProductCheckout } from '@/components/product-checkout'
+import { AddToCartButton } from '@/components/add-to-cart-button'
 import { LandingHeader } from '@/components/landing-header'
 import { Footer } from "@/components/footer"
 import type { Product } from '@/types/database'
@@ -108,12 +108,11 @@ export default async function ProductPage({ params }: Props) {
               </div>
             )}
 
-            {/* Checkout */}
-            <ProductCheckout
-              productId={p.id}
-              slug={slug}
+            {/* Add to Cart */}
+            <AddToCartButton
+              product={p}
               glowGirlId={glowGirl.id}
-              price={p.price_cents}
+              slug={slug}
             />
           </div>
         </div>

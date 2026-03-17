@@ -19,6 +19,15 @@ export async function POST(request: NextRequest) {
       items: { productId: string; quantity: number }[]
       glowGirlId?: string
       slug?: string
+      shipping?: {
+        name: string
+        email: string
+        address: string
+        city: string
+        state: string
+        zip: string
+        country: string
+      }
     }
 
     const { items } = body
@@ -61,6 +70,7 @@ export async function POST(request: NextRequest) {
       .insert({
         items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
         glow_girl_id: glowGirlId,
+        shipping: body.shipping || null,
       })
       .select('id')
       .single()
@@ -83,6 +93,19 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Add international shipping fee if applicable
+    const isInternational = body.shipping?.country && body.shipping.country !== 'US'
+    if (isInternational) {
+      lineItems.push({
+        name: 'International Shipping',
+        quantity: '1',
+        basePriceMoney: {
+          amount: BigInt(1500), // $15 flat rate
+          currency: 'USD' as const,
+        },
+      })
+    }
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://glowlabs.nyc'
     const square = getSquareClient()
 
@@ -94,7 +117,7 @@ export async function POST(request: NextRequest) {
         lineItems,
       },
       checkoutOptions: {
-        askForShippingAddress: true,
+        askForShippingAddress: !body.shipping,
         redirectUrl: `${appUrl}/order-success`,
       },
     })

@@ -699,10 +699,10 @@ export default function FoundersPage() {
 
             <div className="space-y-4">
               {[
-                { month: 'Month 1', desc: 'You join + recruit 3 people', income: '$850', highlight: false },
-                { month: 'Month 3', desc: 'Your recruits each bring 2 more → 9 on Level 2', income: '$2,400', highlight: false },
-                { month: 'Month 6', desc: 'Network hits ~50 people across 4 levels', income: '$6,200', highlight: false },
-                { month: 'Month 12', desc: '300+ people across all 7 levels', income: '$18,000+', highlight: true },
+                { month: 'Month 1', desc: 'You join + recruit 5 people', income: '$1,400', highlight: false },
+                { month: 'Month 3', desc: 'Your recruits each bring 3 more → 20 people in your network', income: '$4,500', highlight: false },
+                { month: 'Month 6', desc: 'Network hits 200 people across 4 levels', income: '$14,000', highlight: false },
+                { month: 'Month 12', desc: '5,000+ people across all 7 levels', income: '$102,000+', highlight: true },
               ].map((item, i) => (
                 <motion.div
                   key={item.month}
@@ -738,7 +738,7 @@ export default function FoundersPage() {
             </div>
 
             <p className="text-center text-xs text-[#6E6A62]/35 mt-6 font-inter">
-              Projections based on average recruit sales of 15 units/month at $80/unit (Glow Serum). Each person recruits 2 others. Actual results vary.
+              Projections based on 5 direct recruits, each person recruits 3 more, average sales of 20 units/month at $80/unit (Glow Serum). Actual results vary.
             </p>
           </div>
         </section>

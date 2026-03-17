@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
 
   const items = pending.items as { productId: string; quantity: number }[]
   const glowGirlId = pending.glow_girl_id
+  const shipping = pending.shipping as { name: string; email: string; address: string; city: string; state: string; zip: string } | null
   const amountCents = Number(payment.amount_money?.amount || 0)
   const primaryProductId = items.length > 0 ? items[0].productId : null
 
@@ -83,6 +84,14 @@ export async function POST(request: NextRequest) {
     is_subscription: false,
     amount_cents: amountCents,
     currency: 'usd',
+    shipping_name: shipping?.name || '',
+    shipping_address: shipping ? {
+      email: shipping.email,
+      street: shipping.address,
+      city: shipping.city,
+      state: shipping.state,
+      zip: shipping.zip,
+    } : {},
     line_items: items.map(i => ({ product_id: i.productId, quantity: i.quantity })),
     blend_components: {},
     fulfillment_status: 'UNFULFILLED' as const,

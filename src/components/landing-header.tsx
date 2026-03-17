@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
+import { CartButton } from "@/components/cart-button"
 
 export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/shop", ctaLabel = "Shop" }: { variant?: "hero" | "light"; hideNav?: boolean; ctaHref?: string; ctaLabel?: string }) {
   const [scrolled, setScrolled] = useState(false)
@@ -65,6 +66,7 @@ export function LandingHeader({ variant = "hero", hideNav = false, ctaHref = "/s
 
         {/* Right nav */}
         {!hideNav && <div className="flex items-center gap-5">
+          <CartButton solid={showSolid} />
           {userLink ? (
             <>
               <Link
