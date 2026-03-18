@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, ShieldCheck, AlertTriangle, Landmark, CircleCheck, CircleAlert, ChevronDown, ChevronUp, CreditCard } from 'lucide-react'
+import { Calendar, ShieldCheck, AlertTriangle, CircleCheck, CircleAlert, ChevronDown, ChevronUp, CreditCard } from 'lucide-react'
 import { submitTaxId, submitPayoutMethod } from '@/lib/actions/wallet'
 import type { Payout, PayoutMethod } from '@/types/database'
 
@@ -36,7 +36,7 @@ export function PayoutCard({
   taxIdLast4: initialTaxIdLast4,
   payoutMethod: initialPayoutMethod,
   estimatedPayoutCents,
-  approvedCents,
+  approvedCents: _approvedCents,
   pendingCents,
   nextPayoutDate,
   payoutHistory,
