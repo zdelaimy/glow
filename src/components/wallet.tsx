@@ -24,7 +24,6 @@ interface PayoutCardProps {
     account_type: string | null
   } | null
   estimatedPayoutCents: number
-  approvedCents: number
   pendingCents: number
   nextPayoutDate: string
   payoutHistory: Payout[]
@@ -36,7 +35,6 @@ export function PayoutCard({
   taxIdLast4: initialTaxIdLast4,
   payoutMethod: initialPayoutMethod,
   estimatedPayoutCents,
-  approvedCents: _approvedCents,
   pendingCents,
   nextPayoutDate,
   payoutHistory,
