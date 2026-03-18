@@ -213,7 +213,6 @@ export default async function CompensationPage() {
             taxIdLast4={payoutData.taxIdLast4}
             payoutMethod={payoutData.payoutMethod}
             estimatedPayoutCents={payoutData.estimatedPayoutCents}
-            approvedCents={payoutData.approvedCents}
             pendingCents={payoutData.pendingCents}
             nextPayoutDate={payoutData.nextPayoutDate}
             payoutHistory={payoutData.payoutHistory}
